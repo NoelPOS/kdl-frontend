@@ -1,0 +1,197 @@
+"use client";
+import { useForm, useFieldArray } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Search, Trash2 } from "lucide-react";
+
+type Student = {
+  studentName: string;
+  nickname: string;
+  id: string;
+};
+
+type FormData = {
+  students: Student[];
+};
+
+interface AddCourseProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function AddCourse({ open, onOpenChange }: AddCourseProps) {
+  const { control, register, handleSubmit } = useForm<FormData>({
+    defaultValues: {
+      students: [
+        {
+          studentName: "",
+          nickname: "",
+          id: "",
+        },
+      ],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "students",
+  });
+
+  const AddCourse = () => {
+    append({
+      studentName: "",
+      nickname: "",
+      id: "",
+    });
+  };
+
+  const removeStudent = (index: number) => {
+    if (fields.length > 1) {
+      remove(index);
+    }
+  };
+
+  const onSubmit = (data: FormData) => {
+    console.log("Students Submitted:", data);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Plus className="h-4 w-4 mr-2" />
+          New
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[400px] p-0 rounded-3xl overflow-hidden max-h-[80vh] overflow-y-auto">
+        <div className="bg-white p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Hello world</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
+            <div className="space-y-6">
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className={index > 0 ? "pt-4 border-t border-gray-200" : ""}
+                >
+                  <div className="space-y-4">
+                    {/* Student Name */}
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor={`students.${index}.studentName`}
+                        className="text-xs text-gray-500"
+                      >
+                        Student name
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          {...register(
+                            `students.${index}.studentName` as const
+                          )}
+                          placeholder="Jane Doe"
+                          className="border-gray-300 rounded-lg pr-10"
+                        />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
+
+                    {/* Nickname */}
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor={`students.${index}.nickname`}
+                        className="text-xs text-gray-500"
+                      >
+                        Nickname
+                      </Label>
+                      <Input
+                        {...register(`students.${index}.nickname` as const)}
+                        placeholder="Jane"
+                        className="border-gray-300 rounded-lg"
+                      />
+                    </div>
+
+                    {/* ID */}
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor={`students.${index}.id`}
+                        className="text-xs text-gray-500"
+                      >
+                        ID
+                      </Label>
+                      <Input
+                        {...register(`students.${index}.id` as const)}
+                        placeholder="202501001"
+                        className="border-gray-300 rounded-lg"
+                      />
+                    </div>
+
+                    {/* Delete button - only show for students after the first one */}
+                    {index > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="text-red-500 p-1 h-auto hover:bg-red-50"
+                          onClick={() => removeStudent(index)}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Add Student Button */}
+              <div className="flex justify-start pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-amber-500 border-amber-500 rounded-full text-sm px-4 py-1 h-auto"
+                  onClick={AddCourse}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Student
+                </Button>
+              </div>
+            </div>
+
+            <DialogFooter className="flex justify-between gap-4 mt-8 px-0">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 rounded-full flex-1"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                type="submit"
+                className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
+              >
+                Next
+              </Button>
+            </DialogFooter>
+          </form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default AddCourse;
