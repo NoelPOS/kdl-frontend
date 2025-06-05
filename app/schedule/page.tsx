@@ -56,22 +56,6 @@ export default function ClassSchedulePage() {
     const studentName = session.student?.fullName || "";
     const courseName = session.course?.name || "";
 
-    // console.log all the session details types
-    console.log("Detail of type of session date:", typeof session.date);
-    console.log("Detail of type of session time:", typeof session.time);
-    console.log("Detail of type of session course:", typeof courseName);
-    console.log("Detail of type of session teacher:", typeof teacherName);
-    console.log("Detail of type of session student:", typeof studentName);
-    console.log("Detail of type of session room:", typeof session.room);
-    console.log("Detail of type of session nickname:", typeof session.nickname);
-    console.log("Detail of type of session class:", typeof session.class);
-    console.log(
-      "Detail of type of session studentId:",
-      typeof session.student?.id
-    );
-    console.log("Detail of type of session remark:", typeof session.remark);
-    console.log("Detail of type of session status:", typeof session.status);
-
     setSelectedSession({
       date: session.date,
       time: session.time,

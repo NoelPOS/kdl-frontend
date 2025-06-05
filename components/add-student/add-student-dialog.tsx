@@ -26,14 +26,13 @@ type FormData = {
 interface AddStudentProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialData?: Partial<FormData>;
-  afterStudent?: (open: boolean) => void; // Optional callback after adding students
+  onSubmit?: (students: Student[]) => void;
 }
 
 export function AddStudent({
   open,
   onOpenChange,
-  afterStudent,
+  onSubmit: afterStudent,
 }: AddStudentProps) {
   const { control, register, handleSubmit, reset } = useForm<FormData>({
     defaultValues: {
@@ -81,7 +80,7 @@ export function AddStudent({
     });
     // Call the afterStudent callback if provided
     if (afterStudent) {
-      afterStudent(true);
+      afterStudent(data.students);
     }
 
     onOpenChange(false);

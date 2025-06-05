@@ -24,22 +24,24 @@ type ClassSession = {
 type FormData = {
   classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
   // For 12 times check
-  checkStartTime: string;
-  checkEndTime: string;
+  checkStartTime?: string;
+  checkEndTime?: string;
   // For 12 times fixed
-  fixedSessions: ClassSession[];
+  fixedSessions?: ClassSession[];
   // For camp class
-  campSessions: ClassSession[];
+  campSessions?: ClassSession[];
 };
 
 interface ClassScheduleFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  afterClassSchedule: (schedule: FormData) => void;
 }
 
 export function ClassScheduleForm({
   open,
   onOpenChange,
+  afterClassSchedule,
 }: ClassScheduleFormProps) {
   const { control, register, handleSubmit, watch } = useForm<FormData>({
     defaultValues: {
@@ -106,6 +108,7 @@ export function ClassScheduleForm({
 
   const onSubmit = (data: FormData) => {
     console.log("Class Schedule Submitted:", data);
+    afterClassSchedule(data);
     onOpenChange(false);
   };
 

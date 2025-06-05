@@ -10,7 +10,6 @@ export interface Student {
 
 export interface Teacher {
   id: string;
-
   fullName: string;
 }
 
@@ -45,3 +44,41 @@ export interface ScheduleBlock {
   color: "blue" | "orange";
   course: string;
 }
+
+// types for class schedule confirmation component
+export type ComfirmStudent = {
+  studentName: string;
+  nickname: string;
+  id: string;
+};
+
+export type ComfirmClassSession = {
+  date: string;
+  startTime: string;
+  endTime: string;
+};
+
+export type ComfirmClassScheduleData = {
+  classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
+  checkStartTime?: string;
+  checkEndTime?: string;
+  fixedSessions?: ComfirmClassSession[];
+  campSessions?: ComfirmClassSession[];
+};
+
+export type ComfirmTeacherData = {
+  teacher: string;
+  room: string;
+  remark: string;
+};
+
+export type ComfirmScheduleRow = {
+  date: string;
+  time: string;
+  student: string;
+  teacher: string;
+  class: number;
+  room: string;
+  remark: string;
+  warning?: string;
+};

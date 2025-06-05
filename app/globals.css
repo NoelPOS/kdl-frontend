@@ -125,6 +125,7 @@
 }
 
 
+
 /* Hide the default calendar picker indicator for Webkit browsers */
 input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
@@ -161,5 +162,49 @@ select {
   -moz-appearance: none;
   /* Firefox */
   background: transparent;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* scroll bar */
+/* Scrollbar styling for WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  
+
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: yellow;
+  border-radius: 4px;
+}
+
+/* Firefox (limited support) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: yellow transparent;
+}
+
+
+.hide-scrollbar-y {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 10+ */
+
+  overflow-y: scroll;
+  /* to enable scroll without showing bar */
+}
+
+.hide-scrollbar-y::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
