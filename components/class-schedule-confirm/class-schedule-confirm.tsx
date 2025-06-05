@@ -9,12 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
+import type {
   ComfirmClassScheduleData,
+  ComfirmScheduleRow,
   ComfirmStudent,
   ComfirmTeacherData,
 } from "@/lib/types";
 import { generateScheduleRows } from "@/lib/utils";
+import { useState } from "react";
+import EditScheduleDialog, {
+  EditScheduleFormData,
+} from "../class-schedule-confirm-edit/class-schedule-confirm-edit";
 
 interface ClassScheduleConfirmProps {
   students: ComfirmStudent[];
@@ -37,12 +42,74 @@ export function ClassScheduleConfirm({
       ? new URLSearchParams(window.location.search).get("course") || "Course"
       : "Course";
 
-  // Generate formatted schedule rows based on the provided data
-  const scheduleRows = generateScheduleRows(
-    students,
-    classSchedule,
-    teacherData
+  // State for managing schedule rows and editing
+  const [scheduleRows, setScheduleRows] = useState<ComfirmScheduleRow[]>(() =>
+    generateScheduleRows(students, classSchedule, teacherData)
   );
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number>(-1);
+  const [selectedRowData, setSelectedRowData] =
+    useState<EditScheduleFormData | null>(null);
+
+  // Handle double click on table row
+  const handleRowDoubleClick = (row: ComfirmScheduleRow, index: number) => {
+    console.log("Row double clicked:", row, "Index:", index);
+
+    // Convert ScheduleRow to EditScheduleFormData format
+    const editData: EditScheduleFormData = {
+      date: row.date,
+      time: row.time,
+      course: courseName,
+      teacher: row.teacher,
+      student: row.student,
+      room: row.room,
+      nickname: row.student, // Assuming student name is used as nickname
+      class: row.class,
+      studentId: "", // This would need to be extracted from students data
+      remark: row.remark,
+      status: "Pending", // Default status
+    };
+
+    // Find student ID from students array
+    const student = students.find(
+      (s) => s.nickname === row.student || s.studentName === row.student
+    );
+    if (student) {
+      editData.studentId = student.id;
+      editData.nickname = student.nickname || student.studentName;
+    }
+
+    setSelectedRowData(editData);
+    setSelectedRowIndex(index);
+    setEditDialogOpen(true);
+  };
+
+  // Handle saving edited schedule
+  const handleSaveEdit = (
+    editedData: EditScheduleFormData,
+    originalIndex: number
+  ) => {
+    console.log("Saving edited data:", editedData, "at index:", originalIndex);
+
+    // Update the schedule rows with edited data
+    const updatedRows = [...scheduleRows];
+    updatedRows[originalIndex] = {
+      ...updatedRows[originalIndex],
+      date: editedData.date,
+      time: editedData.time,
+      student: editedData.nickname || editedData.student,
+      teacher: editedData.teacher,
+      class: editedData.class,
+      room: editedData.room,
+      remark: editedData.remark,
+      warning: "",
+    };
+
+    setScheduleRows(updatedRows);
+    setEditDialogOpen(false);
+    setSelectedRowData(null);
+    setSelectedRowIndex(-1);
+  };
 
   return (
     <div className="py-6 px-10">
@@ -53,6 +120,9 @@ export function ClassScheduleConfirm({
             Confirming Class Schedule
           </h1>
           <p className="text-lg text-gray-700">{courseName}</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Double-click any row to edit the schedule
+          </p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -72,7 +142,7 @@ export function ClassScheduleConfirm({
       </div>
 
       {/* Schedule Table */}
-      <div className="border rounded-lg  bg-white shadow-sm">
+      <div className="border rounded-lg bg-white shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
@@ -104,7 +174,12 @@ export function ClassScheduleConfirm({
           </TableHeader>
           <TableBody>
             {scheduleRows.map((row, index) => (
-              <TableRow key={index} className="hover:bg-gray-50">
+              <TableRow
+                key={index}
+                className="hover:bg-gray-50 cursor-pointer"
+                onDoubleClick={() => handleRowDoubleClick(row, index)}
+                title="Double-click to edit"
+              >
                 <TableCell className="border-r text-center h-20">
                   {row.date}
                 </TableCell>
@@ -117,7 +192,7 @@ export function ClassScheduleConfirm({
                 <TableCell className="border-r text-center h-20">
                   {row.teacher}
                 </TableCell>
-                <TableCell className="border-r text-center h-20 ">
+                <TableCell className="border-r text-center h-20">
                   {row.class}
                 </TableCell>
                 <TableCell className="border-r text-center h-20">
@@ -139,34 +214,14 @@ export function ClassScheduleConfirm({
         </Table>
       </div>
 
-      {/* Summary Info */}
-      {/* <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="font-semibold text-gray-700">Students: </span>
-            <span className="text-gray-600">
-              {students.map((s) => s.nickname || s.studentName).join(", ")}
-            </span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">Class Type: </span>
-            <span className="text-gray-600 capitalize">
-              {classSchedule.classType?.replace("-", " ")}
-            </span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">
-              Total Sessions:{" "}
-            </span>
-            <span className="text-gray-600">
-              {classSchedule.classType === "12-times-check" ||
-              classSchedule.classType === "12-times-fixed"
-                ? "12"
-                : classSchedule.campSessions?.length || 0}
-            </span>
-          </div>
-        </div>
-      </div> */}
+      {/* Edit Dialog */}
+      <EditScheduleDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        initialData={selectedRowData || undefined}
+        onSave={handleSaveEdit}
+        originalIndex={selectedRowIndex}
+      />
     </div>
   );
 }

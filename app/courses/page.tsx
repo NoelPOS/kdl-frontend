@@ -140,8 +140,8 @@ export default function CoursesPage() {
         ))}
       </div>
       {confirmOpen && (
-        <div className="hide-scrollbar-y fixed inset-0 z-10 overflow-y-scroll ">
-          <div className="bg-white rounded-lg ">
+        <div className="hide-scrollbar-y fixed inset-0 z-10 overflow-y-scroll bg-white ">
+          <div className="bg-white rounded-lg h-full ">
             <ClassScheduleConfirm
               students={studentsData}
               classSchedule={classScheduleData}

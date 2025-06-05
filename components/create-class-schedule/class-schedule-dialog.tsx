@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,24 +12,23 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Calendar, Clock, ChevronDown } from "lucide-react";
-import { useRef } from "react";
-
-type ClassSession = {
-  date: string;
-  startTime: string;
-  endTime: string;
-};
+import { Clock, ChevronDown } from "lucide-react";
+import { useRef, useState } from "react";
+import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
 
 type FormData = {
   classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
   // For 12 times check
   checkStartTime?: string;
   checkEndTime?: string;
-  // For 12 times fixed
-  fixedSessions?: ClassSession[];
-  // For camp class
-  campSessions?: ClassSession[];
+  // For 12 times fixed - new structure
+  fixedDays?: string[];
+  fixedStartTime?: string;
+  fixedEndTime?: string;
+  // For camp class - new structure
+  campDates?: string[];
+  campStartTime?: string;
+  campEndTime?: string;
 };
 
 interface ClassScheduleFormProps {
@@ -43,72 +42,79 @@ export function ClassScheduleForm({
   onOpenChange,
   afterClassSchedule,
 }: ClassScheduleFormProps) {
-  const { control, register, handleSubmit, watch } = useForm<FormData>({
+  const { register, handleSubmit, watch, setValue, reset } = useForm<FormData>({
     defaultValues: {
       classType: "",
       checkStartTime: "",
       checkEndTime: "",
-      fixedSessions: Array.from({ length: 12 }, () => ({
-        date: "",
-        startTime: "",
-        endTime: "",
-      })),
-      campSessions: [
-        {
-          date: "",
-          startTime: "",
-          endTime: "",
-        },
-      ],
+      fixedDays: [],
+      fixedStartTime: "",
+      fixedEndTime: "",
+      campDates: [],
+      campStartTime: "",
+      campEndTime: "",
     },
   });
 
-  const {
-    fields: campFields,
-    append: appendCamp,
-    remove: removeCamp,
-  } = useFieldArray({
-    control,
-    name: "campSessions",
-  });
+  // State for day selection (12 times fixed)
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
-  // Refs for 12 times check
+  // State for calendar selection (camp class)
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+
+  // Refs for time inputs
   const checkStartTimeRef = useRef<HTMLInputElement>(null);
   const checkEndTimeRef = useRef<HTMLInputElement>(null);
-
-  // Refs for 12 times fixed (arrays of refs)
-  const fixedDateRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const fixedStartTimeRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const fixedEndTimeRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // Refs for camp class (dynamic arrays)
-  const campDateRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const campStartTimeRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const campEndTimeRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const fixedStartTimeRef = useRef<HTMLInputElement>(null);
+  const fixedEndTimeRef = useRef<HTMLInputElement>(null);
+  const campStartTimeRef = useRef<HTMLInputElement>(null);
+  const campEndTimeRef = useRef<HTMLInputElement>(null);
 
   const classType = watch("classType");
 
-  const addCampSession = () => {
-    appendCamp({
-      date: "",
-      startTime: "",
-      endTime: "",
-    });
+  // Handle day selection for 12 times fixed
+  const toggleDay = (day: string) => {
+    const newSelectedDays = selectedDays.includes(day)
+      ? selectedDays.filter((d) => d !== day)
+      : [...selectedDays, day];
+
+    setSelectedDays(newSelectedDays);
+    setValue("fixedDays", newSelectedDays);
   };
 
-  const removeCampSession = (index: number) => {
-    if (campFields.length > 1) {
-      removeCamp(index);
-      // Clean up refs
-      campDateRefs.current.splice(index, 1);
-      campStartTimeRefs.current.splice(index, 1);
-      campEndTimeRefs.current.splice(index, 1);
-    }
+  // Handle date selection for camp class
+  const toggleDate = (date: string) => {
+    const newSelectedDates = selectedDates.includes(date)
+      ? selectedDates.filter((d) => d !== date)
+      : [...selectedDates, date];
+
+    setSelectedDates(newSelectedDates);
+    setValue("campDates", newSelectedDates);
+  };
+
+  // Generate calendar days for the current month
+  const calendarDays = generateCalendarDays(currentMonth);
+
+  // Navigate to previous/next month
+  const navigateMonth = (direction: "prev" | "next") => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() + (direction === "next" ? 1 : -1));
+    setCurrentMonth(newMonth);
   };
 
   const onSubmit = (data: FormData) => {
-    console.log("Class Schedule Submitted:", data);
-    afterClassSchedule(data);
+    // Update form data with selected days/dates
+    const updatedData = {
+      ...data,
+      fixedDays: selectedDays,
+      campDates: selectedDates,
+    };
+
+    console.log("Class Schedule Submitted:", updatedData);
+    // Reset form and close dialog
+    reset();
+    afterClassSchedule(updatedData);
     onOpenChange(false);
   };
 
@@ -202,240 +208,228 @@ export function ClassScheduleForm({
                 </div>
               )}
 
-              {/* 12 Times Fixed - Show 12 sets of date, start time, end time */}
+              {/* 12 Times Fixed - Day selection with start/end time */}
               {classType === "12-times-fixed" && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     12 Times Fixed Schedule
                   </h3>
 
-                  <div className="space-y-4 max-h-60 overflow-y-auto">
-                    {Array.from({ length: 12 }).map((_, index) => {
-                      const { ref: dateRHFRef, ...dateProps } = register(
-                        `fixedSessions.${index}.date` as const
-                      );
-                      const { ref: startTimeRHFRef, ...startTimeProps } =
-                        register(`fixedSessions.${index}.startTime` as const);
-                      const { ref: endTimeRHFRef, ...endTimeProps } = register(
-                        `fixedSessions.${index}.endTime` as const
-                      );
-
-                      return (
-                        <div
-                          key={index}
-                          className="p-3 bg-white rounded-lg border border-gray-200"
+                  {/* Day Selection */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-700">Select Days</Label>
+                    <div className="grid grid-cols-7 gap-2">
+                      {DAYS_OF_WEEK.map((day) => (
+                        <Button
+                          key={day.key}
+                          type="button"
+                          variant="outline"
+                          className={`h-10 text-xs ${
+                            selectedDays.includes(day.key)
+                              ? "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-500"
+                              : "hover:bg-gray-100"
+                          }`}
+                          onClick={() => toggleDay(day.key)}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">
-                              Session {index + 1}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-500">
-                                Date
-                              </Label>
-                              <div
-                                className="relative cursor-pointer"
-                                onClick={() =>
-                                  fixedDateRefs.current[index]?.showPicker()
-                                }
-                              >
-                                <Input
-                                  {...dateProps}
-                                  ref={(e) => {
-                                    dateRHFRef(e);
-                                    fixedDateRefs.current[index] = e;
-                                  }}
-                                  type="date"
-                                  className="border-gray-300 rounded-lg pr-8 text-xs cursor-pointer"
-                                />
-                                <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-500">
-                                Start
-                              </Label>
-                              <div
-                                className="relative cursor-pointer"
-                                onClick={() =>
-                                  fixedStartTimeRefs.current[
-                                    index
-                                  ]?.showPicker()
-                                }
-                              >
-                                <Input
-                                  {...startTimeProps}
-                                  ref={(e) => {
-                                    startTimeRHFRef(e);
-                                    fixedStartTimeRefs.current[index] = e;
-                                  }}
-                                  type="time"
-                                  className="border-gray-300 rounded-lg pr-8 text-xs cursor-pointer"
-                                />
-                                <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-500">
-                                End
-                              </Label>
-                              <div
-                                className="relative cursor-pointer"
-                                onClick={() =>
-                                  fixedEndTimeRefs.current[index]?.showPicker()
-                                }
-                              >
-                                <Input
-                                  {...endTimeProps}
-                                  ref={(e) => {
-                                    endTimeRHFRef(e);
-                                    fixedEndTimeRefs.current[index] = e;
-                                  }}
-                                  type="time"
-                                  className="border-gray-300 rounded-lg pr-8 text-xs cursor-pointer"
-                                />
-                                <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                          {day.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* Time Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-500">
+                        Start Time
+                      </Label>
+                      <div
+                        className="relative cursor-pointer"
+                        onClick={() => fixedStartTimeRef.current?.showPicker()}
+                      >
+                        <Input
+                          {...register("fixedStartTime")}
+                          ref={(e) => {
+                            register("fixedStartTime").ref(e);
+                            fixedStartTimeRef.current = e;
+                          }}
+                          type="time"
+                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
+                        />
+                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-500">End Time</Label>
+                      <div
+                        className="relative cursor-pointer"
+                        onClick={() => fixedEndTimeRef.current?.showPicker()}
+                      >
+                        <Input
+                          {...register("fixedEndTime")}
+                          ref={(e) => {
+                            register("fixedEndTime").ref(e);
+                            fixedEndTimeRef.current = e;
+                          }}
+                          type="time"
+                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
+                        />
+                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedDays.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      Selected days:{" "}
+                      {selectedDays
+                        .map(
+                          (day) =>
+                            DAYS_OF_WEEK.find((d) => d.key === day)?.label
+                        )
+                        .join(", ")}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Camp Class - Dynamic sessions */}
+              {/* Camp Class - Calendar selection with start/end time */}
               {classType === "camp-class" && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     Camp Class Schedule
                   </h3>
 
-                  <div className="space-y-4">
-                    {campFields.map((field, index) => {
-                      const { ref: campDateRHFRef, ...campDateProps } =
-                        register(`campSessions.${index}.date` as const);
-                      const {
-                        ref: campStartTimeRHFRef,
-                        ...campStartTimeProps
-                      } = register(`campSessions.${index}.startTime` as const);
-                      const { ref: campEndTimeRHFRef, ...campEndTimeProps } =
-                        register(`campSessions.${index}.endTime` as const);
-
-                      return (
-                        <div
-                          key={field.id}
-                          className="p-3 bg-white rounded-lg border border-gray-200"
+                  {/* Calendar */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-700">
+                      Select Dates
+                    </Label>
+                    <div className="border border-gray-300 rounded-lg p-3 bg-white">
+                      {/* Calendar Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigateMonth("prev")}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">
-                              Day {index + 1}
-                            </span>
-                            {index > 0 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="text-red-500 p-1 h-auto hover:bg-red-50"
-                                onClick={() => removeCampSession(index)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
+                          ←
+                        </Button>
+                        <h4 className="font-medium">
+                          {currentMonth.toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </h4>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigateMonth("next")}
+                        >
+                          →
+                        </Button>
+                      </div>
 
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-500">
-                                Date
-                              </Label>
-                              <div
-                                className="relative cursor-pointer"
-                                onClick={() =>
-                                  campDateRefs.current[index]?.showPicker()
-                                }
-                              >
-                                <Input
-                                  {...campDateProps}
-                                  ref={(e) => {
-                                    campDateRHFRef(e);
-                                    campDateRefs.current[index] = e;
-                                  }}
-                                  type="date"
-                                  className="border-gray-300 rounded-lg pr-8 text-xs cursor-pointer"
-                                />
-                                <Calendar className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-                              </div>
+                      {/* Calendar Grid */}
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                          (day) => (
+                            <div
+                              key={day}
+                              className="text-xs font-medium text-gray-500 p-2"
+                            >
+                              {day}
                             </div>
+                          )
+                        )}
+                        {calendarDays.map((date, index) => {
+                          const dateStr = date.toISOString().split("T")[0];
+                          const isCurrentMonth =
+                            date.getMonth() === currentMonth.getMonth();
+                          const isSelected = selectedDates.includes(dateStr);
+                          const isToday =
+                            date.toDateString() === new Date().toDateString();
 
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-500">
-                                Start Time
-                              </Label>
-                              <div
-                                className="relative cursor-pointer"
-                                onClick={() =>
-                                  campStartTimeRefs.current[index]?.showPicker()
-                                }
-                              >
-                                <Input
-                                  {...campStartTimeProps}
-                                  ref={(e) => {
-                                    campStartTimeRHFRef(e);
-                                    campStartTimeRefs.current[index] = e;
-                                  }}
-                                  type="time"
-                                  className="border-gray-300 rounded-lg pr-8 text-xs cursor-pointer"
-                                />
-                                <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-xs text-gray-500">
-                                End Time
-                              </Label>
-                              <div
-                                className="relative cursor-pointer"
-                                onClick={() =>
-                                  campEndTimeRefs.current[index]?.showPicker()
-                                }
-                              >
-                                <Input
-                                  {...campEndTimeProps}
-                                  ref={(e) => {
-                                    campEndTimeRHFRef(e);
-                                    campEndTimeRefs.current[index] = e;
-                                  }}
-                                  type="time"
-                                  className="border-gray-300 rounded-lg pr-8 text-xs cursor-pointer"
-                                />
-                                <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Add Day Button */}
-                    <div className="flex justify-start">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="text-amber-500 border-amber-500 rounded-full text-sm px-4 py-1 h-auto"
-                        onClick={addCampSession}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Day
-                      </Button>
+                          return (
+                            <Button
+                              key={index}
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className={`h-8 w-8 p-0 text-xs ${
+                                !isCurrentMonth
+                                  ? "text-gray-300 hover:bg-transparent cursor-default"
+                                  : isSelected
+                                  ? "bg-yellow-400 text-black hover:bg-yellow-500"
+                                  : isToday
+                                  ? "bg-blue-100 text-blue-600"
+                                  : "hover:bg-gray-100"
+                              }`}
+                              onClick={() =>
+                                isCurrentMonth && toggleDate(dateStr)
+                              }
+                              disabled={!isCurrentMonth}
+                            >
+                              {date.getDate()}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Time Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-500">
+                        Start Time
+                      </Label>
+                      <div
+                        className="relative cursor-pointer"
+                        onClick={() => campStartTimeRef.current?.showPicker()}
+                      >
+                        <Input
+                          {...register("campStartTime")}
+                          ref={(e) => {
+                            register("campStartTime").ref(e);
+                            campStartTimeRef.current = e;
+                          }}
+                          type="time"
+                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
+                        />
+                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs text-gray-500">End Time</Label>
+                      <div
+                        className="relative cursor-pointer"
+                        onClick={() => campEndTimeRef.current?.showPicker()}
+                      >
+                        <Input
+                          {...register("campEndTime")}
+                          ref={(e) => {
+                            register("campEndTime").ref(e);
+                            campEndTimeRef.current = e;
+                          }}
+                          type="time"
+                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
+                        />
+                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedDates.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      Selected dates: {selectedDates.length} day
+                      {selectedDates.length !== 1 ? "s" : ""}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -454,7 +448,7 @@ export function ClassScheduleForm({
                 type="submit"
                 className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
               >
-                Create Schedule
+                Next
               </Button>
             </DialogFooter>
           </form>

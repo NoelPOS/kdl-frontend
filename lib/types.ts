@@ -60,10 +60,17 @@ export type ComfirmClassSession = {
 
 export type ComfirmClassScheduleData = {
   classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
+  // For 12 times check
   checkStartTime?: string;
   checkEndTime?: string;
-  fixedSessions?: ComfirmClassSession[];
-  campSessions?: ComfirmClassSession[];
+  // For 12 times fixed - new structure
+  fixedDays?: string[];
+  fixedStartTime?: string;
+  fixedEndTime?: string;
+  // For camp class - new structure
+  campDates?: string[];
+  campStartTime?: string;
+  campEndTime?: string;
 };
 
 export type ComfirmTeacherData = {
@@ -77,7 +84,7 @@ export type ComfirmScheduleRow = {
   time: string;
   student: string;
   teacher: string;
-  class: number;
+  class: string;
   room: string;
   remark: string;
   warning?: string;

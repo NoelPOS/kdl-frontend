@@ -11,126 +11,120 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Generate schedule rows based on the data
-export const generateScheduleRows = (
-  students: ComfirmStudent[] = [],
+export const DAYS_OF_WEEK = [
+  { key: "monday", label: "Mon", dayIndex: 1 },
+  { key: "tuesday", label: "Tue", dayIndex: 2 },
+  { key: "wednesday", label: "Wed", dayIndex: 3 },
+  { key: "thursday", label: "Thu", dayIndex: 4 },
+  { key: "friday", label: "Fri", dayIndex: 5 },
+  { key: "saturday", label: "Sat", dayIndex: 6 },
+  { key: "sunday", label: "Sun", dayIndex: 0 },
+];
+
+export function generateScheduleRows(
+  students: ComfirmStudent[],
   classSchedule: ComfirmClassScheduleData,
   teacherData: ComfirmTeacherData
-): ComfirmScheduleRow[] => {
+): ComfirmScheduleRow[] {
   const rows: ComfirmScheduleRow[] = [];
-  let classNumber = 1;
 
-  // Helper function to format time
-  const formatTime = (startTime: string, endTime: string) => {
-    return `${startTime} - ${endTime}`;
-  };
-
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  // Generate rows based on class type
   if (classSchedule.classType === "12-times-check") {
-    // For 12 times check, create 12 sessions with sample dates
-    const startDate = new Date();
+    // For 12 times check, create 12 placeholder rows
     for (let i = 0; i < 12; i++) {
-      const sessionDate = new Date(startDate);
-      sessionDate.setDate(startDate.getDate() + i * 7); // Weekly sessions
-
-      students.forEach((student, studentIndex) => {
+      students.forEach((student) => {
         rows.push({
-          date: formatDate(sessionDate.toISOString().split("T")[0]),
-          time: formatTime(
-            classSchedule.checkStartTime || "10:00",
-            classSchedule.checkEndTime || "14:30"
-          ),
+          date: "TBD",
+          time:
+            classSchedule.checkStartTime && classSchedule.checkEndTime
+              ? `${classSchedule.checkStartTime} - ${classSchedule.checkEndTime}`
+              : "TBD",
           student: student.nickname || student.studentName,
           teacher: teacherData.teacher,
-          class: classNumber,
+          class: `${i + 1}`,
           room: teacherData.room,
           remark: teacherData.remark,
-          warning:
-            i < 3 && studentIndex === 0
-              ? "Teacher time conflict with mBot class with Jerry."
-              : i === 2 && studentIndex === 1
-              ? "Student time conflict with mBot class."
-              : i > 8
-              ? "Room conflict with Free Trial class."
-              : undefined,
+          warning: "Schedule to be determined based on availability",
         });
       });
-      classNumber++;
     }
-  } else if (
-    classSchedule.classType === "12-times-fixed" &&
-    classSchedule.fixedSessions
-  ) {
-    // For 12 times fixed, use the specific sessions
-    classSchedule.fixedSessions.forEach((session, sessionIndex) => {
-      if (session.date && session.startTime && session.endTime) {
-        students.forEach((student, studentIndex) => {
+  } else if (classSchedule.classType === "12-times-fixed") {
+    // Generate 12 sessions based on selected days
+    if (classSchedule.fixedDays && classSchedule.fixedDays.length > 0) {
+      const selectedDays = classSchedule.fixedDays;
+      const startTime = classSchedule.fixedStartTime;
+      const endTime = classSchedule.fixedEndTime;
+
+      // Generate dates for the next 12 sessions
+      const today = new Date();
+      const sessionDates: string[] = [];
+      const currentDate = new Date(today);
+
+      // Find the next 12 occurrences of the selected days
+      while (sessionDates.length < 12) {
+        const dayOfWeek = DAYS_OF_WEEK.find(
+          (d) => d.dayIndex === currentDate.getDay()
+        );
+        if (dayOfWeek && selectedDays.includes(dayOfWeek.key)) {
+          sessionDates.push(currentDate.toISOString().split("T")[0]);
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      sessionDates.forEach((date) => {
+        students.forEach((student) => {
           rows.push({
-            date: formatDate(session.date),
-            time: formatTime(session.startTime, session.endTime),
+            date: new Date(date).toLocaleDateString(),
+            time: startTime && endTime ? `${startTime} - ${endTime}` : "TBD",
             student: student.nickname || student.studentName,
             teacher: teacherData.teacher,
-            class: sessionIndex + 1,
+            class: `${sessionDates.indexOf(date) + 1}`,
             room: teacherData.room,
             remark: teacherData.remark,
-            warning:
-              sessionIndex < 3 && studentIndex === 0
-                ? "Teacher time conflict with mBot class with Jerry."
-                : sessionIndex === 2 && studentIndex === 1
-                ? "Student time conflict with mBot class."
-                : sessionIndex > 8
-                ? "Room conflict with Free Trial class."
-                : undefined,
           });
         });
-      }
-    });
-  } else if (
-    classSchedule.classType === "camp-class" &&
-    classSchedule.campSessions
-  ) {
-    // For camp class, use the camp sessions
-    classSchedule.campSessions.forEach((session, sessionIndex) => {
-      if (session.date && session.startTime && session.endTime) {
-        students.forEach((student, studentIndex) => {
+      });
+    }
+  } else if (classSchedule.classType === "camp-class") {
+    // Generate sessions based on selected dates
+    if (classSchedule.campDates && classSchedule.campDates.length > 0) {
+      const startTime = classSchedule.campStartTime;
+      const endTime = classSchedule.campEndTime;
+
+      classSchedule.campDates.forEach((date) => {
+        students.forEach((student) => {
           rows.push({
-            date: formatDate(session.date),
-            time: formatTime(session.startTime, session.endTime),
+            date: new Date(date).toLocaleDateString(),
+            time: startTime && endTime ? `${startTime} - ${endTime}` : "TBD",
             student: student.nickname || student.studentName,
             teacher: teacherData.teacher,
-            class: sessionIndex + 1,
+            class: `${(classSchedule.campDates?.indexOf(date) ?? -1) + 1}`,
             room: teacherData.room,
             remark: teacherData.remark,
-            warning:
-              sessionIndex < 2 && studentIndex === 0
-                ? "Teacher time conflict with mBot class with Jerry."
-                : sessionIndex === 1 && studentIndex === 1
-                ? "Student time conflict with mBot class."
-                : undefined,
           });
         });
-      }
-    });
+      });
+    }
   }
 
-  return rows.sort((a, b) => {
-    // Sort by date first, then by class number
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    if (dateA.getTime() !== dateB.getTime()) {
-      return dateA.getTime() - dateB.getTime();
-    }
-    return a.class - b.class;
-  });
+  return rows;
+}
+
+// Generate calendar days
+export const generateCalendarDays = (currentMonth: Date) => {
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  // const lastDay = new Date(year, month + 1, 0);
+  const startDate = new Date(firstDay);
+  startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+  const days = [];
+  const current = new Date(startDate);
+
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  return days;
 };
