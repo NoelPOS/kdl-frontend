@@ -70,7 +70,6 @@ export function EditSchedule({
           onScheduleUpdate(data);
         }
 
-        alert("Schedule updated successfully.");
         onOpenChange(false);
       } catch (error) {
         console.error("Failed to update schedule", error);

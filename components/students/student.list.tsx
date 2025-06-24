@@ -1,22 +1,39 @@
 import React from "react";
 import { StudentCard } from "./student-card";
-import { fetchStudents, searchStudents } from "@/lib/axio";
+import {
+  fetchStudents,
+  searchStudents,
+  fetchActiveStudents,
+  fetchInactiveStudents,
+} from "@/lib/axio";
 import { Student } from "@/app/types/student.type";
 
 export default async function StudentList({
   query,
+  active,
 }: {
-  query: string | undefined;
+  query: string;
+  active: string;
 }) {
-  const students: Student[] = query
-    ? await searchStudents(query)
-    : (await fetchStudents()).students;
+  let students: Student[];
+  if (active === "active") {
+    students = await fetchActiveStudents();
+  } else if (active === "inactive") {
+    students = await fetchInactiveStudents();
+  } else if (active == "all") {
+    students = (await fetchStudents()).students;
+  } else if (query) {
+    students = await searchStudents(query);
+  } else {
+    students = (await fetchStudents()).students;
+  }
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
-      {students.map((student) => (
-        <StudentCard key={student.id} student={student} />
-      ))}
+      {students &&
+        students.map((student) => (
+          <StudentCard key={student.id} student={student} />
+        ))}
     </div>
   );
 }

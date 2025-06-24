@@ -1,17 +1,26 @@
 import Image from "next/image";
 import CourseClientSide from "@/components/courses/course-client-side";
 import AddNewCourse from "@/components/courses/add-new-course.dialog";
-import { fetchCourses, searchCourses } from "@/lib/axio";
+import { fetchCourses, searchCourses, fetchFilteredCourses } from "@/lib/axio";
 import CourseSearch from "@/components/courses/course-search";
+import FilterCourse from "@/components/courses/filter-course";
 
 export default async function CoursesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string }>;
+  searchParams: Promise<{ query?: string; ageRange?: string; medium?: string }>;
 }) {
-  const { query } = await searchParams;
+  const { query, ageRange, medium } = await searchParams;
 
-  const courses = query ? await searchCourses(query) : await fetchCourses();
+  let courses;
+  if (query) {
+    courses = await searchCourses(query);
+  } else if (ageRange || medium) {
+    // Default to 'all' if not set, to match your API's expected params
+    courses = await fetchFilteredCourses(ageRange || "all", medium || "all");
+  } else {
+    courses = await fetchCourses();
+  }
 
   return (
     <div className="p-6">
@@ -19,6 +28,7 @@ export default async function CoursesPage({
         <div className="flex items-center justify-around w-full gap-4">
           <div className="flex-1/4"></div>
           <CourseSearch />
+          <FilterCourse />
           <AddNewCourse />
         </div>
       </div>
