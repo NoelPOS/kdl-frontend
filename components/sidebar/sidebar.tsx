@@ -19,7 +19,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
-            <AvatarImage src="/placeholder.svg?height=48&width=48" alt="Leo" />
+            <AvatarImage src="/student.png" alt="Leo" />
             <AvatarFallback className="bg-gray-200 text-gray-600">
               L
             </AvatarFallback>

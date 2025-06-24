@@ -1,11 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {
-  ComfirmClassScheduleData,
-  ComfirmScheduleRow,
-  ComfirmStudent,
-  ComfirmTeacherData,
-} from "./types";
+
+import { ComfirmClassScheduleData, ComfirmScheduleRow, ComfirmStudent, ComfirmTeacherData } from "@/app/types/course.type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,12 +34,14 @@ export function generateScheduleRows(
             classSchedule.checkStartTime && classSchedule.checkEndTime
               ? `${classSchedule.checkStartTime} - ${classSchedule.checkEndTime}`
               : "TBD",
-          student: student.nickname || student.studentName,
+          student: student.nickname || student.name,
           teacher: teacherData.teacher,
           class: `${i + 1}`,
           room: teacherData.room,
           remark: teacherData.remark,
           warning: "Schedule to be determined based on availability",
+          teacherId: teacherData.teacherId,
+          studentId: Number(student.id)
         });
       });
     }
@@ -73,13 +71,16 @@ export function generateScheduleRows(
       sessionDates.forEach((date) => {
         students.forEach((student) => {
           rows.push({
-            date: new Date(date).toLocaleDateString(),
+            date: date,
             time: startTime && endTime ? `${startTime} - ${endTime}` : "TBD",
-            student: student.nickname || student.studentName,
+            student: student.nickname || student.name,
             teacher: teacherData.teacher,
+            teacherId: teacherData.teacherId,
             class: `${sessionDates.indexOf(date) + 1}`,
             room: teacherData.room,
             remark: teacherData.remark,
+            attendance: "pending",
+            studentId: Number(student.id)
           });
         });
       });
@@ -93,13 +94,16 @@ export function generateScheduleRows(
       classSchedule.campDates.forEach((date) => {
         students.forEach((student) => {
           rows.push({
-            date: new Date(date).toLocaleDateString(),
+            date: date,
             time: startTime && endTime ? `${startTime} - ${endTime}` : "TBD",
-            student: student.nickname || student.studentName,
+            student: student.nickname || student.name,
             teacher: teacherData.teacher,
+            teacherId: teacherData.teacherId,
             class: `${(classSchedule.campDates?.indexOf(date) ?? -1) + 1}`,
             room: teacherData.room,
             remark: teacherData.remark,
+            attendance: "pending",
+            studentId: Number(student.id)
           });
         });
       });
@@ -108,6 +112,8 @@ export function generateScheduleRows(
 
   return rows;
 }
+
+
 
 // Generate calendar days
 export const generateCalendarDays = (currentMonth: Date) => {
@@ -125,6 +131,5 @@ export const generateCalendarDays = (currentMonth: Date) => {
     days.push(new Date(current));
     current.setDate(current.getDate() + 1);
   }
-
   return days;
 };

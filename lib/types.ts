@@ -1,39 +1,26 @@
-export interface Student {
-  id: string;
-  nickname: string;
-  fullName: string;
-  age: number;
-  phone: string;
-  avatar?: string;
-  hasConsent?: boolean;
-}
+
 
 export interface Teacher {
   id: string;
-  fullName: string;
-}
-
-export interface Course {
-  id: string;
   name: string;
-  ageRange: string;
-  device: string;
-  price: number;
-  currency: string;
 }
 
 export interface ClassSession {
-  id: string;
-  date: string;
-  time: string;
-  student: Student;
-  teacher: Teacher;
-  course: Course;
-  class: string;
-  room: string;
-  status?: "Completed" | "Confirmed" | "Cancelled";
-  remark?: string;
-  nickname: string; // Optional nickname for the student
+  course_id: number;
+  course_title: string;
+  schedule_attendance: string;
+  schedule_date: string;
+  schedule_endTime: string;
+  schedule_feedback: string;
+  schedule_id: number;
+  schedule_remark: string;
+  schedule_room: string;
+  schedule_startTime: string;
+  schedule_verifyFb: boolean;
+  student_id: number;
+  student_name: string;
+  teacher_id: number;
+  teacher_name: string;
 }
 
 export interface ScheduleBlock {
@@ -45,47 +32,5 @@ export interface ScheduleBlock {
   course: string;
 }
 
-// types for class schedule confirmation component
-export type ComfirmStudent = {
-  studentName: string;
-  nickname: string;
-  id: string;
-};
 
-export type ComfirmClassSession = {
-  date: string;
-  startTime: string;
-  endTime: string;
-};
 
-export type ComfirmClassScheduleData = {
-  classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
-  // For 12 times check
-  checkStartTime?: string;
-  checkEndTime?: string;
-  // For 12 times fixed - new structure
-  fixedDays?: string[];
-  fixedStartTime?: string;
-  fixedEndTime?: string;
-  // For camp class - new structure
-  campDates?: string[];
-  campStartTime?: string;
-  campEndTime?: string;
-};
-
-export type ComfirmTeacherData = {
-  teacher: string;
-  room: string;
-  remark: string;
-};
-
-export type ComfirmScheduleRow = {
-  date: string;
-  time: string;
-  student: string;
-  teacher: string;
-  class: string;
-  room: string;
-  remark: string;
-  warning?: string;
-};
