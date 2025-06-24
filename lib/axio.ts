@@ -82,22 +82,22 @@ export async function addNewStudent(student: NewStudentData): Promise<Student> {
 type NewCourseData = Omit<Course, 'id'>;
 
 export async function addNewCourse(course: NewCourseData): Promise<Course> {
-  const response = await api.post<Course>('/course', course);
+  const response = await api.post<Course>('/courses', course);
   return response.data;
 }
 
 export async function fetchCourses(): Promise<Course[]> {
-  const response = await api.get<Course[]>('/course');
+  const response = await api.get<Course[]>('/courses');
   return response.data;
 }
 
 export async function searchCourses(query: string): Promise<Course[]> {
-  const res = await api.get<Course[]>(`/course/${query}`);
+  const res = await api.get<Course[]>(`/courses/${query}`);
   return res.data
 }
 
 export async function getCourseIdByCourseName(name: string): Promise<Course> {
-  const response = await api.get<Course>(`/course/${name}`);
+  const response = await api.get<Course>(`/courses/${name}`);
   return response.data;
 }
 
