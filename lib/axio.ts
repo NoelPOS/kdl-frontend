@@ -1,9 +1,10 @@
 import axios from "axios";
-import type { Teacher } from "./types";
 import { ClassSchedule } from "@/app/types/schedule.type";
 import { ConflictDetail, Course } from "@/app/types/course.type";
 import { Student } from "@/app/types/student.type";
 import { SessionOverview } from "@/app/types/session.type";
+import { Teacher } from "@/app/types/teacher.type";
+import { Parent } from "@/app/types/parent.type";
 
 // Extend axios config to include metadata
 declare module "axios" {
@@ -115,16 +116,25 @@ export async function getCourseIdByCourseName(name: string): Promise<Course> {
 
 export async function getTeacherByCourseId(
   courseId: number
-): Promise<Teacher[]> {
-  const response = await api.get<Teacher[]>(
+): Promise<Pick<Teacher, "id" | "name">[]> {
+  const response = await api.get<Pick<Teacher, "id" | "name">[]>(
     `/users/teachers/course/${courseId}`
   );
   return response.data;
 }
 
-export async function getTeacherByName(name: string): Promise<Teacher> {
-  const response = await api.get<Teacher>(
+export async function getTeacherByName(
+  name: string
+): Promise<Pick<Teacher, "id" | "name">> {
+  const response = await api.get<Pick<Teacher, "id" | "name">>(
     `/users/teachers/name/${encodeURIComponent(name)}`
+  );
+  return response.data;
+}
+
+export async function searchTeachers(query: string): Promise<Teacher[]> {
+  const response = await api.get<Teacher[]>(
+    `/users/teachers/search?name=${encodeURIComponent(query)}`
   );
   return response.data;
 }
@@ -261,5 +271,37 @@ export async function fetchFilteredCourses(
       ageRange
     )}&medium=${encodeURIComponent(medium)}`
   );
+  return response.data;
+}
+
+// teachers
+export async function fetchTeachers(): Promise<Teacher[]> {
+  const response = await api.get<Teacher[]>("/users/teachers");
+  return response.data;
+}
+
+type NewTeacherData = Omit<Teacher, "id">;
+
+export async function addNewTeacher(teacher: NewTeacherData): Promise<Teacher> {
+  const response = await api.post<Teacher>("/users/teachers", teacher);
+  return response.data;
+}
+
+export async function fetchParents(): Promise<Parent[]> {
+  const response = await api.get<Parent[]>("/users/parents");
+  return response.data;
+}
+
+export async function searchParents(query: string): Promise<Parent[]> {
+  const response = await api.get<Parent[]>(
+    `/users/parents/search?name=${encodeURIComponent(query)}`
+  );
+  return response.data;
+}
+
+type NewParentData = Omit<Parent, "id">;
+
+export async function addNewParent(parent: NewParentData): Promise<Parent> {
+  const response = await api.post<Parent>("/users/parents", parent);
   return response.data;
 }

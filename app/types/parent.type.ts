@@ -2,6 +2,8 @@ export type Parent = {
   id: number;
   name: string;
   email: string;
-  phone: string;
-  active: boolean;
+  contactNo: string;
+  lineId: string;
+  address: string;
+  profilePicture: string;
 };

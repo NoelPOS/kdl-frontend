@@ -4,15 +4,12 @@ import ParentSearch from "@/components/parents/search/parent.search";
 import ParentList from "@/components/parents/parent.list";
 import { Suspense } from "react";
 
-export default function ParentsPage({
+export default async function ParentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string; active?: string }>;
+  searchParams: Promise<{ query?: string }>;
 }) {
-  // Dummy params for now
-  const query = "";
-  const active = "all";
-  console.log(searchParams);
+  const { query } = await searchParams;
 
   return (
     <div className="p-6">
@@ -24,11 +21,8 @@ export default function ParentsPage({
         </div>
         <AddNewParent />
       </div>
-      <Suspense
-        key={`${query || ""}${active || ""}`}
-        fallback={<div>Loading...</div>}
-      >
-        <ParentList query={query || ""} active={active || ""} />
+      <Suspense key={`${query || ""}`} fallback={<div>Loading...</div>}>
+        <ParentList query={query || ""} />
       </Suspense>
     </div>
   );

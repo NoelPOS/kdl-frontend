@@ -1,10 +1,3 @@
-
-
-export interface Teacher {
-  id: string;
-  name: string;
-}
-
 export interface ClassSession {
   course_id: number;
   course_title: string;
@@ -31,6 +24,3 @@ export interface ScheduleBlock {
   color: "blue" | "orange";
   course: string;
 }
-
-
-

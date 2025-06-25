@@ -35,7 +35,7 @@ export default function ParentFilter() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[350px] p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-bold text-green-600">
             Filter Parents
           </DialogTitle>
         </DialogHeader>
@@ -73,7 +73,7 @@ export default function ParentFilter() {
             <DialogClose asChild>
               <Button
                 type="submit"
-                className="bg-purple-500 hover:bg-purple-600 text-white rounded-full px-6"
+                className="bg-green-500 hover:bg-green-600 text-white rounded-full px-6"
               >
                 Filter
               </Button>

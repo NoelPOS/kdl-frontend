@@ -14,10 +14,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Calendar, ChevronDown } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { addNewStudent } from "@/lib/axio";
 import { Checkbox } from "../../ui/checkbox";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export type FormData = {
   name: string;
@@ -36,6 +37,8 @@ export type FormData = {
 export function AddNewStudent() {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const { register, handleSubmit, setValue } = useForm<FormData>({
     defaultValues: {
@@ -62,8 +65,22 @@ export function AddNewStudent() {
       allergic: data.allergic.split(" "),
       doNotEat: data.doNotEat.split(" "),
     });
+    console.log(imageFile);
     closeRef.current?.click();
     router.refresh();
+  };
+
+  const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+        // setValue("profilePicture", reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -84,9 +101,16 @@ export function AddNewStudent() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Profile */}
-          <div className="flex flex-col gap-2">
-            <div className="relative">
-              <Input type="file" />
+          <div className="flex flex-col gap-2 mb-2">
+            <div className="relative flex flex-col items-center gap-2">
+              {imagePreview && (
+                <Image
+                  src={imagePreview}
+                  alt="Profile Preview"
+                  className="w-24 h-24 rounded-full object-cover border border-gray-300 mb-2"
+                />
+              )}
+              <Input type="file" accept="image/*" onChange={onImageChange} />
             </div>
           </div>
 

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
 import { getTeacherByCourseId } from "@/lib/axio";
-import { Teacher } from "@/lib/types";
+import { Teacher } from "@/app/types/teacher.type";
 
 export type FormData = {
   teacher: string;
@@ -43,7 +43,7 @@ export function AddTeacher({
     },
   });
 
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
 
   useEffect(() => {
     if (!open) return;

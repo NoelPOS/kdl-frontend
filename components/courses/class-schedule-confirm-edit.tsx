@@ -14,9 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Teacher } from "@/lib/types";
 import { getCourseIdByCourseName, getTeacherByCourseId } from "@/lib/axio";
 import { EditScheduleFormData } from "@/app/types/course.type";
+import { Teacher } from "@/app/types/teacher.type";
 
 interface EditScheduleDialogProps {
   open: boolean;
@@ -54,7 +54,7 @@ export function EditScheduleDialog({
   const { ref: starttimeRHFRef } = register("starttime");
   const { ref: endtimeRHFRef } = register("endtime");
 
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
 
   useEffect(() => {
     if (initialData && open) {

@@ -1,41 +1,13 @@
 import React from "react";
 import { ParentCard } from "./parent-card";
-import { Parent } from "@/app/types/parent.type";
+import { fetchParents, searchParents } from "@/lib/axio";
 
-const dummyParents: Parent[] = [
-  {
-    id: 1,
-    name: "Alice Brown",
-    phone: "111-222-3333",
-    email: "alice@example.com",
-    active: true,
-  },
-  {
-    id: 2,
-    name: "Bob White",
-    phone: "444-555-6666",
-    email: "bob@example.com",
-    active: false,
-  },
-];
-
-export default function ParentList({
-  query,
-  active,
-}: {
-  query: string;
-  active: string;
-}) {
-  let parents = dummyParents;
-  if (active === "active") {
-    parents = parents.filter((p) => p.active);
-  } else if (active === "inactive") {
-    parents = parents.filter((p) => !p.active);
-  }
+export default async function ParentList({ query }: { query: string }) {
+  let parents;
   if (query) {
-    parents = parents.filter((p) =>
-      p.name.toLowerCase().includes(query.toLowerCase())
-    );
+    parents = await searchParents(query);
+  } else {
+    parents = await fetchParents();
   }
   return (
     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">

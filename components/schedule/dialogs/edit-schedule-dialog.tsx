@@ -15,8 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { getTeacherByCourseId, updateSchedule } from "@/lib/axio";
-import { Teacher } from "@/lib/types";
 import { FormData } from "@/app/types/schedule.type";
+import { Teacher } from "@/app/types/teacher.type";
 
 interface EditScheduleProps {
   open: boolean;
@@ -43,7 +43,7 @@ export function EditSchedule({
   const starttimeRef = useRef<HTMLInputElement>(null);
   const endtimeRef = useRef<HTMLInputElement>(null);
 
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = useCallback(

@@ -1,7 +1,9 @@
 export type Teacher = {
   id: number;
   name: string;
-  subject: string;
-  phone: string;
-  active: boolean;
+  email: string;
+  contactNo: string;
+  lineId: string;
+  address: string;
+  profilePicture: string;
 };

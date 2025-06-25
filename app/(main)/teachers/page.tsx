@@ -4,15 +4,12 @@ import TeacherSearch from "@/components/teachers/search/teacher.search";
 import TeacherList from "@/components/teachers/teacher.list";
 import { Suspense } from "react";
 
-export default function TeachersPage({
+export default async function TeachersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string; active?: string }>;
+  searchParams: Promise<{ query?: string }>;
 }) {
-  const query = "";
-  const active = "all";
-
-  console.log(searchParams);
+  const { query } = await searchParams;
 
   return (
     <div className="p-6">
@@ -24,11 +21,8 @@ export default function TeachersPage({
         </div>
         <AddNewTeacher />
       </div>
-      <Suspense
-        key={`${query || ""}${active || ""}`}
-        fallback={<div>Loading...</div>}
-      >
-        <TeacherList query={query || ""} active={active || ""} />
+      <Suspense key={`${query || ""}`} fallback={<div>Loading...</div>}>
+        <TeacherList query={query || ""} />
       </Suspense>
     </div>
   );
