@@ -12,6 +12,7 @@ import {
   MessageSquare,
   User,
   FileText,
+  PlusCircleIcon,
 } from "lucide-react";
 
 import {
@@ -49,37 +50,42 @@ const menuItems = [
   {
     title: "teachers",
     icon: GraduationCap,
-    url: "#",
+    url: "teachers",
   },
   {
     title: "parents",
     icon: UserCheck,
-    url: "#",
+    url: "parents",
   },
   {
     title: "discount",
     icon: Percent,
-    url: "#",
+    url: "discount",
   },
   {
     title: "notifications",
     icon: Bell,
-    url: "#",
+    url: "notifications",
   },
   {
     title: "feedback",
     icon: MessageSquare,
-    url: "#",
+    url: "feedback",
   },
   {
     title: "users",
     icon: User,
-    url: "#",
+    url: "users",
   },
   {
     title: "invoices",
     icon: FileText,
-    url: "#",
+    url: "invoices",
+  },
+  {
+    title: "courseplus",
+    icon: PlusCircleIcon,
+    url: "courseplus",
   },
 ];
 

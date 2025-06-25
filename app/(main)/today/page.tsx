@@ -5,7 +5,6 @@ import Image from "next/image";
 
 export default async function TodayPage() {
   const raw = await getTodaySchedules();
-  // console.log("Raw", raw);
   const grouped = raw.reduce((acc: Record<string, Course>, item) => {
     const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}`;
 
