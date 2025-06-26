@@ -135,6 +135,7 @@ export function AddNewCourse() {
           <DialogFooter className="flex justify-end gap-3 mt-6">
             <DialogClose asChild>
               <Button
+                ref={closeRef}
                 type="button"
                 variant="outline"
                 className="border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full px-6"
@@ -145,7 +146,6 @@ export function AddNewCourse() {
 
             <Button
               type="submit"
-              ref={closeRef}
               className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6"
             >
               Create

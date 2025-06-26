@@ -5,6 +5,7 @@ import EditSchedule from "./dialogs/edit-schedule-dialog";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import ScheduleTable from "./schedule-table";
 import { useRouter } from "next/navigation";
+import { formatDateLocal } from "@/lib/utils";
 
 interface ScheduleClientSideProps {
   initialSchedules: ClassSchedule[];
@@ -21,7 +22,7 @@ function ScheduleClientSide({ initialSchedules }: ScheduleClientSideProps) {
 
   const handleRowDoubleClick = useCallback((session: ClassSchedule) => {
     const formData: FormData = {
-      date: new Date(session.schedule_date).toISOString().split("T")[0],
+      date: formatDateLocal(new Date(session.schedule_date)),
       starttime: session.schedule_startTime,
       endtime: session.schedule_endTime,
       course: session.course_title,

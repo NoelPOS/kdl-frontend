@@ -14,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getCourseIdByCourseName, getTeacherByCourseId } from "@/lib/axio";
+import { getTeacherByCourseId } from "@/lib/axio";
 import { EditScheduleFormData } from "@/app/types/course.type";
 import { Teacher } from "@/app/types/teacher.type";
+import { useSearchParams } from "next/navigation";
 
 interface EditScheduleDialogProps {
   open: boolean;
@@ -33,6 +34,8 @@ export function EditScheduleDialog({
   onSave,
   originalIndex,
 }: EditScheduleDialogProps) {
+  const params = useSearchParams();
+  const courseId = Number(params.get("id"));
   const { register, handleSubmit, reset } = useForm<EditScheduleFormData>({
     defaultValues: {
       date: "",
@@ -49,6 +52,8 @@ export function EditScheduleDialog({
       status: "",
     },
   });
+
+  // console.log("EditScheduleDialog initialData:", initialData);
 
   const { ref: dateRHFRef } = register("date");
   const { ref: starttimeRHFRef } = register("starttime");
@@ -81,13 +86,7 @@ export function EditScheduleDialog({
     const fetchTeachers = async () => {
       if (!open || !initialData?.course) return;
       try {
-        const courses = await getCourseIdByCourseName(initialData.course);
-        const course = Array.isArray(courses) ? courses[0] : courses;
-        if (!course || !course.id) {
-          setTeachers([]);
-          return;
-        }
-        const teacherList = await getTeacherByCourseId(course.id);
+        const teacherList = await getTeacherByCourseId(courseId);
         setTeachers(teacherList);
       } catch (error) {
         console.error("Failed to fetch teachers:", error);
@@ -95,7 +94,7 @@ export function EditScheduleDialog({
     };
 
     fetchTeachers();
-  }, [open, initialData?.course]);
+  }, [open, initialData?.course, courseId]);
 
   const dateRef = useRef<HTMLInputElement>(null);
   const starttimeRef = useRef<HTMLInputElement>(null);

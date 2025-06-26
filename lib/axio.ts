@@ -111,7 +111,7 @@ export async function fetchCourses(): Promise<Course[]> {
 }
 
 export async function searchCourses(query: string): Promise<Course[]> {
-  const res = await api.get<Course[]>(`/courses/${query}`);
+  const res = await api.get<Course[]>(`/courses/search?name=${query}`);
   return res.data;
 }
 

@@ -31,7 +31,7 @@ export function EditSchedule({
   initialData,
   onScheduleUpdate,
 }: EditScheduleProps) {
-  // console.log("Initial", initialData);
+  console.log("Initial", initialData);
   const { register, handleSubmit, reset } = useForm<FormData>({
     defaultValues: initialData,
   });

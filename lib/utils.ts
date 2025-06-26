@@ -1,7 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { ComfirmClassScheduleData, ComfirmScheduleRow, ComfirmStudent, ComfirmTeacherData } from "@/app/types/course.type";
+import {
+  ComfirmClassScheduleData,
+  ComfirmScheduleRow,
+  ComfirmStudent,
+  ComfirmTeacherData,
+} from "@/app/types/course.type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,7 +46,7 @@ export function generateScheduleRows(
           remark: teacherData.remark,
           warning: "Schedule to be determined based on availability",
           teacherId: teacherData.teacherId,
-          studentId: Number(student.id)
+          studentId: Number(student.id),
         });
       });
     }
@@ -80,7 +85,7 @@ export function generateScheduleRows(
             room: teacherData.room,
             remark: teacherData.remark,
             attendance: "pending",
-            studentId: Number(student.id)
+            studentId: Number(student.id),
           });
         });
       });
@@ -103,7 +108,7 @@ export function generateScheduleRows(
             room: teacherData.room,
             remark: teacherData.remark,
             attendance: "pending",
-            studentId: Number(student.id)
+            studentId: Number(student.id),
           });
         });
       });
@@ -112,8 +117,6 @@ export function generateScheduleRows(
 
   return rows;
 }
-
-
 
 // Generate calendar days
 export const generateCalendarDays = (currentMonth: Date) => {
@@ -132,4 +135,11 @@ export const generateCalendarDays = (currentMonth: Date) => {
     current.setDate(current.getDate() + 1);
   }
   return days;
+};
+
+export const formatDateLocal = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };

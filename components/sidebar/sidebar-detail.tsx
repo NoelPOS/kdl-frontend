@@ -29,7 +29,7 @@ const menuItems = [
   {
     title: "today",
     icon: Calendar,
-    url: "/",
+    url: "/today",
     isActive: true,
   },
   {

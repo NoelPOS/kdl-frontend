@@ -16,7 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Clock, ChevronDown } from "lucide-react";
 
-import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
+import {
+  DAYS_OF_WEEK,
+  formatDateLocal,
+  generateCalendarDays,
+} from "@/lib/utils";
 
 type FormData = {
   classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
@@ -87,6 +91,7 @@ export function ClassScheduleForm({
 
   // Handle date selection for camp class
   const toggleDate = (date: string) => {
+    console.log("Toggling date:", date);
     const newSelectedDates = selectedDates.includes(date)
       ? selectedDates.filter((d) => d !== date)
       : [...selectedDates, date];
@@ -351,7 +356,7 @@ export function ClassScheduleForm({
                           )
                         )}
                         {calendarDays.map((date, index) => {
-                          const dateStr = date.toISOString().split("T")[0];
+                          const dateStr = formatDateLocal(date);
                           const isCurrentMonth =
                             date.getMonth() === currentMonth.getMonth();
                           const isSelected = selectedDates.includes(dateStr);

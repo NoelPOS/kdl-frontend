@@ -17,7 +17,6 @@ import {
 import {
   createSession,
   createBulkSchedules,
-  getTeacherByName,
   checkScheduleConflict,
   checkScheduleConflicts,
 } from "@/lib/axio";
@@ -82,6 +81,7 @@ export default function ClassScheduleConfirm({
   students,
   classSchedule,
   teacherData,
+  onConfirm,
   onCancel,
 }: ClassScheduleConfirmProps) {
   const courseName = new URLSearchParams(window.location.search).get("course");
@@ -115,7 +115,7 @@ export default function ClassScheduleConfirm({
           schedules: formattedSchedules,
         });
 
-        // console.log("Conflicts", conflicts);
+        console.log("Conflicts", conflicts);
 
         const updatedRows = rows.map((row) => {
           const conflictCourse = conflicts.find(
@@ -210,7 +210,8 @@ export default function ClassScheduleConfirm({
   const handleConfirmSubmit = async () => {
     try {
       const courseId = params.get("id");
-      const teacherId = (await getTeacherByName(teacherData.teacher)).id;
+      // console.log("Teacher ID:", teacherId);
+      // console.log("Teacher Data:", teacherData);
 
       const sessionsMap: Record<string, number> = {};
 
@@ -239,7 +240,7 @@ export default function ClassScheduleConfirm({
           sessionId: sessionsMap[student!.id],
           courseId: Number(courseId),
           studentId: Number(student!.id),
-          teacherId: Number(teacherId),
+          teacherId: teacherData.teacherId,
           date: row.date,
           startTime,
           endTime,
@@ -253,8 +254,11 @@ export default function ClassScheduleConfirm({
         };
       });
 
+      // console.log("Schedule Payload:", schedulePayload);
+
       // 3. Send to backend
       await createBulkSchedules(schedulePayload);
+      onConfirm();
 
       router.refresh();
     } catch (err) {
