@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth.context";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { login } from "@/lib/axio";
 
-type LoginFormData = {
+export type LoginFormData = {
   email: string;
   password: string;
 };
@@ -22,10 +23,7 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3001/auth/login",
-        data
-      );
+      const response = await login(data);
 
       if (!response.data || !response.data.user) {
         throw new Error("Invalid response from server");

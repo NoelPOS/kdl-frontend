@@ -5,6 +5,7 @@ import { Student } from "@/app/types/student.type";
 import { SessionOverview } from "@/app/types/session.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Parent } from "@/app/types/parent.type";
+import { LoginFormData } from "@/app/(auth)/login/page";
 
 // Extend axios config to include metadata
 declare module "axios" {
@@ -57,6 +58,11 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export async function login(info: LoginFormData) {
+  const response = await api.post("/auth/login", info);
+  return response.data;
+}
 
 export async function fetchStudents(): Promise<{ students: Student[] }> {
   const response = await api.get<{ students: Student[] }>("/users/students");
