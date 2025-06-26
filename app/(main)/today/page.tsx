@@ -28,7 +28,7 @@ export default async function TodayPage() {
     return acc;
   }, {});
 
-  const formattedDate = new Date().toLocaleDateString("en-US", {
+  const formattedDate = new Date().toLocaleDateString("en-CA", {
     year: "numeric",
     month: "long",
     day: "numeric",
