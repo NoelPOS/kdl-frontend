@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import Link from "next/link";
 import { useAuth } from "@/context/auth.context";
 import { Label } from "@/components/ui/label";
