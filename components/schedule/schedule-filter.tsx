@@ -114,7 +114,7 @@ export default function ScheduleFilter() {
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1  gap-4 mb-4">
             {/* Start Date */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>

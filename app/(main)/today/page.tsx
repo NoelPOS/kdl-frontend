@@ -28,10 +28,11 @@ export default async function TodayPage() {
     return acc;
   }, {});
 
-  const formattedDate = new Date().toLocaleDateString("th-TH-u-ca-gregory", {
+  const formattedDate = new Date().toLocaleDateString("en-TH", {
     year: "numeric",
     month: "long",
     day: "numeric",
+    weekday: "long",
   });
 
   const hasCourses = Object.values(grouped).length > 0;

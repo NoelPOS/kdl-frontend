@@ -35,62 +35,62 @@ const menuItems = [
   {
     title: "schedule",
     icon: Calendar,
-    url: "schedule",
+    url: "/schedule",
   },
   {
     title: "courses",
     icon: BookOpen,
-    url: "courses",
+    url: "/courses",
   },
   {
     title: "students",
     icon: Users,
-    url: "students",
+    url: "/students",
   },
   {
     title: "teachers",
     icon: GraduationCap,
-    url: "teachers",
+    url: "/teachers",
   },
   {
     title: "parents",
     icon: UserCheck,
-    url: "parents",
+    url: "/parents",
   },
   {
     title: "discount",
     icon: Percent,
-    url: "discount",
+    url: "/discount",
   },
   {
     title: "notifications",
     icon: Bell,
-    url: "notifications",
+    url: "/notifications",
   },
   {
     title: "feedback",
     icon: MessageSquare,
-    url: "feedback",
+    url: "/feedback",
   },
   {
     title: "users",
     icon: User,
-    url: "users",
+    url: "/users",
   },
   {
     title: "invoices",
     icon: FileText,
-    url: "invoices",
+    url: "/invoices",
   },
   {
     title: "courseplus",
     icon: PlusCircleIcon,
-    url: "courseplus",
+    url: "/courseplus",
   },
 ];
 
 export function SidebarDetail() {
-  const pathname2 = usePathname().slice(1); // Remove leading slash
+  const pathname2 = usePathname().split("/")[1];
   return (
     <SidebarMenu className="space-y-0">
       {menuItems.map((item) => (
@@ -102,7 +102,6 @@ export function SidebarDetail() {
           >
             <Link href={item.url} className="flex items-center gap-3">
               <item.icon className="h-4 w-4" />
-              {/* capatilize the item.title */}
               <span className="hidden sm:inline-block transition-all duration-200">
                 {item.title.charAt(0).toUpperCase() + item.title.slice(1)}
               </span>
