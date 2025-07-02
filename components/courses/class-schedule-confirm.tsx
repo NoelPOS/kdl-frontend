@@ -220,8 +220,7 @@ export default function ClassScheduleConfirm({
         const session = await createSession({
           studentId: Number(student.id),
           courseId: Number(courseId),
-          mode: classSchedule.classType,
-          classLimit: 12,
+          classOptionId: Number(classSchedule.classType.id),
           classCancel: 0,
           payment: "Unpaid",
           status: "Pending",

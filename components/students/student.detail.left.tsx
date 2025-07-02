@@ -12,7 +12,7 @@ export default async function StudentDetail({
   student: Partial<Student>;
 }) {
   return (
-    <div className="w-70 p-4 flex flex-col bg-blue-50">
+    <div className="w-80 p-4 flex flex-col bg-blue-50">
       <div className="mb-6">
         <nav className="flex items-center text-sm font-medium">
           <Link

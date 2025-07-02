@@ -15,7 +15,7 @@ export default async function StudentsPage({
     <div className="p-6">
       <div className="flex items-center justify-center mb-6 ">
         <div className="flex items-center justify-around w-full gap-4">
-          <div className="flex-1/4"></div>
+          <div className="flex-1/4 text-3xl font-medium">Students</div>
           <StudentSearch />
           <StudentFilter />
         </div>

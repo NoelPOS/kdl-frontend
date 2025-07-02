@@ -29,7 +29,9 @@ export function generateScheduleRows(
 ): ComfirmScheduleRow[] {
   const rows: ComfirmScheduleRow[] = [];
 
-  if (classSchedule.classType === "12-times-check") {
+  // console.log("Generating schedule rows for class mode:", classSchedule);
+
+  if (classSchedule.classType.classMode === "12 times check") {
     // For 12 times check, create 12 placeholder rows
     for (let i = 0; i < 12; i++) {
       students.forEach((student) => {
@@ -50,7 +52,7 @@ export function generateScheduleRows(
         });
       });
     }
-  } else if (classSchedule.classType === "12-times-fixed") {
+  } else if (classSchedule.classType.classMode === "12 times fixed") {
     // Generate 12 sessions based on selected days
     if (classSchedule.fixedDays && classSchedule.fixedDays.length > 0) {
       const selectedDays = classSchedule.fixedDays;
@@ -90,7 +92,7 @@ export function generateScheduleRows(
         });
       });
     }
-  } else if (classSchedule.classType === "camp-class") {
+  } else if (classSchedule.classType.classMode === "5 days camp") {
     // Generate sessions based on selected dates
     if (classSchedule.campDates && classSchedule.campDates.length > 0) {
       const startTime = classSchedule.campStartTime;

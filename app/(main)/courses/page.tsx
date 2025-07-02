@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
@@ -34,8 +33,8 @@ const PreCoursesPage = () => {
   const router = useRouter();
   const { register, handleSubmit, reset } = useForm<FilterFormData>({
     defaultValues: {
-      ageRange: "",
-      medium: "",
+      ageRange: "all",
+      medium: "all",
     },
   });
 
@@ -96,23 +95,12 @@ const PreCoursesPage = () => {
             </div>
           </div>
           <DialogFooter className="flex justify-end gap-3 mt-6">
-            <DialogClose asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full px-6"
-              >
-                Cancel
-              </Button>
-            </DialogClose>
-            <DialogClose>
-              <Button
-                type="submit"
-                className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6"
-              >
-                Filter
-              </Button>
-            </DialogClose>
+            <Button
+              type="submit"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6"
+            >
+              Filter
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

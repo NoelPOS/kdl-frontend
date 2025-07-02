@@ -3,40 +3,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, Filter as FilterIcon } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const statusOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "All", value: "all" },
-];
+const statusOptions = [{ label: "All", value: "all" }];
 
-export default function ParentFilter() {
+export default function PreEnrollmentPage() {
+  const router = useRouter();
   const [status, setStatus] = useState("all");
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Filter parents by status:", status);
+    console.log("Filter enrollments by status:", status);
+    router.replace(`/enrollments/details?status=${status}`);
   };
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="mr-4">
-          <FilterIcon className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[350px] p-6">
+    <Dialog open={true} modal={false}>
+      <DialogContent className="sm:max-w-[350px] p-6 [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold ">
-            Filter Parents
+          <DialogTitle className="text-xl font-bold">
+            Filter Invoices
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -61,23 +52,12 @@ export default function ParentFilter() {
             </div>
           </div>
           <DialogFooter className="flex justify-end gap-3 mt-6">
-            <DialogClose asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full px-6"
-              >
-                Cancel
-              </Button>
-            </DialogClose>
-            <DialogClose asChild>
-              <Button
-                type="submit"
-                className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6"
-              >
-                Filter
-              </Button>
-            </DialogClose>
+            <Button
+              type="submit"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6"
+            >
+              Filter
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

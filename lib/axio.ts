@@ -5,7 +5,10 @@ import { Student } from "@/app/types/student.type";
 import { SessionOverview } from "@/app/types/session.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Parent } from "@/app/types/parent.type";
+import { Discount } from "@/app/types/discount.type";
 import { LoginFormData } from "@/app/(auth)/login/page";
+import { Enrollment, InvoiceSubmission } from "@/app/types/enrollment.type";
+import { FetchAllInvoices, Invoice } from "@/app/types/invoice.type";
 
 // Extend axios config to include metadata
 declare module "axios" {
@@ -113,6 +116,18 @@ export async function fetchCourses(): Promise<Course[]> {
 export async function searchCourses(query: string): Promise<Course[]> {
   const res = await api.get<Course[]>(`/courses/search?name=${query}`);
   return res.data;
+}
+
+export async function fetchFilteredCourses(
+  ageRange: string,
+  medium: string
+): Promise<Course[]> {
+  const response = await api.get<Course[]>(
+    `/courses/filter?ageRange=${encodeURIComponent(
+      ageRange
+    )}&medium=${encodeURIComponent(medium)}`
+  );
+  return response.data;
 }
 
 export async function getCourseIdByCourseName(name: string): Promise<Course> {
@@ -245,11 +260,29 @@ export async function getSchedulesByStudentAndSession(
 interface SessionData {
   studentId: number;
   courseId: number;
-  mode: string;
-  classLimit: number;
+  classOptionId: number; // Changed from mode to classOptionId
   classCancel: number;
   payment: string;
   status: string;
+}
+
+export async function getCourseTypes(): Promise<
+  {
+    id: number;
+    classMode: string;
+    tuitionFee: number;
+    classLimit: number;
+  }[]
+> {
+  const res = await api.get<
+    {
+      id: number;
+      classMode: string;
+      tuitionFee: number;
+      classLimit: number;
+    }[]
+  >("sessions/class-options");
+  return res.data;
 }
 
 export async function createSession(
@@ -268,16 +301,16 @@ export async function getStudentSession(
   return res.data;
 }
 
-export async function fetchFilteredCourses(
-  ageRange: string,
-  medium: string
-): Promise<Course[]> {
-  const response = await api.get<Course[]>(
-    `/courses/filter?ageRange=${encodeURIComponent(
-      ageRange
-    )}&medium=${encodeURIComponent(medium)}`
-  );
-  return response.data;
+export async function changeSessionStatus(
+  sessionId: number,
+  status: string
+): Promise<boolean> {
+  try {
+    await api.patch(`/sessions/${sessionId}`, { payment: status });
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 // teachers
@@ -292,6 +325,8 @@ export async function addNewTeacher(teacher: NewTeacherData): Promise<Teacher> {
   const response = await api.post<Teacher>("/users/teachers", teacher);
   return response.data;
 }
+
+// parents
 
 export async function fetchParents(): Promise<Parent[]> {
   const response = await api.get<Parent[]>("/users/parents");
@@ -309,5 +344,102 @@ type NewParentData = Omit<Parent, "id">;
 
 export async function addNewParent(parent: NewParentData): Promise<Parent> {
   const response = await api.post<Parent>("/users/parents", parent);
+  return response.data;
+}
+
+// Discount API functions
+export async function fetchDiscounts(): Promise<Discount[]> {
+  const response = await api.get<Discount[]>("/discounts");
+  console.log("Discounts fetched:", response.data);
+  return response.data;
+}
+
+export async function searchDiscounts(query: string): Promise<Discount[]> {
+  const response = await api.get<Discount[]>(
+    `/discounts/search/${encodeURIComponent(query)}`
+  );
+  return response.data;
+}
+
+export async function getDiscountById(id: string): Promise<Partial<Discount>> {
+  const response = await api.get<Partial<Discount>>(`/discounts/${id}`);
+  return response.data;
+}
+
+type NewDiscountData = Omit<Discount, "id">;
+
+export async function addNewDiscount(
+  discount: NewDiscountData
+): Promise<Discount> {
+  const response = await api.post<Discount>("/discounts", discount);
+  return response.data;
+}
+
+export async function fetchActiveDiscounts(): Promise<Discount[]> {
+  const response = await api.get<Discount[]>("/discounts");
+  return response.data;
+}
+
+// Enrollment API functions
+export async function fetchPendingInvoices(): Promise<Enrollment[]> {
+  const response = await api.get<Enrollment[]>("/sessions/pending-invoice");
+  return response.data;
+}
+
+export async function fetchSpedificPendingInvoices(
+  sessionId: number
+): Promise<Enrollment> {
+  const response = await api.get<Enrollment>(
+    `/sessions/pending-invoice/${sessionId}`
+  );
+  return response.data;
+}
+
+export async function searchEnrollments(query: string): Promise<Enrollment[]> {
+  const response = await api.get<Enrollment[]>(
+    `/sessions/pending-invoice/search?query=${encodeURIComponent(query)}`
+  );
+  return response.data;
+}
+
+// invoice API functions
+
+export async function addNewInvoice(
+  invoice: InvoiceSubmission
+): Promise<InvoiceSubmission> {
+  const response = await api.post<InvoiceSubmission>(
+    "/sessions/invoices",
+    invoice
+  );
+  return response.data;
+}
+
+export async function fetchAllInvoices(
+  status?: string
+): Promise<FetchAllInvoices> {
+  console.log("Fetching invoices with status:", status);
+  if (!status) {
+    const response = await api.get<FetchAllInvoices>("/sessions/invoices");
+    return response.data;
+  }
+  const response = await api.get<FetchAllInvoices>(
+    `/sessions/invoices?receiptDone=${status}`
+  );
+  return response.data;
+}
+
+export async function getInvoiceById(id: number): Promise<Invoice> {
+  const response = await api.get<Invoice>(`/sessions/invoices/${id}`);
+  return response.data;
+}
+
+// receipt API functions
+export async function createReceipt(
+  invoiceId: number
+): Promise<{ receiptId: number }> {
+  const response = await api.post<{ receiptId: number }>(`/sessions/receipts`, {
+    invoiceId,
+    date: new Date().toISOString().split("T")[0],
+  });
   return response.data;
 }

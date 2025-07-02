@@ -30,7 +30,7 @@ export default function PreParentsPage() {
     <Dialog open={true} modal={false}>
       <DialogContent className="sm:max-w-[350px] p-6 [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-blue-600">
+          <DialogTitle className="text-xl font-bold ">
             Filter Parents
           </DialogTitle>
         </DialogHeader>

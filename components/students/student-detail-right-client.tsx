@@ -29,7 +29,12 @@ function StudentDetailRightClient({
   });
   const [classScheduleData, setClassScheduleData] =
     useState<ComfirmClassScheduleData>({
-      classType: "",
+      classType: {
+        id: -1,
+        classLimit: 0,
+        classMode: "",
+        tuitionFee: 0,
+      },
     });
   const [teacherData, setTeacherData] = useState<TeacherData>({
     teacher: "",
@@ -63,7 +68,14 @@ function StudentDetailRightClient({
       id: -1,
       title: "",
     });
-    setClassScheduleData({ classType: "" });
+    setClassScheduleData({
+      classType: {
+        id: -1,
+        classLimit: 0,
+        classMode: "",
+        tuitionFee: 0,
+      },
+    });
     setTeacherData({ teacher: "", room: "", remark: "", teacherId: -1 });
   };
 
@@ -79,7 +91,14 @@ function StudentDetailRightClient({
       id: -1,
       title: "",
     });
-    setClassScheduleData({ classType: "" });
+    setClassScheduleData({
+      classType: {
+        id: -1,
+        classLimit: 0,
+        classMode: "",
+        tuitionFee: 0,
+      },
+    });
     setTeacherData({ teacher: "", room: "", remark: "", teacherId: -1 });
     alert("Class schedule confirmed successfully!");
   };

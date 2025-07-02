@@ -19,8 +19,6 @@ function ScheduleTable({
   schedules,
   handleRowDoubleClick,
 }: ScheduleTableProps) {
-  // console.log("again", schedules);
-  // Memoize the attendance badge to prevent unnecessary re-renders
   const getAttendanceBadge = useCallback(
     (attendance: string | null | undefined) => {
       if (!attendance) return null;
@@ -41,9 +39,6 @@ function ScheduleTable({
 
   return (
     <>
-      {/* <div className="text-2xl font-medium mb-4">
-        Class Mode: {schedules[0].session_mode}{" "}
-      </div> */}
       <Table className="bg-white table-fixed">
         <TableHeader>
           <TableRow className="">

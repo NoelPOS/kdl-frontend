@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -21,9 +21,10 @@ import {
   formatDateLocal,
   generateCalendarDays,
 } from "@/lib/utils";
+import { getCourseTypes } from "@/lib/axio";
 
 type FormData = {
-  classType: "12-times-check" | "12-times-fixed" | "camp-class" | "";
+  classTypeId: string; // Store the ID as string from select
   // For 12 times check
   checkStartTime?: string;
   checkEndTime?: string;
@@ -40,7 +41,22 @@ type FormData = {
 interface ClassScheduleFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  afterClassSchedule: (schedule: FormData) => void;
+  afterClassSchedule: (schedule: {
+    classType: {
+      id: number;
+      classMode: string;
+      classLimit: number;
+      tuitionFee: number;
+    };
+    checkStartTime?: string;
+    checkEndTime?: string;
+    fixedDays?: string[];
+    fixedStartTime?: string;
+    fixedEndTime?: string;
+    campDates?: string[];
+    campStartTime?: string;
+    campEndTime?: string;
+  }) => void;
 }
 
 export function ClassScheduleForm({
@@ -50,7 +66,7 @@ export function ClassScheduleForm({
 }: ClassScheduleFormProps) {
   const { register, handleSubmit, watch, setValue, reset } = useForm<FormData>({
     defaultValues: {
-      classType: "",
+      classTypeId: "",
       checkStartTime: "",
       checkEndTime: "",
       fixedDays: [],
@@ -69,6 +85,15 @@ export function ClassScheduleForm({
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
+  const [courseOptions, setCourseOptions] = useState<
+    {
+      id: number;
+      classMode: string;
+      classLimit: number;
+      tuitionFee: number;
+    }[]
+  >();
+
   // Refs for time inputs
   const checkStartTimeRef = useRef<HTMLInputElement>(null);
   const checkEndTimeRef = useRef<HTMLInputElement>(null);
@@ -77,7 +102,18 @@ export function ClassScheduleForm({
   const campStartTimeRef = useRef<HTMLInputElement>(null);
   const campEndTimeRef = useRef<HTMLInputElement>(null);
 
-  const classType = watch("classType");
+  const classTypeId = watch("classTypeId");
+
+  // Get the selected course option object
+  const selectedCourseOption = useMemo(() => {
+    return courseOptions?.find(
+      (option) => option.id.toString() === classTypeId
+    );
+  }, [courseOptions, classTypeId]);
+
+  const classType = selectedCourseOption?.classMode;
+
+  console.log("Class Type:", classType);
 
   // Handle day selection for 12 times fixed
   const toggleDay = (day: string) => {
@@ -114,19 +150,48 @@ export function ClassScheduleForm({
   };
 
   const onSubmit = (data: FormData) => {
-    // Update form data with selected days/dates
+    console.log("Form submitted with data:", data);
+
+    // Get the complete course type object
+    const selectedCourse = courseOptions?.find(
+      (option) => option.id.toString() === data.classTypeId
+    );
+
+    if (!selectedCourse) {
+      console.error("Selected course not found");
+      return;
+    }
+
+    // Update form data with selected days/dates and complete course object
     const updatedData = {
-      ...data,
+      classType: selectedCourse, // Complete course object
+      checkStartTime: data.checkStartTime,
+      checkEndTime: data.checkEndTime,
       fixedDays: selectedDays,
+      fixedStartTime: data.fixedStartTime,
+      fixedEndTime: data.fixedEndTime,
       campDates: selectedDates,
+      campStartTime: data.campStartTime,
+      campEndTime: data.campEndTime,
     };
 
-    // console.log("Class Schedule Submitted:", updatedData);
+    console.log("Class Schedule Submitted:", updatedData);
     // Reset form and close dialog
     reset();
+    setSelectedDays([]);
+    setSelectedDates([]);
     afterClassSchedule(updatedData);
     onOpenChange(false);
   };
+
+  useEffect(() => {
+    const fetchCourseOptions = async () => {
+      const response = await getCourseTypes();
+      setCourseOptions(response);
+    };
+
+    fetchCourseOptions();
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,20 +212,30 @@ export function ClassScheduleForm({
                 </Label>
                 <div className="relative flex flex-col">
                   <select
-                    {...register("classType")}
+                    {...register("classTypeId")}
                     className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm"
                   >
-                    <option value="">Select class type</option>
-                    <option value="12-times-check">12 Times Check</option>
-                    <option value="12-times-fixed">12 Times Fixed</option>
-                    <option value="camp-class">Camp Class</option>
+                    <option value="">Select a class type</option>
+                    {courseOptions &&
+                      courseOptions.map(
+                        (option: {
+                          id: number;
+                          classMode: string;
+                          classLimit: number;
+                          tuitionFee: number;
+                        }) => (
+                          <option key={option.id} value={option.id.toString()}>
+                            {option.classMode}
+                          </option>
+                        )
+                      )}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
               {/* 12 Times Check - Show start and end time */}
-              {classType === "12-times-check" && (
+              {classType === "12 times check" && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     12 Times Check Schedule
@@ -219,7 +294,7 @@ export function ClassScheduleForm({
               )}
 
               {/* 12 Times Fixed - Day selection with start/end time */}
-              {classType === "12-times-fixed" && (
+              {classType === "12 times fixed" && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     12 Times Fixed Schedule
@@ -305,7 +380,7 @@ export function ClassScheduleForm({
               )}
 
               {/* Camp Class - Calendar selection with start/end time */}
-              {classType === "camp-class" && (
+              {classType === "5 days camp" && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     Camp Class Schedule

@@ -29,7 +29,12 @@ function CourseClientSide({ courses }: { courses: Course[] }) {
   const [studentsData, setStudentsData] = useState<Student[]>([]);
   const [classScheduleData, setClassScheduleData] =
     useState<ComfirmClassScheduleData>({
-      classType: "",
+      classType: {
+        id: -1,
+        classLimit: 0,
+        classMode: "",
+        tuitionFee: 0,
+      },
     });
   const [teacherData, setTeacherData] = useState<TeacherData>({
     teacher: "",
@@ -60,14 +65,23 @@ function CourseClientSide({ courses }: { courses: Course[] }) {
   const handleConfirmCancel = () => {
     setConfirmOpen(false);
     setStudentsData([]);
-    setClassScheduleData({ classType: "" });
+    setClassScheduleData({
+      classType: {
+        id: -1,
+        classLimit: 0,
+        classMode: "",
+        tuitionFee: 0,
+      },
+    });
     setTeacherData({ teacher: "", room: "", remark: "", teacherId: -1 });
   };
 
   const handleConfirmSubmit = () => {
     setConfirmOpen(false);
     setStudentsData([]);
-    setClassScheduleData({ classType: "" });
+    setClassScheduleData({
+      classType: { id: -1, classLimit: 0, classMode: "", tuitionFee: 0 },
+    });
     setTeacherData({ teacher: "", room: "", remark: "", teacherId: -1 });
   };
 

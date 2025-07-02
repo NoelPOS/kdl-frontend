@@ -178,19 +178,17 @@ body {
 
 ::-webkit-scrollbar-track {
   background: transparent;
-  
-
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: yellow;
+  background-color: rgb(255, 213, 0);
   border-radius: 4px;
 }
 
 /* Firefox (limited support) */
 * {
   scrollbar-width: thin;
-  scrollbar-color: yellow transparent;
+  scrollbar-color: rgb(255, 213, 0) transparent;
 }
 
 

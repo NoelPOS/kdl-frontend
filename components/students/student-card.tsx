@@ -128,7 +128,7 @@ export function StudentCard({ student }: StudentCardProps) {
         </div>
       </div>
 
-      <Link href={`student/${student.id}`}>
+      <Link href={`/student/${student.id}`}>
         <Button className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer">
           Details
         </Button>

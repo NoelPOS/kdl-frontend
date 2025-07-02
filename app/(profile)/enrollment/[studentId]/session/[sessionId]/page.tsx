@@ -1,0 +1,40 @@
+import EnrollmentDetailRight from "@/components/enrollments/enrollment-detail-right";
+import StudentDetail from "@/components/students/student.detail.left";
+import {
+  fetchActiveDiscounts,
+  fetchSpedificPendingInvoices,
+  getStudentById,
+} from "@/lib/axio";
+
+export default async function StudentDetailPage({
+  params,
+}: {
+  params: Promise<{
+    studentId: string;
+    sessionId: string;
+  }>;
+}) {
+  const { studentId, sessionId } = (await params) || {
+    studentId: -1,
+    sessionId: -1,
+  };
+  const student = await getStudentById(Number(studentId));
+  const discounts = await fetchActiveDiscounts();
+  const session = await fetchSpedificPendingInvoices(Number(sessionId));
+
+  return (
+    <div className="relative">
+      <div className="flex min-h-screen ">
+        {/* Left Side - Student Information */}
+        <StudentDetail student={student} />
+
+        {/* Right Side  */}
+        <EnrollmentDetailRight
+          sessionId={Number(sessionId)}
+          session={session}
+          discounts={discounts}
+        />
+      </div>
+    </div>
+  );
+}

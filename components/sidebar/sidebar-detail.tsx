@@ -10,7 +10,6 @@ import {
   Percent,
   Bell,
   MessageSquare,
-  User,
   FileText,
   PlusCircleIcon,
 } from "lucide-react";
@@ -58,9 +57,9 @@ const menuItems = [
     url: "/parents",
   },
   {
-    title: "discount",
+    title: "discounts",
     icon: Percent,
-    url: "/discount",
+    url: "/discounts",
   },
   {
     title: "notifications",
@@ -73,9 +72,9 @@ const menuItems = [
     url: "/feedback",
   },
   {
-    title: "users",
-    icon: User,
-    url: "/users",
+    title: "enrollments",
+    icon: FileText,
+    url: "/enrollments",
   },
   {
     title: "invoices",
