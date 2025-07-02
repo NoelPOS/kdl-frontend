@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SessionOverview } from "@/app/types/session.type";
+import CoursePlusDialog from "./course-plus.dialog";
 
 interface StudentCourseProps {
   course: SessionOverview;
@@ -20,7 +21,7 @@ export function StudentCourse({ course }: StudentCourseProps) {
   };
 
   return (
-    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 h-75 w-[220px]">
+    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 h-75 w-[250px]">
       {!isHovered ? (
         <>
           <Info
@@ -55,13 +56,15 @@ export function StudentCourse({ course }: StudentCourseProps) {
               {/* {course.device} */} Later
             </div>
           </div>
-
-          <Button
-            className="w-full bg-blue-400 hover:bg-blue-500 mt-auto"
-            onClick={() => handleClick(course.sessionId)}
-          >
-            Details
-          </Button>
+          <div className="flex items-center justify-between mt-auto">
+            <CoursePlusDialog />
+            <Button
+              className=" bg-blue-400 hover:bg-blue-500 mt-auto"
+              onClick={() => handleClick(course.sessionId)}
+            >
+              Details
+            </Button>
+          </div>
         </>
       ) : (
         <div

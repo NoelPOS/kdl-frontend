@@ -309,6 +309,7 @@ export async function changeSessionStatus(
     await api.patch(`/sessions/${sessionId}`, { payment: status });
     return true;
   } catch (error) {
+    console.error("Error changing session status:", error);
     return false;
   }
 }

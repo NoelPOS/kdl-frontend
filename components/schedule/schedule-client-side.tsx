@@ -32,7 +32,7 @@ function ScheduleClientSide({ initialSchedules }: ScheduleClientSideProps) {
       nickname: session.student_name ?? "",
       remark: session.schedule_remark ?? "",
       status: session.schedule_attendance ?? "",
-      courseId: Number(session.course_id),
+      courseId: Number(session.schedule_courseId),
       scheduleId: Number(session.schedule_id),
     };
     setSelectedSession(formData);

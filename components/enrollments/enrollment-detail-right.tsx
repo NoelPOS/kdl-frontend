@@ -79,7 +79,7 @@ const InvoiceDetailRight = ({
       0
     );
     return sessionAmount + discountTotal;
-  }, [discountRows]);
+  }, [discountRows, session.classOption_tuitionFee]);
 
   const {
     control,
