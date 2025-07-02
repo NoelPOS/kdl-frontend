@@ -51,6 +51,7 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
   }, []);
 
   const handleRowDoubleClick = useCallback((session: ClassSchedule) => {
+    console.log("Row double clicked:", session);
     // Fix date conversion - remove the +24 hours adjustment
     const formData: FormData = {
       date: new Date(

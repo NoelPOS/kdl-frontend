@@ -359,6 +359,7 @@ export async function searchDiscounts(query: string): Promise<Discount[]> {
   const response = await api.get<Discount[]>(
     `/discounts/search/${encodeURIComponent(query)}`
   );
+  console.log("Discounts searched:", response.data);
   return response.data;
 }
 

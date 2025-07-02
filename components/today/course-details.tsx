@@ -31,63 +31,6 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
       </div>
 
       <div className="bg-white rounded-lg border">
-        {/* <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="border text-center">
-                Profile picture
-              </TableHead>
-              <TableHead className="border text-center">Student ID</TableHead>
-              <TableHead className="border text-center">Name</TableHead>
-              <TableHead className="border text-center">Nickname</TableHead>
-              <TableHead className="border text-center">Class no</TableHead>
-              <TableHead className="border text-center">Attendance</TableHead>
-              <TableHead className="border text-center">Remark</TableHead>
-              <TableHead className="border text-center">Warning</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {selectedCourse.students.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell className="text-center">
-                  <Avatar className="h-10 w-10 mx-auto">
-                    <AvatarImage
-                      src={student.profilePicture}
-                      alt={student.name}
-                    />
-                    <AvatarFallback>
-                      {student.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.id}
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.name}
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.nickname}
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.classNo}
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.attendance}
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.remark}
-                </TableCell>
-                <TableCell className="border text-center">
-                  {student.warning}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table> */}
         <StudentSchedule initialSchedules={selectedCourse.students} />
       </div>
     </div>

@@ -11,7 +11,6 @@ export default async function DiscountList({ query }: { query: string }) {
   } else {
     discounts = await fetchDiscounts();
   }
-  //   console.log("Discounts fetched:", discounts);
 
   return (
     <div className="">

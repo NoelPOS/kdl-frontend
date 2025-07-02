@@ -19,10 +19,8 @@ const RenderSchedule: React.FC<RenderScheduleProps> = ({ scheduleData }) => {
     setSelectedCourse(course);
   }, []);
 
-  // Memoize the number of columns calculation
   const numCols = useMemo(() => timeSlots.length - 1, []);
 
-  // Memoize the time headers
   const timeHeaders = useMemo(() => {
     return Array.from({ length: numCols }).map((_, index) => ({
       key: index,
@@ -31,7 +29,6 @@ const RenderSchedule: React.FC<RenderScheduleProps> = ({ scheduleData }) => {
     }));
   }, [numCols]);
 
-  // Memoize the course rows
   const courseRows = useMemo(() => {
     return scheduleData.courses.map((course) => {
       const startIndex = timeSlots.indexOf(course.startTime);
