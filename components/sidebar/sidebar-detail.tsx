@@ -57,9 +57,9 @@ const menuItems = [
     url: "/parents",
   },
   {
-    title: "discounts",
+    title: "management-fee",
     icon: Percent,
-    url: "/discounts",
+    url: "/management-fee",
   },
   {
     title: "notifications",

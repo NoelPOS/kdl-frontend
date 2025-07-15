@@ -1,10 +1,10 @@
 export interface Enrollment {
   session_id: number;
-  session_createdAt: string;
+  session_createdat: string;
   student_id: number;
   student_name: string;
   course_title: string;
-  classOption_tuitionFee: string;
+  classoption_tuitionfee: string;
 }
 
 export interface DiscountRow {

@@ -36,18 +36,13 @@ export function generateScheduleRows(
     for (let i = 0; i < 12; i++) {
       students.forEach((student) => {
         rows.push({
-          date: "TBD",
-          time:
-            classSchedule.checkStartTime && classSchedule.checkEndTime
-              ? `${classSchedule.checkStartTime} - ${classSchedule.checkEndTime}`
-              : "TBD",
+          date: undefined, // Placeholder, will be set later
+          time: "TBD",
           student: student.nickname || student.name,
-          teacher: teacherData.teacher,
-          class: `${i + 1}`,
-          room: teacherData.room,
-          remark: teacherData.remark,
-          warning: "Schedule to be determined based on availability",
-          teacherId: teacherData.teacherId,
+          teacher: "TBD",
+          room: "TBD",
+          remark: "TBD",
+          warning: "TBD",
           studentId: Number(student.id),
         });
       });
@@ -78,12 +73,11 @@ export function generateScheduleRows(
       sessionDates.forEach((date) => {
         students.forEach((student) => {
           rows.push({
-            date: date,
+            date: "TBD",
             time: startTime && endTime ? `${startTime} - ${endTime}` : "TBD",
             student: student.nickname || student.name,
             teacher: teacherData.teacher,
             teacherId: teacherData.teacherId,
-            class: `${sessionDates.indexOf(date) + 1}`,
             room: teacherData.room,
             remark: teacherData.remark,
             attendance: "pending",
@@ -106,7 +100,6 @@ export function generateScheduleRows(
             student: student.nickname || student.name,
             teacher: teacherData.teacher,
             teacherId: teacherData.teacherId,
-            class: `${(classSchedule.campDates?.indexOf(date) ?? -1) + 1}`,
             room: teacherData.room,
             remark: teacherData.remark,
             attendance: "pending",

@@ -28,6 +28,8 @@ export interface FilterFormData {
   startDate: string;
   endDate: string;
   studentName: string;
+  teacherName: string;
+  courseName: string;
 }
 
 export type FormData = {
@@ -43,4 +45,6 @@ export type FormData = {
   remark: string;
   status?: string;
   courseId: number;
+  studentId?: number;
+  warning?: string;
 };

@@ -25,17 +25,27 @@ export type FormData = {
 };
 
 interface AddTeacherProps {
+  courseId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   afterTeacher: (data: FormData) => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export function AddTeacher({
+  courseId,
   open,
   onOpenChange,
   afterTeacher,
+  onBack,
+  onCancel,
 }: AddTeacherProps) {
-  const { register, handleSubmit } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     defaultValues: {
       teacher: "",
       room: "",
@@ -50,9 +60,6 @@ export function AddTeacher({
 
     const fetchTeachers = async () => {
       try {
-        const courseId = new URLSearchParams(window.location.search).get("id");
-        if (!courseId) return;
-
         const teacherList = await getTeacherByCourseId(Number(courseId));
         setTeachers(teacherList);
       } catch (error) {
@@ -61,21 +68,33 @@ export function AddTeacher({
     };
 
     fetchTeachers();
-  }, [open]);
+  }, [open, courseId]);
 
   const onSubmit = (data: FormData) => {
-    // console.log("Schedule Submitted:", data);
-    const selectedTeacher = teachers.find((t) => t.name === data.teacher);
-    if (!selectedTeacher) {
-      console.error("Selected teacher not found:", data.teacher);
+    // Validate required fields
+    if (!data.teacher || !data.room) {
+      alert("Please select both teacher and room.");
       return;
     }
+
+    const selectedTeacher = teachers.find((t) => t.name === data.teacher);
+    if (!selectedTeacher) {
+      alert("Selected teacher not found. Please select a valid teacher.");
+      return;
+    }
+
     const payload = {
       ...data,
       teacherId: Number(selectedTeacher.id),
     };
     afterTeacher(payload);
     onOpenChange(false);
+  };
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    }
   };
 
   return (
@@ -97,7 +116,7 @@ export function AddTeacher({
               <div className="relative">
                 <select
                   id="teacher"
-                  {...register("teacher")}
+                  {...register("teacher", { required: "Teacher is required" })}
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
                 >
@@ -120,16 +139,18 @@ export function AddTeacher({
               <div className="relative">
                 <select
                   id="room"
-                  {...register("room")}
+                  {...register("room", { required: "Room is required" })}
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
                 >
                   <option value="" disabled hidden>
                     Select a room
                   </option>
-                  <option value="Online">Online</option>
-                  <option value="Room 101">Room 101</option>
-                  <option value="Auditorium">Auditorium</option>
+                  <option value="Room 1">Room 1</option>
+                  <option value="Room 2">Room 2</option>
+                  <option value="Room 3">Room 3</option>
+                  <option value="Room 4">Room 4</option>
+                  <option value="Room 5">Room 5</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
@@ -147,16 +168,19 @@ export function AddTeacher({
             </div>
           </div>
 
-          <DialogFooter className="flex justify-end gap-2 mt-8">
-            <DialogClose asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="text-red-600 border-red-600 hover:bg-red-500 hover:text-white rounded-2xl w-[5rem]"
-              >
-                Cancel
-              </Button>
-            </DialogClose>
+          <DialogFooter className="flex justify-between gap-2 mt-8">
+            <div className="flex gap-2">
+              {onBack && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-gray-500 border-gray-500 hover:bg-gray-50 hover:text-gray-600 rounded-2xl w-[5rem]"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+              )}
+            </div>
             <Button
               type="submit"
               className="bg-yellow-500 text-white hover:bg-yellow-400 rounded-2xl w-[5rem]"

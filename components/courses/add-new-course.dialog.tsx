@@ -19,6 +19,7 @@ import { Plus, ChevronDown } from "lucide-react";
 
 import { addNewCourse } from "@/lib/axio";
 import { useRef } from "react";
+import { Course } from "@/app/types/course.type";
 
 export type CourseFormData = {
   title: string;
@@ -27,7 +28,11 @@ export type CourseFormData = {
   medium: string;
 };
 
-export function AddNewCourse() {
+export function AddNewCourse({
+  onCourseAdded,
+}: {
+  onCourseAdded?: (course: Course) => void;
+}) {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { register, handleSubmit, reset } = useForm<CourseFormData>({
@@ -40,10 +45,12 @@ export function AddNewCourse() {
   });
 
   const onSubmit = async (data: CourseFormData) => {
-    await addNewCourse(data);
+    const newCourse = await addNewCourse(data);
+    if (onCourseAdded && newCourse) {
+      onCourseAdded(newCourse);
+    }
     reset();
     closeRef.current?.click();
-    router.refresh();
   };
 
   return (
@@ -103,9 +110,8 @@ export function AddNewCourse() {
                 >
                   <option value="5-6 yrs">5-6 yrs</option>
                   <option value="7-8 yrs">7-8 yrs</option>
-                  <option value="9-10 yrs">9-10 yrs</option>
-                  <option value="11-12 yrs">11-12 yrs</option>
-                  <option value="13+ yrs">13+ yrs</option>
+                  <option value="9-10 yrs">9-12 yrs</option>
+                  <option value="13+ yrs">13-18 yrs</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>

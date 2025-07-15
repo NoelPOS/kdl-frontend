@@ -10,22 +10,31 @@ interface CourseCardProps {
   onAddStudent?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  setCourseId: (id: number) => void;
+  onOpenDialog?: (courseId: number) => void;
+  setCourseName: (name: string) => void;
 }
 
-export function CourseCard({ course, onOpenChange }: CourseCardProps) {
+export function CourseCard({
+  course,
+  onOpenChange,
+  setCourseId,
+  onOpenDialog,
+  setCourseName,
+}: CourseCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAddStudent = () => {
-    const query = new URLSearchParams();
-    query.set("course", course.title);
-    query.set("id", String(course.id));
+    // Always set the course name when a course is selected
+    setCourseName(course.title);
 
-    if (typeof window !== "undefined") {
-      window.history.pushState({}, "", `?${query.toString()}`);
-    }
-
-    if (onOpenChange) {
-      onOpenChange(true);
+    if (onOpenDialog) {
+      onOpenDialog(course.id);
+    } else {
+      setCourseId(course.id);
+      if (onOpenChange) {
+        onOpenChange(true);
+      }
     }
   };
 

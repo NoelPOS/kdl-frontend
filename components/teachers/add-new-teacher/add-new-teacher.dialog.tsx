@@ -1,5 +1,5 @@
 "use client";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,11 +12,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
-import { addNewTeacher } from "@/lib/axio";
+import {
+  addNewTeacher,
+  searchCourses,
+  assignCoursesToTeacher,
+} from "@/lib/axio";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Course } from "@/app/types/course.type";
 
 export type TeacherFormData = {
   name: string;
@@ -25,29 +30,106 @@ export type TeacherFormData = {
   lineId: string;
   address: string;
   profilePicture: string;
+  courses: Pick<Course, "id" | "title">[];
 };
 
 export default function AddNewTeacher() {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const { register, handleSubmit, setValue } = useForm<TeacherFormData>({
-    defaultValues: {
-      name: "",
-      email: "",
-      contactNo: "",
-      lineId: "",
-      address: "",
-      profilePicture: "",
-    },
+  const [activeSearchIndex, setActiveSearchIndex] = useState<number>(-1);
+  const [searchResults, setSearchResults] = useState<Course[]>([]);
+
+  const { register, handleSubmit, setValue, control } =
+    useForm<TeacherFormData>({
+      defaultValues: {
+        name: "",
+        email: "",
+        contactNo: "",
+        lineId: "",
+        address: "",
+        profilePicture: "",
+        courses: [
+          {
+            id: 0,
+            title: "",
+          },
+        ],
+      },
+    });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "courses",
   });
+
   const router = useRouter();
 
   const onSubmit = async (data: TeacherFormData) => {
-    await addNewTeacher(data);
-    console.log(imageFile);
-    closeRef.current?.click();
-    router.refresh();
+    try {
+      // First, create the teacher without courses
+      const teacherData = {
+        name: data.name,
+        email: data.email,
+        contactNo: data.contactNo,
+        lineId: data.lineId,
+        address: data.address,
+        profilePicture: data.profilePicture,
+      };
+
+      const newTeacher = await addNewTeacher(teacherData);
+
+      // Then, assign courses to the teacher if any courses are selected
+      const selectedCourses = data.courses.filter((course) => course.id > 0);
+      if (selectedCourses.length > 0) {
+        const courseIds = selectedCourses.map((course) => course.id);
+        await assignCoursesToTeacher(newTeacher.id, courseIds);
+      }
+      console.log("Image file:", imageFile);
+
+      console.log("Teacher created successfully:", newTeacher);
+      console.log("Courses assigned:", selectedCourses);
+      closeRef.current?.click();
+      router.refresh();
+    } catch (error) {
+      console.error("Error creating teacher or assigning courses:", error);
+    }
+  };
+
+  const handleSelectCourse = (index: number, course: Course) => {
+    setValue(`courses.${index}.id`, course.id);
+    setValue(`courses.${index}.title`, course.title);
+    setSearchResults([]);
+    setActiveSearchIndex(-1);
+  };
+
+  const handleSearch = async (query: string, index: number) => {
+    setActiveSearchIndex(index);
+
+    if (query.length >= 3) {
+      try {
+        const results = await searchCourses(query);
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Search failed", error);
+        setSearchResults([]);
+      }
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const addCourse = () => {
+    append({
+      id: 0,
+      title: "",
+    });
+  };
+
+  const removeCourse = (index: number) => {
+    if (fields.length > 1) {
+      remove(index);
+    }
   };
 
   const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +153,7 @@ export default function AddNewTeacher() {
           New
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px] p-8">
+      <DialogContent className="sm:max-w-[400px] p-8 max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
             Add New Teacher
@@ -85,6 +167,8 @@ export default function AddNewTeacher() {
                   src={imagePreview}
                   alt="Profile Preview"
                   className="w-24 h-24 rounded-full object-cover border border-gray-300 mb-2"
+                  width={96}
+                  height={96}
                 />
               )}
               <Input type="file" accept="image/*" onChange={onImageChange} />
@@ -133,6 +217,83 @@ export default function AddNewTeacher() {
                 placeholder="Enter address"
                 className="border-black "
               />
+            </div>
+
+            {/* Courses Section */}
+            <div className="flex flex-col gap-4">
+              <Label className="text-lg font-semibold">Courses</Label>
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className={`p-4 border rounded-lg ${
+                    index > 0 ? "border-t border-gray-200" : ""
+                  }`}
+                >
+                  <div className="space-y-4">
+                    {/* Course Name (with search) */}
+                    <div className="space-y-1 relative">
+                      <Label
+                        htmlFor={`courses.${index}.title`}
+                        className="text-xs text-gray-500"
+                      >
+                        Course name
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          {...register(`courses.${index}.title` as const)}
+                          placeholder="Tinkamo"
+                          className="border-gray-300 rounded-lg pr-10"
+                          onChange={(e) => handleSearch(e.target.value, index)}
+                          autoComplete="off"
+                        />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      </div>
+                      {activeSearchIndex === index &&
+                        searchResults.length > 0 && (
+                          <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                            {searchResults.map((course) => (
+                              <li
+                                key={course.id}
+                                onClick={() =>
+                                  handleSelectCourse(index, course)
+                                }
+                                className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                              >
+                                {course.title}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                    </div>
+
+                    {index > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="text-red-500 p-1 h-auto hover:bg-red-50"
+                          onClick={() => removeCourse(index)}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Add Course Button */}
+              <div className="flex justify-start">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-amber-500 border-amber-500 rounded-full text-sm px-4 py-1 h-auto"
+                  onClick={addCourse}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Course
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter className="flex justify-end gap-2 mt-8">

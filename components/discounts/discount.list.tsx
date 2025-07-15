@@ -17,7 +17,7 @@ export default async function DiscountList({ query }: { query: string }) {
       {discounts.length > 0 ? (
         <DiscountTable discounts={discounts} />
       ) : (
-        <p>No discounts found.</p>
+        <p>No fees found.</p>
       )}
     </div>
   );

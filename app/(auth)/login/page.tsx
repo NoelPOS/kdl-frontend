@@ -24,11 +24,7 @@ const Login = () => {
     try {
       const response = await login(data);
 
-      if (!response.data || !response.data.user) {
-        throw new Error("Invalid response from server");
-      }
-
-      const userData = response.data.user;
+      const userData = response.user;
       if (!userData.email) {
         throw new Error("User data is missing required fields");
       }

@@ -19,8 +19,8 @@ export type ComfirmClassScheduleData = {
     tuitionFee: number;
   };
   // For 12 times check
-  checkStartTime?: string;
-  checkEndTime?: string;
+  // checkStartTime?: string;
+  // checkEndTime?: string;
   // For 12 times fixed - new structure
   fixedDays?: string[];
   fixedStartTime?: string;
@@ -40,28 +40,27 @@ export type Course = {
 };
 
 export type EditScheduleFormData = {
-  date: string;
+  date?: string;
   starttime: string;
   endtime: string;
   course: string;
   teacher: string;
-  teacherId: number;
+  teacherId?: number;
   student: string;
   room: string;
   nickname: string;
-  class: string;
   studentId: string;
   remark: string;
   status?: string;
 };
 
 export type ComfirmScheduleRow = {
-  date: string;
+  date?: string;
   time: string;
   student: string;
   teacher: string;
-  teacherId: number;
-  class: string;
+  teacherId?: number;
+  class?: string;
   room: string;
   remark: string;
   warning?: string;

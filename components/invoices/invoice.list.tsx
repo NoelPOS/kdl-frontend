@@ -1,23 +1,49 @@
 import React from "react";
-import { fetchAllInvoices } from "@/lib/axio";
+import { fetchInvoices, InvoiceFilter } from "@/lib/axio";
 import { Invoice } from "@/app/types/invoice.type";
 import { InvoiceTable } from "./invoice-table";
+import { Pagination } from "@/components/ui/pagination";
 
-export default async function InvoiceList({ status }: { status: string }) {
-  let invoices: Invoice[];
+export default async function InvoiceList({
+  documentId,
+  student,
+  course,
+  receiptDone,
+  page = 1,
+}: {
+  documentId: string;
+  student: string;
+  course: string;
+  receiptDone: string;
+  page?: number;
+}) {
+  const filter: InvoiceFilter = {
+    documentId,
+    student,
+    course,
+    receiptDone,
+  };
 
-  if (status && status !== "All") {
-    invoices = (await fetchAllInvoices(status)).invoices;
-  } else {
-    invoices = (await fetchAllInvoices()).invoices;
-  }
+  const { invoices, pagination } = await fetchInvoices(filter, page, 10);
 
   return (
-    <div className="">
-      {invoices.length > 0 ? (
-        <InvoiceTable invoices={invoices} />
+    <div className="space-y-6">
+      {invoices.length === 0 ? (
+        <div className="text-center text-gray-500 py-8">No invoices found</div>
       ) : (
-        <p>No invoices found.</p>
+        <InvoiceTable invoices={invoices} />
+      )}
+
+      {invoices.length > 0 && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          hasNext={pagination.hasNext}
+          hasPrev={pagination.hasPrev}
+          itemsPerPage={10}
+          itemName="invoices"
+        />
       )}
     </div>
   );

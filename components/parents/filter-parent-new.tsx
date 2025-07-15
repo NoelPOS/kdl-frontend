@@ -4,28 +4,32 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
+const statusOptions = [
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+  { label: "All", value: "all" },
+];
+
 type FilterFormData = {
   query: string;
-  ageRange: string;
-  medium: string;
+  status: string;
 };
 
-const FilterCourse = () => {
+export default function ParentFilter() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
     defaultValues: {
       query: searchParams.get("query") || "",
-      ageRange: searchParams.get("ageRange") || "all",
-      medium: searchParams.get("medium") || "all",
+      status: searchParams.get("status") || "all",
     },
   });
 
@@ -42,25 +46,18 @@ const FilterCourse = () => {
     } else {
       params.delete("query");
     }
-    if (data.ageRange) {
-      params.set("ageRange", data.ageRange);
+    if (data.status && data.status !== "all") {
+      params.set("status", data.status);
     } else {
-      params.delete("ageRange");
+      params.delete("status");
     }
-    if (data.medium) {
-      params.set("medium", data.medium);
-    } else {
-      params.delete("medium");
-    }
-    params.delete("page");
     router.replace(`${pathname}?${params.toString()}`);
   };
 
   const handleClearFilters = useCallback(() => {
     reset({
       query: "",
-      ageRange: "all",
-      medium: "all",
+      status: "all",
     });
     router.replace(pathname);
   }, [reset, router, pathname]);
@@ -115,56 +112,37 @@ const FilterCourse = () => {
           isExpanded ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 ">
-            <div className="flex flex-col gap-2 ">
-              <Label htmlFor="studentName">Course Title</Label>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="p-4 pt-0 border-t border-gray-100"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="parentName">Parent Name</Label>
               <Input
-                id="studentName"
+                id="parentName"
                 {...register("query")}
-                placeholder="Enter course title"
-                className="border-gray-300 "
+                placeholder="Enter parent name"
+                className="border-gray-300"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="ageRange">Age Range</Label>
+              <Label htmlFor="status" className="text-sm text-gray-500">
+                Status
+              </Label>
               <div className="relative">
                 <select
-                  id="ageRange"
-                  {...register("ageRange")}
-                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none"
+                  id="status"
+                  {...register("status")}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none"
                 >
-                  <option value="" disabled hidden>
-                    Select age range
-                  </option>
-                  <option value="all">All</option>
-                  <option value="5-6">5-6 years</option>
-                  <option value="7-8">7-8 years</option>
-                  <option value="9-12">9-12 years</option>
-                  <option value="13-18">13-18 years</option>
+                  {statusOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
-
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="medium">Learning Medium</Label>
-              <div className="relative">
-                <select
-                  id="medium"
-                  {...register("medium")}
-                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none"
-                >
-                  <option value="" disabled hidden>
-                    Select learning medium
-                  </option>
-                  <option value="all">All</option>
-                  <option value="Tablet">Tablet</option>
-                  <option value="Computer">Computer</option>
-                </select>
-
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
@@ -182,6 +160,4 @@ const FilterCourse = () => {
       </div>
     </div>
   );
-};
-
-export default FilterCourse;
+}

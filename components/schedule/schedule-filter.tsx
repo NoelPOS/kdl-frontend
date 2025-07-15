@@ -1,121 +1,186 @@
 "use client";
-import { FilterFormData, Student } from "@/app/types/schedule.type";
-import { searchStudents } from "@/lib/axio";
-import { useRef, useState, useCallback, useMemo } from "react";
+import { useRef, useCallback, useState } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { Calendar, Search, Filter as FilterIcon } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useForm } from "react-hook-form";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "../ui/dialog";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "../ui/select";
+import { cn } from "@/lib/utils";
 
-export default function ScheduleFilter() {
+// Define the form data type
+type ScheduleFilterFormData = {
+  startDate?: string;
+  endDate?: string;
+  studentName?: string;
+  teacherName?: string;
+  courseName?: string;
+  attendanceStatus?: string;
+  room?: string;
+  sessionMode?: string;
+  sort?: string;
+};
+
+const ATTENDANCE_STATUS_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const SORT_OPTIONS = [
+  { value: "date_asc", label: "Date (Ascending)" },
+  { value: "date_desc", label: "Date (Descending)" },
+  { value: "student_asc", label: "Student Name (A-Z)" },
+  { value: "student_desc", label: "Student Name (Z-A)" },
+  { value: "teacher_asc", label: "Teacher Name (A-Z)" },
+  { value: "teacher_desc", label: "Teacher Name (Z-A)" },
+  { value: "room_asc", label: "Room (A-Z)" },
+  { value: "room_desc", label: "Room (Z-A)" },
+];
+
+export function ScheduleFilterForm() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { register, handleSubmit, setValue, watch } = useForm<FilterFormData>({
+  const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const { register, handleSubmit, setValue, watch, reset } = useForm({
     defaultValues: {
       startDate: searchParams.get("startDate") || "",
       endDate: searchParams.get("endDate") || "",
       studentName: searchParams.get("studentName") || "",
+      teacherName: searchParams.get("teacherName") || "",
+      courseName: searchParams.get("courseName") || "",
+      attendanceStatus: searchParams.get("attendanceStatus") || "",
+      classStatus: searchParams.get("classStatus") || "",
+      room: searchParams.get("room") || "",
+      sort: searchParams.get("sort") || "date_asc",
     },
   });
 
-  const [searchResults, setSearchResults] = useState<Student[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-
   const startDateRef = useRef<HTMLInputElement>(null);
   const endDateRef = useRef<HTMLInputElement>(null);
-
   const { ref: startDateRHFRef } = register("startDate");
   const { ref: endDateRHFRef } = register("endDate");
 
-  const studentName = watch("studentName");
+  // Watch values for controlled Selects
+  const attendanceStatus = watch("attendanceStatus");
+  const sort = watch("sort");
 
-  const handleSearch = useCallback(
-    async (query: string) => {
-      setValue("studentName", query);
-      if (query.length >= 2) {
-        try {
-          const results = await searchStudents(query);
-          setSearchResults(results);
-          setShowDropdown(true);
-        } catch (error) {
-          console.log(error);
-          setSearchResults([]);
-          setShowDropdown(false);
-        }
-      } else {
-        setSearchResults([]);
-        setShowDropdown(false);
-      }
-    },
-    [setValue]
-  );
+  // Watch all form values to show active filter count
+  const formValues = watch();
 
-  const handleSelectStudent = useCallback(
-    (student: Student) => {
-      setValue("studentName", student.name);
-      setSearchResults([]);
-      setShowDropdown(false);
-    },
-    [setValue]
-  );
+  // Calculate active filters count (excluding sort as it always has a default)
+  const activeFiltersCount = Object.entries(formValues).filter(
+    ([key, value]) => key !== "sort" && value && value.toString().trim() !== ""
+  ).length;
 
   const onSubmit = useCallback(
-    (data: FilterFormData) => {
-      const params = new URLSearchParams(searchParams);
-      params.set("startDate", data.startDate);
-      params.set("endDate", data.endDate);
-      params.set("studentName", data.studentName);
-      router.replace(`${pathname}?${params.toString()}`);
+    async (data: ScheduleFilterFormData) => {
+      setLoading(true);
+      const params = new URLSearchParams();
+
+      // Always reset to page 1 when filtering
+      params.delete("page");
+
+      if (data.startDate) params.set("startDate", data.startDate);
+      if (data.endDate) params.set("endDate", data.endDate);
+      if (data.studentName) params.set("studentName", data.studentName);
+      if (data.teacherName) params.set("teacherName", data.teacherName);
+      if (data.courseName) params.set("courseName", data.courseName);
+      if (data.attendanceStatus)
+        params.set("attendanceStatus", data.attendanceStatus);
+      if (data.room) params.set("room", data.room);
+      if (data.sessionMode) params.set("sessionMode", data.sessionMode);
+      if (data.sort) params.set("sort", data.sort);
+      router.replace(
+        `${pathname}${params.toString() ? `?${params.toString()}` : ""}`
+      );
     },
-    [router, pathname, searchParams]
+    [router, pathname]
   );
 
-  const searchDropdown = useMemo(() => {
-    if (!showDropdown || searchResults.length === 0) return null;
-    return (
-      <ul className="absolute z-10 bg-white border border-gray-200 shadow-lg w-full rounded-md mt-1 max-h-48 overflow-y-auto top-full">
-        {searchResults.map((student) => (
-          <li
-            key={student.id}
-            onClick={() => handleSelectStudent(student)}
-            className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-          >
-            {student.name} ({student.nickname})
-          </li>
-        ))}
-      </ul>
-    );
-  }, [showDropdown, searchResults, handleSelectStudent]);
+  const handleClearFilters = useCallback(() => {
+    reset({
+      startDate: "",
+      endDate: "",
+      studentName: "",
+      teacherName: "",
+      courseName: "",
+      attendanceStatus: "",
+      classStatus: "",
+      room: "",
+      sort: "date_asc",
+    });
+    router.replace(pathname);
+  }, [reset, router, pathname]);
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <FilterIcon className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-6">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            Filter Schedules
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1  gap-4 mb-4">
-            {/* Start Date */}
+    <div className="mb-5 border border-gray-200 rounded-lg bg-white shadow-sm">
+      {/* Filter Header */}
+      <div
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-3">
+          <Filter className="h-5 w-5 text-gray-600" />
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900">Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+                {activeFiltersCount}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {activeFiltersCount > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClearFilters();
+              }}
+              className="text-gray-500 hover:text-gray-700 h-8 px-2"
+            >
+              <X className="h-4 w-4" />
+              Clear
+            </Button>
+          )}
+          {isExpanded ? (
+            <ChevronUp className="h-5 w-5 text-gray-600" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-600" />
+          )}
+        </div>
+      </div>
+
+      {/* Filter Content */}
+      <div
+        className={cn(
+          "transition-all duration-300 ease-in-out overflow-hidden",
+          isExpanded ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="p-4 pt-0 border-t border-gray-100"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            {/* Date Range */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>
               <div
@@ -135,7 +200,7 @@ export default function ScheduleFilter() {
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            {/* End Date */}
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
               <div
@@ -155,35 +220,104 @@ export default function ScheduleFilter() {
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            {/* Student Search */}
+
+            {/* Student Name */}
             <div className="flex flex-col gap-2 relative">
               <Label htmlFor="studentName">Student</Label>
-              <div className="relative">
-                <Input
-                  id="studentName"
-                  value={studentName}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search for a student"
-                  className="border-gray-300 pr-10"
-                  autoComplete="off"
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="studentName"
+                {...register("studentName")}
+                placeholder="Enter student's name"
+                className="border-gray-300"
+              />
+            </div>
+
+            {/* Teacher Name */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="teacherName">Teacher</Label>
+              <Input
+                id="teacherName"
+                {...register("teacherName")}
+                placeholder="Enter teacher's name"
+                className="border-gray-300"
+              />
+            </div>
+
+            {/* Course Name */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="courseName">Course</Label>
+              <Input
+                id="courseName"
+                {...register("courseName")}
+                placeholder="Enter course name"
+                className="border-gray-300"
+              />
+            </div>
+
+            {/* Attendance Status */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="attendanceStatus">Attendance Status</Label>
+              <div className="w-full">
+                <Select
+                  value={attendanceStatus}
+                  onValueChange={(v) => setValue("attendanceStatus", v)}
+                >
+                  <SelectTrigger id="attendanceStatus" className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ATTENDANCE_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              {searchDropdown}
+            </div>
+
+            {/* Sort */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="sort">Sort By</Label>
+              <div className="w-full">
+                <Select value={sort} onValueChange={(v) => setValue("sort", v)}>
+                  <SelectTrigger id="sort" className="w-full">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Room */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="room">Room</Label>
+              <Input
+                id="room"
+                {...register("room")}
+                placeholder="Enter room name/number"
+                className="border-gray-300"
+              />
             </div>
           </div>
-          <DialogFooter className="flex justify-end gap-2 mt-4">
-            <DialogClose asChild>
-              <Button
-                type="submit"
-                className="bg-yellow-500 text-white hover:bg-yellow-600 px-6"
-              >
-                Filter
-              </Button>
-            </DialogClose>
-          </DialogFooter>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              type="submit"
+              className="bg-yellow-500 text-white hover:bg-yellow-600 px-6"
+              disabled={loading}
+            >
+              {loading ? "Filtering..." : "Apply Filters"}
+            </Button>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

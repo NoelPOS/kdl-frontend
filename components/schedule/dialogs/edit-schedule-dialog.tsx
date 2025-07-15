@@ -14,15 +14,53 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { getTeacherByCourseId, updateSchedule } from "@/lib/axio";
-import { FormData } from "@/app/types/schedule.type";
+import {
+  getTeacherByCourseId,
+  updateSchedule,
+  checkScheduleConflict,
+} from "@/lib/axio";
+import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
+
+interface ConflictDetail {
+  conflictType: string;
+  courseTitle: string;
+  teacherName: string;
+  studentName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+}
+
+const generateConflictWarning = (conflict: ConflictDetail) => {
+  const { conflictType, courseTitle, teacherName, studentName } = conflict;
+
+  switch (conflictType) {
+    case "room":
+      return `Room conflict with ${courseTitle}`;
+    case "teacher":
+      return `Teacher conflict with ${teacherName}`;
+    case "student":
+      return `Student conflict with ${studentName} in ${courseTitle}`;
+    case "room_teacher":
+      return `Room and teacher conflict with ${courseTitle} / ${teacherName}`;
+    case "room_student":
+      return `Room and student conflict with ${courseTitle} / ${studentName}`;
+    case "teacher_student":
+      return `Teacher and student conflict with ${teacherName} / ${studentName} in ${courseTitle}`;
+    case "all":
+      return `Room, teacher, and student conflict with ${courseTitle} / ${teacherName} / ${studentName}`;
+    default:
+      return `Conflict with ${courseTitle}`;
+  }
+};
 
 interface EditScheduleProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData?: Partial<FormData>;
-  onScheduleUpdate?: (updatedSchedule: FormData) => void;
+  onScheduleUpdate?: (schedule: FormData) => void;
 }
 
 export function EditSchedule({
@@ -31,7 +69,6 @@ export function EditSchedule({
   initialData,
   onScheduleUpdate,
 }: EditScheduleProps) {
-  console.log("Initial", initialData);
   const { register, handleSubmit, reset } = useForm<FormData>({
     defaultValues: initialData,
   });
@@ -48,9 +85,31 @@ export function EditSchedule({
 
   const onSubmit = useCallback(
     async (data: FormData) => {
-      // console.log("Schedule Submitted:", data);
+      console.log("Submitting data:", data.scheduleId);
       setIsSubmitting(true);
       try {
+        let warningMessage = "none";
+        try {
+          const conflictResult = await checkScheduleConflict({
+            date: data.date,
+            startTime: data.starttime,
+            endTime: data.endtime,
+            room: data.room,
+            teacherId: teachers.find((t) => t.name === data.teacher)?.id || 0,
+            studentId:
+              parseInt(data.student) ||
+              parseInt(initialData?.student || "0") ||
+              0,
+            excludeId: initialData?.scheduleId || 0,
+          });
+
+          if (conflictResult) {
+            warningMessage = generateConflictWarning(conflictResult);
+          }
+        } catch (conflictError) {
+          console.warn("Conflict check failed:", conflictError);
+        }
+
         const updateData = {
           date: data.date,
           startTime: data.starttime,
@@ -58,31 +117,61 @@ export function EditSchedule({
           room: data.room,
           remark: data.remark,
           attendance: data.status,
+          teacherId:
+            teachers.find((t) => t.name === data.teacher)?.id ||
+            initialData?.courseId ||
+            0,
+          teacherName: data.teacher,
+          studentName: data.student,
+          nickname: data.nickname,
+          courseName: data.course,
+          warning: warningMessage,
         };
+        await updateSchedule(Number(data.scheduleId), updateData);
 
-        // console.log("Sending update to API:", updateData);
-        await updateSchedule(data.scheduleId, updateData);
-        // console.log("API response:", response);
-
-        // Call the update callback to notify parent component
+        // Construct updated FormData for direct state update
+        const updatedFormData: FormData = {
+          scheduleId: Number(data.scheduleId),
+          courseId: initialData?.courseId ?? 0,
+          date: data.date,
+          starttime: data.starttime,
+          endtime: data.endtime,
+          course: data.course || "",
+          teacher: data.teacher || "",
+          student: data.student || "",
+          room: data.room || "",
+          nickname: data.nickname || "",
+          remark: data.remark || "",
+          status: data.status || "",
+          // Add any other required FormData fields here
+        };
         if (onScheduleUpdate) {
-          // console.log("Calling onScheduleUpdate callback");
-          onScheduleUpdate(data);
+          onScheduleUpdate(updatedFormData);
         }
-
+        if (warningMessage) {
+          alert(`Schedule updated with warning: ${warningMessage}`);
+        }
         onOpenChange(false);
       } catch (error) {
         console.error("Failed to update schedule", error);
-        alert("Failed to update schedule.");
+        alert("Failed to update schedule. Please try again.");
       } finally {
         setIsSubmitting(false);
       }
     },
-    [onScheduleUpdate, onOpenChange]
+    [
+      onScheduleUpdate,
+      onOpenChange,
+      teachers,
+      initialData?.courseId,
+      initialData?.scheduleId,
+      initialData?.student,
+    ]
   );
 
   // Memoized teacher fetching to prevent unnecessary API calls
   const fetchTeachers = useCallback(async () => {
+    console.log("Fetching teachers for course ID:", initialData?.courseId);
     try {
       if (typeof initialData?.courseId === "number") {
         const result = await getTeacherByCourseId(initialData.courseId);
@@ -97,6 +186,9 @@ export function EditSchedule({
   }, [initialData?.courseId]);
 
   useEffect(() => {
+    console.log("EditSchedule opened, fetching teachers if needed");
+    console.log("Open state:", open);
+    console.log("Initial data course ID:", initialData?.courseId);
     if (open && initialData?.courseId) {
       fetchTeachers();
     }
@@ -254,9 +346,11 @@ export function EditSchedule({
                   <option value="" disabled hidden>
                     Select a room
                   </option>
-                  <option value="Online">Online</option>
-                  <option value="Room 101">Room 101</option>
-                  <option value="Auditorium">Auditorium</option>
+                  <option value="Room 1">Room 1</option>
+                  <option value="Room 2">Room 2</option>
+                  <option value="Room 3">Room 3</option>
+                  <option value="Room 4">Room 4</option>
+                  <option value="Room 5">Room 5</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
@@ -298,7 +392,8 @@ export function EditSchedule({
                   <option value="confirmed">Confirmed</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
-                  <option value="pending"> Pending </option>
+                  <option value="pending">Pending</option>
+                  <option value="absent">Absent</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>

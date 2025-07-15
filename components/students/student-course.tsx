@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SessionOverview } from "@/app/types/session.type";
-import CoursePlusDialog from "./course-plus.dialog";
+// import CoursePlusDialog from "./course-plus.dialog";
 
 interface StudentCourseProps {
   course: SessionOverview;
@@ -57,7 +57,6 @@ export function StudentCourse({ course }: StudentCourseProps) {
             </div>
           </div>
           <div className="flex items-center justify-between mt-auto">
-            <CoursePlusDialog />
             <Button
               className=" bg-blue-400 hover:bg-blue-500 mt-auto"
               onClick={() => handleClick(course.sessionId)}

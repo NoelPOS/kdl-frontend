@@ -73,13 +73,13 @@ const InvoiceDetailRight = ({
 
   // Calculate total amount
   const totalAmount: number = useMemo(() => {
-    const sessionAmount = Number(session.classOption_tuitionFee);
+    const sessionAmount = Number(session.classoption_tuitionfee);
     const discountTotal = discountRows.reduce(
       (sum, discount) => sum + discount.amount,
       0
     );
     return sessionAmount + discountTotal;
-  }, [discountRows, session.classOption_tuitionFee]);
+  }, [discountRows, session.classoption_tuitionfee]);
 
   const {
     control,
@@ -142,7 +142,7 @@ const InvoiceDetailRight = ({
     try {
       const result = await addNewInvoice(invoiceData);
       console.log("Invoice created successfully:", result);
-      router.replace("/invoices/details");
+      router.replace("/invoices");
     } catch (error) {
       console.error("Error creating invoice:", error);
     }
@@ -241,7 +241,7 @@ const InvoiceDetailRight = ({
                 {session.course_title}
               </TableCell>
               <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                {session.classOption_tuitionFee}
+                {session.classoption_tuitionfee}
               </TableCell>
               <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                 -

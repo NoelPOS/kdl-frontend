@@ -15,6 +15,7 @@ export function EnrollmentTable({
 }: {
   enrollments: Enrollment[];
 }) {
+  console.log("Enrollment Data:", enrollments);
   return (
     <Table className="bg-white table-fixed rounded-2xl ">
       <TableHeader>
@@ -43,7 +44,7 @@ export function EnrollmentTable({
         {enrollments.map((enrollment) => (
           <TableRow key={enrollment.session_id}>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {new Date(enrollment.session_createdAt).toLocaleDateString()}
+              {new Date(enrollment.session_createdat).toLocaleDateString()}
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {enrollment.student_id}
@@ -55,7 +56,7 @@ export function EnrollmentTable({
               {enrollment.course_title}
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {enrollment.classOption_tuitionFee}
+              {enrollment.classoption_tuitionfee}
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               <Link

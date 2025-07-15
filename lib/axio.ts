@@ -67,8 +67,34 @@ export async function login(info: LoginFormData) {
   return response.data;
 }
 
-export async function fetchStudents(): Promise<{ students: Student[] }> {
-  const response = await api.get<{ students: Student[] }>("/users/students");
+export async function fetchStudents(
+  query?: string,
+  active?: string,
+  course?: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  students: Student[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const response = await api.get<{
+    students: Student[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>("/users/students", {
+    params: { query, active, course, page, limit },
+  });
   return response.data;
 }
 
@@ -108,25 +134,75 @@ export async function addNewCourse(course: NewCourseData): Promise<Course> {
   return response.data;
 }
 
-export async function fetchCourses(): Promise<Course[]> {
-  const response = await api.get<Course[]>("/courses");
-  return response.data;
-}
-
-export async function searchCourses(query: string): Promise<Course[]> {
-  const res = await api.get<Course[]>(`/courses/search?name=${query}`);
-  return res.data;
+export interface CourseFilter {
+  query?: string;
+  ageRange?: string;
+  medium?: string;
 }
 
 export async function fetchFilteredCourses(
-  ageRange: string,
-  medium: string
-): Promise<Course[]> {
-  const response = await api.get<Course[]>(
-    `/courses/filter?ageRange=${encodeURIComponent(
-      ageRange
-    )}&medium=${encodeURIComponent(medium)}`
-  );
+  filter: CourseFilter = {},
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  courses: Course[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.query) params.set("query", filter.query);
+  if (filter.ageRange) params.set("ageRange", filter.ageRange);
+  if (filter.medium) params.set("medium", filter.medium);
+
+  // Add pagination params
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    courses: Course[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/courses/filter?${params.toString()}`);
+  return response.data;
+}
+
+export async function fetchCourses(
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  courses: Course[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    courses: Course[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/courses?${params.toString()}`);
   return response.data;
 }
 
@@ -161,11 +237,11 @@ export async function searchTeachers(query: string): Promise<Teacher[]> {
 }
 
 interface Schedule {
-  date: string;
+  date?: string;
   startTime: string;
   endTime: string;
   room: string;
-  teacherId: number;
+  teacherId?: number;
   courseId: number;
   studentId: number;
 }
@@ -177,13 +253,14 @@ export async function createBulkSchedules(
   return res.data;
 }
 
-interface ScheduleConflictCheck {
-  date: string;
+export interface ScheduleConflictCheck {
+  date?: string;
   startTime: string;
   endTime: string;
   room: string;
-  teacherId: number;
+  teacherId?: number;
   studentId: number;
+  excludeId?: number;
 }
 
 export async function checkScheduleConflict(
@@ -232,18 +309,63 @@ export async function getTodaySchedules(): Promise<ClassSchedule[]> {
   return res.data;
 }
 
-interface ScheduleFilter {
-  startDate: string;
-  endDate: string;
-  studentName: string;
+export interface ScheduleFilter {
+  startDate?: string;
+  endDate?: string;
+  studentName?: string;
+  teacherName?: string;
+  courseName?: string;
+  attendanceStatus?: string;
+  classStatus?: string;
+  room?: string;
+  sessionMode?: string;
+  sort?: string;
 }
 
 export async function getFilteredSchedules(
-  data: ScheduleFilter
-): Promise<ClassSchedule[]> {
-  const res = await api.get<ClassSchedule[]>(
-    `/schedules/filter?startDate=${data.startDate}&&endDate=${data.endDate}&studentName=${data.studentName}`
-  );
+  data: ScheduleFilter,
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  schedules: ClassSchedule[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (data.startDate) params.set("startDate", data.startDate);
+  if (data.endDate) params.set("endDate", data.endDate);
+  if (data.studentName) params.set("studentName", data.studentName);
+  if (data.teacherName) params.set("teacherName", data.teacherName);
+  if (data.courseName) params.set("courseName", data.courseName);
+  if (data.attendanceStatus)
+    params.set("attendanceStatus", data.attendanceStatus);
+  if (data.classStatus) params.set("classStatus", data.classStatus);
+  if (data.room) params.set("room", data.room);
+  if (data.sort) params.set("sort", data.sort);
+
+  // Add pagination params
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  console.log("API call URL:", `/schedules/filter?${params.toString()}`);
+  console.log("Pagination params:", { page, limit });
+
+  const res = await api.get<{
+    schedules: ClassSchedule[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/schedules/filter?${params.toString()}`);
+  console.log("API response:", res.data);
   return res.data;
 }
 
@@ -260,7 +382,8 @@ export async function getSchedulesByStudentAndSession(
 interface SessionData {
   studentId: number;
   courseId: number;
-  classOptionId: number; // Changed from mode to classOptionId
+  teacherId?: number;
+  classOptionId: number;
   classCancel: number;
   payment: string;
   status: string;
@@ -315,8 +438,44 @@ export async function changeSessionStatus(
 }
 
 // teachers
-export async function fetchTeachers(): Promise<Teacher[]> {
-  const response = await api.get<Teacher[]>("/users/teachers");
+export async function fetchTeachers(
+  query?: string,
+  status?: string,
+  course?: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  teachers: Teacher[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (query) params.set("query", query);
+  if (status) params.set("status", status);
+  if (course) params.set("course", course);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    teachers: Teacher[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/users/teachers?${params.toString()}`);
+  return response.data;
+}
+
+export async function fetchAllTeachers(): Promise<Teacher[]> {
+  const response = await api.get<Teacher[]>("/users/teachers/all");
   return response.data;
 }
 
@@ -327,10 +486,48 @@ export async function addNewTeacher(teacher: NewTeacherData): Promise<Teacher> {
   return response.data;
 }
 
+export async function assignCoursesToTeacher(
+  teacherId: number,
+  courseIds: number[]
+): Promise<void> {
+  await api.post(`/users/teachers/${teacherId}/courses`, { courseIds });
+}
+
 // parents
 
-export async function fetchParents(): Promise<Parent[]> {
-  const response = await api.get<Parent[]>("/users/parents");
+export async function fetchParents(
+  query?: string,
+  child?: string,
+  address?: string,
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  parents: Parent[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (query) params.set("query", query);
+  if (child) params.set("child", child);
+  if (address) params.set("address", address);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    parents: Parent[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/users/parents/search?${params.toString()}`);
   return response.data;
 }
 
@@ -345,6 +542,11 @@ type NewParentData = Omit<Parent, "id">;
 
 export async function addNewParent(parent: NewParentData): Promise<Parent> {
   const response = await api.post<Parent>("/users/parents", parent);
+  return response.data;
+}
+
+export async function fetchAllParents(): Promise<Parent[]> {
+  const response = await api.get<Parent[]>("/users/parents/all");
   return response.data;
 }
 
@@ -383,6 +585,52 @@ export async function fetchActiveDiscounts(): Promise<Discount[]> {
 }
 
 // Enrollment API functions
+export interface EnrollmentFilter {
+  date?: string;
+  status?: string;
+  course?: string;
+  teacher?: string;
+  student?: string;
+}
+
+export async function fetchEnrollments(
+  filter: EnrollmentFilter = {},
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  enrollments: Enrollment[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.date) params.set("date", filter.date);
+  if (filter.status) params.set("status", filter.status);
+  if (filter.course) params.set("course", filter.course);
+  if (filter.teacher) params.set("teacher", filter.teacher);
+  if (filter.student) params.set("student", filter.student);
+
+  // Add pagination params
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    enrollments: Enrollment[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/sessions/pending-invoice?${params.toString()}`);
+  return response.data;
+}
+
 export async function fetchPendingInvoices(): Promise<Enrollment[]> {
   const response = await api.get<Enrollment[]>("/sessions/pending-invoice");
   return response.data;
@@ -405,6 +653,49 @@ export async function searchEnrollments(query: string): Promise<Enrollment[]> {
 }
 
 // invoice API functions
+export interface InvoiceFilter {
+  documentId?: string;
+  student?: string;
+  course?: string;
+  receiptDone?: string;
+}
+
+export async function fetchInvoices(
+  filter: InvoiceFilter = {},
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  invoices: Invoice[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.documentId) params.set("documentId", filter.documentId);
+  if (filter.student) params.set("student", filter.student);
+  if (filter.course) params.set("course", filter.course);
+  if (filter.receiptDone) params.set("receiptDone", filter.receiptDone);
+
+  // Add pagination params
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    invoices: Invoice[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/sessions/invoices?${params.toString()}`);
+  return response.data;
+}
 
 export async function addNewInvoice(
   invoice: InvoiceSubmission
@@ -443,5 +734,17 @@ export async function createReceipt(
     invoiceId,
     date: new Date().toISOString().split("T")[0],
   });
+  return response.data;
+}
+
+export async function searchCourses(query: string): Promise<Course[]> {
+  const response = await api.get<Course[]>(
+    `/courses/search?query=${encodeURIComponent(query)}`
+  );
+  return response.data;
+}
+
+export async function fetchAllCourses(): Promise<Course[]> {
+  const response = await api.get<Course[]>("/courses/all");
   return response.data;
 }

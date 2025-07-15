@@ -40,16 +40,18 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface ClassScheduleConfirmProps {
+  courseName: string;
   course?: Pick<Course, "id" | "title">;
   students: ComfirmStudent[];
   classSchedule: ComfirmClassScheduleData;
   teacherData: ComfirmTeacherData;
   onCancel: () => void;
   onConfirm: () => void;
+  onBack?: () => void;
 }
 
-const normalizeDate = (d: string) => {
-  const parsed = new Date(d);
+const normalizeDate = (d?: string) => {
+  const parsed = new Date(d ?? "");
   return parsed.toLocaleDateString();
 };
 
@@ -78,15 +80,15 @@ const generateConflictWarning = (conflict: ConflictDetail) => {
 };
 
 export default function ClassScheduleConfirm({
+  courseName,
+  course,
   students,
   classSchedule,
   teacherData,
   onConfirm,
   onCancel,
+  onBack,
 }: ClassScheduleConfirmProps) {
-  const courseName = new URLSearchParams(window.location.search).get("course");
-  const params = useSearchParams();
-
   const router = useRouter();
 
   const [scheduleRows, setScheduleRows] = useState<ComfirmScheduleRow[]>([]);
@@ -115,7 +117,7 @@ export default function ClassScheduleConfirm({
           schedules: formattedSchedules,
         });
 
-        console.log("Conflicts", conflicts);
+        // console.log("Conflicts", conflicts);
 
         const updatedRows = rows.map((row) => {
           const conflictCourse = conflicts.find(
@@ -147,19 +149,19 @@ export default function ClassScheduleConfirm({
     const student = students.find(
       (s) => s.nickname === row.student || s.name === row.student
     );
+    console.log("Row data:", row);
     const [startTime, endTime] = row.time.split(" - ");
 
     setSelectedRowData({
       date: row.date,
       starttime: startTime,
       endtime: endTime,
-      course: courseName ?? "",
+      course: courseName || "", // Use the actual course name instead of empty string
       teacher: row.teacher,
       teacherId: row.teacherId,
       student: row.student,
       room: row.room,
       nickname: student?.nickname || "",
-      class: row.class,
       studentId: student?.id || "",
       remark: row.remark,
       status: "Pending",
@@ -194,7 +196,6 @@ export default function ClassScheduleConfirm({
       time: `${startTime} - ${endTime}`,
       student: editedData.nickname || editedData.student,
       teacher: editedData.teacher,
-      class: editedData.class,
       room: editedData.room,
       remark: editedData.remark,
       warning: conflictCourse ? generateConflictWarning(conflictCourse) : "",
@@ -206,20 +207,18 @@ export default function ClassScheduleConfirm({
     setSelectedRowIndex(-1);
   };
 
-  // 🧠 Connect to Backend
+  // Connect to Backend
   const handleConfirmSubmit = async () => {
     try {
-      const courseId = params.get("id");
-      // console.log("Teacher ID:", teacherId);
-      // console.log("Teacher Data:", teacherData);
-
       const sessionsMap: Record<string, number> = {};
 
       // 1. Create a session for each student
       for (const student of students) {
         const session = await createSession({
           studentId: Number(student.id),
-          courseId: Number(courseId),
+          courseId: course?.id || -1,
+          teacherId:
+            teacherData.teacherId == -1 ? undefined : teacherData.teacherId,
           classOptionId: Number(classSchedule.classType.id),
           classCancel: 0,
           payment: "Unpaid",
@@ -237,9 +236,10 @@ export default function ClassScheduleConfirm({
 
         return {
           sessionId: sessionsMap[student!.id],
-          courseId: Number(courseId),
+          courseId: course?.id || -1,
           studentId: Number(student!.id),
-          teacherId: teacherData.teacherId,
+          teacherId:
+            teacherData.teacherId == -1 ? undefined : teacherData.teacherId,
           date: row.date,
           startTime,
           endTime,
@@ -253,7 +253,7 @@ export default function ClassScheduleConfirm({
         };
       });
 
-      // console.log("Schedule Payload:", schedulePayload);
+      console.log("Schedule Payload:", schedulePayload);
 
       // 3. Send to backend
       await createBulkSchedules(schedulePayload);
@@ -273,12 +273,21 @@ export default function ClassScheduleConfirm({
           <h1 className="text-2xl font-bold text-orange-500 mb-1">
             Confirming Class Schedule
           </h1>
-          <p className="text-lg text-gray-700">{courseName}</p>
+          <p className="text-lg text-gray-700">{course?.title}</p>
           <p className="text-sm text-gray-500 mt-1">
             Double-click any row to edit the schedule
           </p>
         </div>
         <div className="flex gap-3">
+          {/* {onBack && (
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="text-gray-500 border-gray-500 hover:bg-gray-50 hover:text-gray-600 rounded-full px-6"
+            >
+              Back
+            </Button>
+          )} */}
           <Button
             variant="outline"
             onClick={onCancel}
@@ -312,9 +321,6 @@ export default function ClassScheduleConfirm({
                 Teacher
               </TableHead>
               <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Class
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
                 Room
               </TableHead>
               <TableHead className="border h-30 text-center whitespace-normal font-semibold">
@@ -333,7 +339,9 @@ export default function ClassScheduleConfirm({
                 onDoubleClick={() => handleRowDoubleClick(row, index)}
               >
                 <TableCell className="border h-30 text-center whitespace-normal">
-                  {new Date(row.date).toLocaleDateString("en-GB")}
+                  {row.date
+                    ? new Date(row.date).toLocaleDateString("en-GB")
+                    : "TBD"}
                 </TableCell>
                 <TableCell className="border h-30 text-center whitespace-normal">
                   {row.time}
@@ -343,9 +351,6 @@ export default function ClassScheduleConfirm({
                 </TableCell>
                 <TableCell className="border h-30 text-center whitespace-normal">
                   {row.teacher}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.class}
                 </TableCell>
                 <TableCell className="border h-30 text-center whitespace-normal">
                   {row.room}
@@ -368,6 +373,8 @@ export default function ClassScheduleConfirm({
         initialData={selectedRowData || undefined}
         onSave={handleSaveEdit}
         originalIndex={selectedRowIndex}
+        courseId={course?.id || -1}
+        courseName={courseName}
       />
     </div>
   );

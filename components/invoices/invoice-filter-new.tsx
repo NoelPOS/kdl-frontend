@@ -4,18 +4,26 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useCallback } from "react";
+import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import { useRef, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 
+const receiptStatusOptions = [
+  { label: "Choose Status", value: "" },
+  { label: "Completed", value: "completed" },
+  { label: "Pending", value: "pending" },
+  { label: "All", value: "all" },
+];
+
 type FilterFormData = {
-  query: string;
-  ageRange: string;
-  medium: string;
+  documentId: string;
+  student: string;
+  course: string;
+  receiptDone: string;
 };
 
-const FilterCourse = () => {
+function InvoiceFilterNew() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -23,9 +31,10 @@ const FilterCourse = () => {
 
   const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
     defaultValues: {
-      query: searchParams.get("query") || "",
-      ageRange: searchParams.get("ageRange") || "all",
-      medium: searchParams.get("medium") || "all",
+      documentId: searchParams.get("documentId") || "",
+      student: searchParams.get("student") || "",
+      course: searchParams.get("course") || "",
+      receiptDone: searchParams.get("receiptDone") || "",
     },
   });
 
@@ -37,20 +46,41 @@ const FilterCourse = () => {
 
   const onSubmit = (data: FilterFormData) => {
     const params = new URLSearchParams(searchParams);
-    if (data.query) {
-      params.set("query", data.query);
+
+    // Always reset to page 1 when filtering
+    params.delete("page");
+
+    if (data.documentId) {
+      params.set("documentId", data.documentId);
     } else {
-      params.delete("query");
+      params.delete("documentId");
     }
-    if (data.ageRange) {
-      params.set("ageRange", data.ageRange);
+    if (data.student) {
+      params.set("student", data.student);
     } else {
-      params.delete("ageRange");
+      params.delete("student");
     }
-    if (data.medium) {
-      params.set("medium", data.medium);
+    if (data.course) {
+      params.set("course", data.course);
     } else {
-      params.delete("medium");
+      params.delete("course");
+    }
+    if (data.receiptDone) {
+      params.set("receiptDone", data.receiptDone);
+    } else {
+      params.delete("receiptDone");
+    }
+    if (
+      !data.documentId &&
+      !data.student &&
+      !data.course &&
+      !data.receiptDone
+    ) {
+      params.delete("documentId");
+      params.delete("student");
+      params.delete("course");
+      params.delete("receiptDone");
+      params.set("receiptDone", "all");
     }
     params.delete("page");
     router.replace(`${pathname}?${params.toString()}`);
@@ -58,9 +88,10 @@ const FilterCourse = () => {
 
   const handleClearFilters = useCallback(() => {
     reset({
-      query: "",
-      ageRange: "all",
-      medium: "all",
+      documentId: "",
+      student: "",
+      course: "",
+      receiptDone: "",
     });
     router.replace(pathname);
   }, [reset, router, pathname]);
@@ -115,56 +146,52 @@ const FilterCourse = () => {
           isExpanded ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 ">
-            <div className="flex flex-col gap-2 ">
-              <Label htmlFor="studentName">Course Title</Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0 ">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="documentId">Document ID</Label>
               <Input
-                id="studentName"
-                {...register("query")}
-                placeholder="Enter course title"
-                className="border-gray-300 "
+                id="documentId"
+                {...register("documentId")}
+                placeholder="Enter document ID"
+                className="border-gray-300"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="ageRange">Age Range</Label>
-              <div className="relative">
-                <select
-                  id="ageRange"
-                  {...register("ageRange")}
-                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none"
-                >
-                  <option value="" disabled hidden>
-                    Select age range
-                  </option>
-                  <option value="all">All</option>
-                  <option value="5-6">5-6 years</option>
-                  <option value="7-8">7-8 years</option>
-                  <option value="9-12">9-12 years</option>
-                  <option value="13-18">13-18 years</option>
-                </select>
-
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-              </div>
+              <Label htmlFor="student">Student Name</Label>
+              <Input
+                id="student"
+                {...register("student")}
+                placeholder="Enter student name"
+                className="border-gray-300"
+              />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="medium">Learning Medium</Label>
+              <Label htmlFor="course">Course</Label>
+              <Input
+                id="course"
+                {...register("course")}
+                placeholder="Enter course name"
+                className="border-gray-300"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="receiptDone">Receipt Done</Label>
               <div className="relative">
                 <select
-                  id="medium"
-                  {...register("medium")}
-                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none"
+                  id="receiptDone"
+                  {...register("receiptDone")}
+                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none text-sm text-gray-500"
                 >
-                  <option value="" disabled hidden>
-                    Select learning medium
-                  </option>
-                  <option value="all">All</option>
-                  <option value="Tablet">Tablet</option>
-                  <option value="Computer">Computer</option>
+                  {receiptStatusOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
-
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
@@ -182,6 +209,6 @@ const FilterCourse = () => {
       </div>
     </div>
   );
-};
+}
 
-export default FilterCourse;
+export default InvoiceFilterNew;

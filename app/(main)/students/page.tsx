@@ -1,77 +1,47 @@
-"use client";
+import AddNewStudent from "@/components/students/add-new-student/add-new-student.dialog";
+import StudentFilter from "@/components/students/filter-student";
+import StudentList from "@/components/students/student.list";
+import { Suspense } from "react";
 
-import { usePathname, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { ChevronDown } from "lucide-react";
-
-const statusOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "All", value: "all" },
-];
-
-function PreStudentsPage() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { register, handleSubmit } = useForm<{ status: string }>({
-    defaultValues: {
-      status: "all",
-    },
-  });
-
-  const onSubmit = (data: { status: string }) => {
-    router.replace(`${pathname}/details?active=${data.status}`);
-  };
+export default async function StudentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    query?: string;
+    active?: string;
+    course?: string;
+    page?: string;
+  }>;
+}) {
+  const { query, active, course, page } = (await searchParams) || {};
+  const currentPage = parseInt(page || "1", 10);
 
   return (
-    <Dialog open={true} modal={false}>
-      <DialogContent className="sm:max-w-[350px] p-6 [&>button]:hidden">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            Filter Students
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="status" className="text-sm text-gray-500">
-              Status
-            </Label>
-            <div className="relative">
-              <select
-                id="status"
-                {...register("status")}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none"
-              >
-                {statusOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-          <DialogFooter className="flex justify-end gap-3 mt-6">
-            <Button
-              type="submit"
-              className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6"
-            >
-              Filter
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <div className="p-6">
+      <div className="flex items-center justify-center mb-6 ">
+        <div className="flex items-center justify-around w-full gap-4">
+          <div className="flex-1/4 text-3xl font-medium">Students</div>
+        </div>
+        <AddNewStudent />
+      </div>
+      <StudentFilter />
+      {!query && !active && !course ? (
+        <div className="text-center text-gray-500 mt-4">
+          Please use the filter to search for students.
+        </div>
+      ) : (
+        <Suspense
+          key={`${query || ""}${active || ""}${course || ""}${currentPage}`}
+          fallback={<div>Loading...</div>}
+        >
+          <StudentList
+            query={query || ""}
+            active={active || ""}
+            course={course || ""}
+            page={currentPage}
+          />
+        </Suspense>
+      )}
+    </div>
   );
 }
-
-export default PreStudentsPage;

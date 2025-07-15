@@ -48,8 +48,8 @@ interface ClassScheduleFormProps {
       classLimit: number;
       tuitionFee: number;
     };
-    checkStartTime?: string;
-    checkEndTime?: string;
+    // checkStartTime?: string;
+    // checkEndTime?: string;
     fixedDays?: string[];
     fixedStartTime?: string;
     fixedEndTime?: string;
@@ -57,18 +57,29 @@ interface ClassScheduleFormProps {
     campStartTime?: string;
     campEndTime?: string;
   }) => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export function ClassScheduleForm({
   open,
   onOpenChange,
   afterClassSchedule,
+  onBack,
+  onCancel,
 }: ClassScheduleFormProps) {
-  const { register, handleSubmit, watch, setValue, reset } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<FormData>({
     defaultValues: {
       classTypeId: "",
-      checkStartTime: "",
-      checkEndTime: "",
+      // checkStartTime: "",
+      // checkEndTime: "",
       fixedDays: [],
       fixedStartTime: "",
       fixedEndTime: "",
@@ -95,8 +106,8 @@ export function ClassScheduleForm({
   >();
 
   // Refs for time inputs
-  const checkStartTimeRef = useRef<HTMLInputElement>(null);
-  const checkEndTimeRef = useRef<HTMLInputElement>(null);
+  // const checkStartTimeRef = useRef<HTMLInputElement>(null);
+  // const checkEndTimeRef = useRef<HTMLInputElement>(null);
   const fixedStartTimeRef = useRef<HTMLInputElement>(null);
   const fixedEndTimeRef = useRef<HTMLInputElement>(null);
   const campStartTimeRef = useRef<HTMLInputElement>(null);
@@ -158,15 +169,36 @@ export function ClassScheduleForm({
     );
 
     if (!selectedCourse) {
-      console.error("Selected course not found");
+      alert("Please select a class type.");
       return;
+    }
+
+    // Validate based on class type
+    if (selectedCourse.classMode === "12 times fixed") {
+      if (selectedDays.length === 0) {
+        alert("Please select at least one day for 12 times fixed.");
+        return;
+      }
+      if (!data.fixedStartTime || !data.fixedEndTime) {
+        alert("Please select both start and end times for 12 times fixed.");
+        return;
+      }
+    } else if (selectedCourse.classMode === "5 days camp") {
+      if (selectedDates.length === 0) {
+        alert("Please select at least one date for camp class.");
+        return;
+      }
+      if (!data.campStartTime || !data.campEndTime) {
+        alert("Please select both start and end times for camp class.");
+        return;
+      }
     }
 
     // Update form data with selected days/dates and complete course object
     const updatedData = {
       classType: selectedCourse, // Complete course object
-      checkStartTime: data.checkStartTime,
-      checkEndTime: data.checkEndTime,
+      // checkStartTime: data.checkStartTime,
+      // checkEndTime: data.checkEndTime,
       fixedDays: selectedDays,
       fixedStartTime: data.fixedStartTime,
       fixedEndTime: data.fixedEndTime,
@@ -175,13 +207,16 @@ export function ClassScheduleForm({
       campEndTime: data.campEndTime,
     };
 
-    console.log("Class Schedule Submitted:", updatedData);
-    // Reset form and close dialog
-    reset();
-    setSelectedDays([]);
-    setSelectedDates([]);
+    // console.log("Class Schedule Submitted:", updatedData);
     afterClassSchedule(updatedData);
+    console.log("success");
     onOpenChange(false);
+  };
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    }
   };
 
   useEffect(() => {
@@ -235,7 +270,7 @@ export function ClassScheduleForm({
               </div>
 
               {/* 12 Times Check - Show start and end time */}
-              {classType === "12 times check" && (
+              {/* {classType === "12 times check" && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     12 Times Check Schedule
@@ -291,7 +326,7 @@ export function ClassScheduleForm({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* 12 Times Fixed - Day selection with start/end time */}
               {classType === "12 times fixed" && (
@@ -520,15 +555,18 @@ export function ClassScheduleForm({
             </div>
 
             <DialogFooter className="flex justify-between gap-4 mt-8 px-0">
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 rounded-full flex-1"
-                >
-                  Cancel
-                </Button>
-              </DialogClose>
+              <div className="flex gap-2 flex-1">
+                {onBack && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-gray-500 border-gray-500 hover:bg-gray-50 hover:text-gray-600 rounded-full flex-1"
+                    onClick={handleBack}
+                  >
+                    Back
+                  </Button>
+                )}
+              </div>
               <Button
                 type="submit"
                 className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"

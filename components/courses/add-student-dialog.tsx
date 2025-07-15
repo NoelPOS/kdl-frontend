@@ -28,25 +28,33 @@ interface AddStudentProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (students: Student[]) => void;
+  onCancel?: () => void;
 }
 
 export function AddStudent({
   open,
   onOpenChange,
   onSubmit: afterStudent,
+  onCancel,
 }: AddStudentProps) {
-  const { control, register, handleSubmit, reset, setValue } =
-    useForm<FormData>({
-      defaultValues: {
-        students: [
-          {
-            name: "",
-            nickname: "",
-            id: "",
-          },
-        ],
-      },
-    });
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      students: [
+        {
+          name: "",
+          nickname: "",
+          id: "",
+        },
+      ],
+    },
+  });
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -95,19 +103,38 @@ export function AddStudent({
   };
 
   const onSubmit = (data: FormData) => {
-    reset({
-      students: [
-        {
-          name: "",
-          nickname: "",
-          id: "",
-        },
-      ],
-    });
+    // Validate that all students have required fields
+    const isValid = data.students.every(
+      (student) =>
+        student.name !== "" && student.nickname !== "" && student.id !== ""
+    );
+
+    if (!isValid) {
+      alert("Please fill in all required fields for all students.");
+      return;
+    }
+
+    // reset({
+    //   students: [
+    //     {
+    //       name: "",
+    //       nickname: "",
+    //       id: "",
+    //     },
+    //   ],
+    // });
     if (afterStudent) {
       afterStudent(data.students);
     }
     onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -140,7 +167,9 @@ export function AddStudent({
                       </Label>
                       <div className="relative">
                         <Input
-                          {...register(`students.${index}.name` as const)}
+                          {...register(`students.${index}.name` as const, {
+                            required: "Student name is required",
+                          })}
                           placeholder="Jane Doe"
                           className="border-gray-300 rounded-lg pr-10"
                           onChange={(e) => handleSearch(e.target.value, index)}
@@ -175,7 +204,9 @@ export function AddStudent({
                         Nickname
                       </Label>
                       <Input
-                        {...register(`students.${index}.nickname` as const)}
+                        {...register(`students.${index}.nickname` as const, {
+                          required: "Nickname is required",
+                        })}
                         placeholder="Jane"
                         className="border-gray-300 rounded-lg"
                       />
@@ -190,7 +221,9 @@ export function AddStudent({
                         ID
                       </Label>
                       <Input
-                        {...register(`students.${index}.id` as const)}
+                        {...register(`students.${index}.id` as const, {
+                          required: "Student ID is required",
+                        })}
                         placeholder="202501001"
                         className="border-gray-300 rounded-lg"
                       />
@@ -227,15 +260,14 @@ export function AddStudent({
             </div>
 
             <DialogFooter className="flex justify-between gap-4 mt-8 px-0">
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 rounded-full flex-1"
-                >
-                  Cancel
-                </Button>
-              </DialogClose>
+              <Button
+                type="button"
+                variant="outline"
+                className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 rounded-full flex-1"
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"

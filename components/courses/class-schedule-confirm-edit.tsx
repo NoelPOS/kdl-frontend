@@ -17,7 +17,6 @@ import { useEffect, useRef, useState } from "react";
 import { getTeacherByCourseId } from "@/lib/axio";
 import { EditScheduleFormData } from "@/app/types/course.type";
 import { Teacher } from "@/app/types/teacher.type";
-import { useSearchParams } from "next/navigation";
 
 interface EditScheduleDialogProps {
   open: boolean;
@@ -25,6 +24,8 @@ interface EditScheduleDialogProps {
   initialData?: Partial<EditScheduleFormData>;
   onSave: (data: EditScheduleFormData, originalIndex: number) => void;
   originalIndex: number;
+  courseId: number;
+  courseName?: string;
 }
 
 export function EditScheduleDialog({
@@ -33,20 +34,20 @@ export function EditScheduleDialog({
   initialData,
   onSave,
   originalIndex,
+  courseId,
+  courseName,
 }: EditScheduleDialogProps) {
-  const params = useSearchParams();
-  const courseId = Number(params.get("id"));
+  console.log("Class Name:", courseName);
   const { register, handleSubmit, reset } = useForm<EditScheduleFormData>({
     defaultValues: {
       date: "",
       starttime: "",
       endtime: "",
-      course: "",
+      course: courseName,
       teacher: "",
       student: "",
       room: "",
       nickname: "",
-      class: "",
       studentId: "",
       remark: "",
       status: "",
@@ -78,15 +79,17 @@ export function EditScheduleDialog({
         date: formattedDate,
         starttime: initialData.starttime,
         endtime: initialData.endtime,
+        course: initialData.course || courseName || "", // Ensure course name is preserved
       });
     }
-  }, [initialData, reset, open]);
+  }, [initialData, reset, open, courseName]);
 
   useEffect(() => {
     const fetchTeachers = async () => {
-      if (!open || !initialData?.course) return;
+      if (!open) return;
       try {
         const teacherList = await getTeacherByCourseId(courseId);
+        // console.log("Fetched teachers:", teacherList);
         setTeachers(teacherList);
       } catch (error) {
         console.error("Failed to fetch teachers:", error);
@@ -105,6 +108,8 @@ export function EditScheduleDialog({
     onSave(data, originalIndex);
     onOpenChange(false);
   };
+
+  console.log("teachers:", teachers);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -260,17 +265,6 @@ export function EditScheduleDialog({
                 {...register("nickname")}
                 className="border-black"
                 placeholder="Enter nickname"
-              />
-            </div>
-
-            {/* Class */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="class">Class</Label>
-              <Input
-                id="class"
-                {...register("class")}
-                className="border-black"
-                placeholder="Enter class number"
               />
             </div>
 

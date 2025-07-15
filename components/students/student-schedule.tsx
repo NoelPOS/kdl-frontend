@@ -19,12 +19,9 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
     setSchedules(initialSchedules);
   }, [initialSchedules]);
 
-  // Handle schedule update
   const handleScheduleUpdate = useCallback((updatedSchedule: FormData) => {
-    // console.log("Updating schedule:", updatedSchedule);
-    // console.log("Current schedules:", schedules);
+    console.log("Updating schedule in UI:", updatedSchedule);
 
-    // Create the updated schedule object
     const updatedScheduleData = {
       schedule_date: updatedSchedule.date,
       schedule_startTime: updatedSchedule.starttime,
@@ -32,27 +29,35 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
       schedule_room: updatedSchedule.room,
       schedule_remark: updatedSchedule.remark,
       schedule_attendance: updatedSchedule.status ?? "",
+      schedule_warning: updatedSchedule.warning ?? "",
+      teacher_name: updatedSchedule.teacher,
+      student_name: updatedSchedule.student,
+      student_nickname: updatedSchedule.nickname,
+      course_title: updatedSchedule.course,
     };
 
-    // console.log("Updated schedule data:", updatedScheduleData);
-
-    // Update current schedules - convert scheduleId to string for comparison
     setSchedules((prevSchedules) => {
       const updatedSchedules = prevSchedules.map((schedule) => {
-        if (schedule.schedule_id == updatedSchedule.scheduleId.toString()) {
-          // console.log("Found matching schedule to update:", schedule);
+        console.log(schedule.schedule_id);
+        console.log(updatedSchedule.scheduleId);
+        if (
+          Number(schedule.schedule_id) == Number(updatedSchedule.scheduleId)
+        ) {
+          console.log(
+            "Found matching schedule, updating:",
+            schedule.schedule_id
+          );
           return { ...schedule, ...updatedScheduleData };
         }
         return schedule;
       });
-      // console.log("Updated schedules:", updatedSchedules);
+      console.log("Updated schedules:", updatedSchedules);
       return updatedSchedules;
     });
   }, []);
 
   const handleRowDoubleClick = useCallback((session: ClassSchedule) => {
     console.log("Row double clicked:", session);
-    // Fix date conversion - remove the +24 hours adjustment
     const formData: FormData = {
       date: new Date(
         new Date(session.schedule_date).getTime() + 24 * 60 * 60 * 1000
@@ -64,13 +69,16 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
       course: session.course_title,
       teacher: session.teacher_name,
       student: session.student_name,
+      studentId: Number(session.student_id),
       room: session.schedule_room ?? "",
-      nickname: session.student_name ?? "",
+      nickname: session.student_nickname ?? session.student_name ?? "",
       remark: session.schedule_remark ?? "",
       status: session.schedule_attendance ?? "",
       courseId: Number(session.schedule_courseId),
       scheduleId: Number(session.schedule_id),
+      warning: session.schedule_warning ?? "",
     };
+    // console.log("Prepared form data:", formData);
     setSelectedSession(formData);
     setOpen(true);
   }, []);

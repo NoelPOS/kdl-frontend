@@ -110,6 +110,7 @@ function StudentDetailRightClient({
         onSubmit={handleCourseSubmit}
       />
       <AddTeacher
+        courseId={courseData.id}
         open={teacherOpen}
         onOpenChange={setTeacherOpen}
         afterTeacher={handleTeacherSubmit}
@@ -125,6 +126,7 @@ function StudentDetailRightClient({
           <div className="bg-white rounded-lg h-full ">
             <ClassScheduleConfirm
               course={courseData}
+              courseName={courseData.title}
               students={studentData}
               classSchedule={classScheduleData}
               teacherData={teacherData}

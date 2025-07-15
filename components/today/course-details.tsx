@@ -30,9 +30,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border">
-        <StudentSchedule initialSchedules={selectedCourse.students} />
-      </div>
+      <StudentSchedule initialSchedules={selectedCourse.students} />
     </div>
   );
 };
