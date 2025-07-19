@@ -12,11 +12,17 @@ import {
   TeacherData,
 } from "@/app/types/course.type";
 
+type DialogStep = "course" | "schedule" | "teacher" | "confirm" | "closed";
+
 function StudentDetailRightClient({
   studentData,
 }: {
   studentData: ComfirmStudent[];
 }) {
+  // Navigation state
+  const [currentStep, setCurrentStep] = useState<DialogStep>("closed");
+
+  // states to control dialogs
   const [courseOpen, setCourseOpen] = useState(false);
   const [courseTypeOpen, setCourseTypeOpen] = useState(false);
   const [teacherOpen, setTeacherOpen] = useState(false);
@@ -43,27 +49,118 @@ function StudentDetailRightClient({
     teacherId: -1,
   });
 
-  const handleCourseSubmit = (course: { id: number; title: string }) => {
-    setCourseData(course);
+  // Navigation functions
+  const openCourseDialog = () => {
+    setCurrentStep("course");
+    setCourseOpen(true);
+  };
+
+  const goToScheduleStep = () => {
+    // Validate that course is selected
+    if (courseData.id === -1 || !courseData.title) {
+      alert("Please select a course first!");
+      return;
+    }
+
+    setCurrentStep("schedule");
     setCourseOpen(false);
     setCourseTypeOpen(true);
   };
 
-  const handleClassScheduleSubmit = (schedule: ComfirmClassScheduleData) => {
-    setClassScheduleData(schedule);
+  const goToTeacherStep = () => {
+    // Validate that schedule is configured
+    if (classScheduleData.classType.id === -1) {
+      alert("Please configure the class schedule first!");
+      return;
+    }
+
+    setCurrentStep("teacher");
     setCourseTypeOpen(false);
     setTeacherOpen(true);
   };
 
-  const handleTeacherSubmit = (teacher: TeacherData) => {
-    setTeacherData(teacher);
+  const goToConfirmStep = () => {
+    // For class types other than 2, validate that teacher is selected
+    if (classScheduleData.classType.id !== 2 && teacherData.teacherId === -1) {
+      alert("Please select a teacher first!");
+      return;
+    }
+
+    setCurrentStep("confirm");
     setTeacherOpen(false);
     setConfirmOpen(true);
   };
 
-  const handleConfirmCancel = () => {
+  const goBackToCourse = () => {
+    setCurrentStep("course");
+    setCourseTypeOpen(false);
+    setCourseOpen(true);
+  };
+
+  const goBackToSchedule = () => {
+    setCurrentStep("schedule");
+    setTeacherOpen(false);
+    setCourseTypeOpen(true);
+  };
+
+  const goBackToTeacher = () => {
+    setCurrentStep("teacher");
     setConfirmOpen(false);
-    // Reset all data
+    setTeacherOpen(true);
+  };
+
+  // dialog handler functions
+
+  // dialog handler functions
+  const handleCourseSubmit = (course: { id: number; title: string }) => {
+    setCourseData(course);
+    goToScheduleStep();
+  };
+
+  const handleClassScheduleSubmit = (schedule: ComfirmClassScheduleData) => {
+    // Validate that course is selected
+    if (courseData.id === -1 || !courseData.title) {
+      alert("Please select a course first!");
+      return;
+    }
+
+    setClassScheduleData(schedule);
+
+    if (schedule.classType.id === 2) {
+      // If class type is 12 times check, go directly to confirm step
+      setCurrentStep("confirm");
+      setCourseTypeOpen(false);
+      setConfirmOpen(true);
+    } else {
+      goToTeacherStep();
+    }
+  };
+
+  const handleTeacherSubmit = (teacher: TeacherData) => {
+    // Validate that schedule is configured
+    if (classScheduleData.classType.id === -1) {
+      alert("Please configure the class schedule first!");
+      return;
+    }
+
+    setTeacherData(teacher);
+    goToConfirmStep();
+  };
+
+  const handleConfirmCancel = () => {
+    setCurrentStep("closed");
+    setConfirmOpen(false);
+    resetAllData();
+  };
+
+  const handleConfirmSubmit = () => {
+    setCurrentStep("closed");
+    setConfirmOpen(false);
+    resetAllData();
+    alert("Class schedule confirmed successfully!");
+  };
+
+  const resetAllData = () => {
     setCourseData({
       id: -1,
       title: "",
@@ -79,46 +176,46 @@ function StudentDetailRightClient({
     setTeacherData({ teacher: "", room: "", remark: "", teacherId: -1 });
   };
 
-  const handleConfirmSubmit = () => {
-    // console.log("Final submission:", {
-    //   students: courseData,
-    //   schedule: classScheduleData,
-    //   teacher: teacherData,
-    // });
+  const handleDialogClose = () => {
+    setCurrentStep("closed");
+    setCourseOpen(false);
+    setCourseTypeOpen(false);
+    setTeacherOpen(false);
     setConfirmOpen(false);
-    // Reset all data
-    setCourseData({
-      id: -1,
-      title: "",
-    });
-    setClassScheduleData({
-      classType: {
-        id: -1,
-        classLimit: 0,
-        classMode: "",
-        tuitionFee: 0,
-      },
-    });
-    setTeacherData({ teacher: "", room: "", remark: "", teacherId: -1 });
-    alert("Class schedule confirmed successfully!");
+    resetAllData();
   };
   return (
     <>
       <StudentDetailAddCourse
         open={courseOpen}
-        onOpenChange={setCourseOpen}
+        onOpenChange={openCourseDialog}
         onSubmit={handleCourseSubmit}
+        onCancel={handleDialogClose}
+      />
+      <ClassScheduleForm
+        open={courseTypeOpen}
+        onOpenChange={(open) => {
+          // Only allow closing, prevent manual opening
+          if (!open) {
+            setCourseTypeOpen(false);
+          }
+        }}
+        afterClassSchedule={handleClassScheduleSubmit}
+        onBack={goBackToCourse}
+        onCancel={handleDialogClose}
       />
       <AddTeacher
         courseId={courseData.id}
         open={teacherOpen}
-        onOpenChange={setTeacherOpen}
+        onOpenChange={(open) => {
+          // Only allow closing, prevent manual opening
+          if (!open) {
+            setTeacherOpen(false);
+          }
+        }}
         afterTeacher={handleTeacherSubmit}
-      />
-      <ClassScheduleForm
-        open={courseTypeOpen}
-        onOpenChange={setCourseTypeOpen}
-        afterClassSchedule={handleClassScheduleSubmit}
+        onBack={goBackToSchedule}
+        onCancel={handleDialogClose}
       />
 
       {confirmOpen && (
@@ -132,6 +229,7 @@ function StudentDetailRightClient({
               teacherData={teacherData}
               onCancel={handleConfirmCancel}
               onConfirm={handleConfirmSubmit}
+              onBack={goBackToTeacher}
             />
           </div>
         </div>

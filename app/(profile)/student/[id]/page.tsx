@@ -10,11 +10,14 @@ export default async function StudentDetailPage({
     id: string;
   }>;
   searchParams: Promise<{
-    query: string;
+    courseName?: string;
+    status?: string;
+    payment?: string;
+    page?: string;
   }>;
 }) {
   const { id } = (await params) || -1;
-  const { query } = (await searchParams) || "";
+  const resolvedSearchParams = (await searchParams) || {};
   const student = await getStudentById(Number(id));
   return (
     <div className="relative">
@@ -29,7 +32,7 @@ export default async function StudentDetailPage({
             name: student.name ?? "",
             nickname: student.nickname ?? "",
           }}
-          query={query}
+          searchParams={resolvedSearchParams}
         />
       </div>
     </div>

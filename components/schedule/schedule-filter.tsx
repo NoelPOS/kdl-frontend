@@ -106,6 +106,8 @@ export function ScheduleFilterForm() {
       router.replace(
         `${pathname}${params.toString() ? `?${params.toString()}` : ""}`
       );
+
+      setLoading(false);
     },
     [router, pathname]
   );

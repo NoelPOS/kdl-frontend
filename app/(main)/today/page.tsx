@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Course } from "@/app/types/today.type";
 import RenderSchedule from "@/components/today/render-schedule";
 import { getTodaySchedules } from "@/lib/axio";

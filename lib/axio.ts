@@ -106,8 +106,26 @@ export async function searchStudents(query: string): Promise<Student[]> {
 }
 
 export async function getStudentById(id: number): Promise<Partial<Student>> {
-  const response = await api.get<Partial<Student>>(`/users/students/${id}`);
-  return response.data;
+  try {
+    const response = await api.get(`/users/students/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching student ${id}:`, error);
+    throw error;
+  }
+}
+
+export async function updateStudentById(
+  id: number,
+  studentData: Partial<Student>
+): Promise<Student> {
+  try {
+    const response = await api.put(`/users/students/${id}`, studentData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating student ${id}:`, error);
+    throw error;
+  }
 }
 
 type NewStudentData = Omit<Student, "id">;
@@ -421,6 +439,49 @@ export async function getStudentSession(
   const res = await api.get<SessionOverview[]>(
     `/sessions/overview/${studentId}`
   );
+  return res.data;
+}
+
+export interface StudentSessionFilter {
+  courseName?: string;
+  status?: string; // "completed" | "wip"
+  payment?: string; // "paid" | "unpaid"
+}
+
+export async function getStudentSessionsFiltered(
+  studentId: number,
+  filters: StudentSessionFilter = {},
+  page: number = 1,
+  limit: number = 12
+): Promise<{
+  sessions: SessionOverview[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+
+  if (filters.courseName) params.set("courseName", filters.courseName);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.payment) params.set("payment", filters.payment);
+
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const res = await api.get<{
+    sessions: SessionOverview[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/sessions/student/${studentId}/filtered?${params.toString()}`);
   return res.data;
 }
 
@@ -739,7 +800,7 @@ export async function createReceipt(
 
 export async function searchCourses(query: string): Promise<Course[]> {
   const response = await api.get<Course[]>(
-    `/courses/search?query=${encodeURIComponent(query)}`
+    `/courses/search?name=${encodeURIComponent(query)}`
   );
   return response.data;
 }

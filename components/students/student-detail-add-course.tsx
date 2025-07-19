@@ -23,12 +23,14 @@ interface StudentDetailAddCourseProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (course: Pick<Course, "id" | "title">) => void;
+  onCancel?: () => void;
 }
 
 export function StudentDetailAddCourse({
   open,
   onOpenChange,
   onSubmit: afterCourse,
+  onCancel,
 }: StudentDetailAddCourseProps) {
   const { register, handleSubmit, setValue, reset } = useForm<{
     course: string;
@@ -45,7 +47,7 @@ export function StudentDetailAddCourse({
     if (value.length >= 2) {
       try {
         const results = await searchCourses(value);
-        // console.log("Search Results: ", results);
+        console.log("Search Results: ", results);
         setSearchResults(results);
       } catch (err) {
         console.error("Course search failed", err);
@@ -78,7 +80,7 @@ export function StudentDetailAddCourse({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -148,6 +150,7 @@ export function StudentDetailAddCourse({
                   type="button"
                   variant="outline"
                   className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 rounded-full flex-1"
+                  onClick={onCancel}
                 >
                   Cancel
                 </Button>

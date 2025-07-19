@@ -29,7 +29,7 @@ export function generateScheduleRows(
 ): ComfirmScheduleRow[] {
   const rows: ComfirmScheduleRow[] = [];
 
-  // console.log("Generating schedule rows for class mode:", classSchedule);
+  console.log("Generating schedule rows for class mode:", classSchedule);
 
   if (classSchedule.classType.classMode === "12 times check") {
     // For 12 times check, create 12 placeholder rows
@@ -48,6 +48,7 @@ export function generateScheduleRows(
       });
     }
   } else if (classSchedule.classType.classMode === "12 times fixed") {
+    console.log("fixedDays", classSchedule.fixedDays);
     // Generate 12 sessions based on selected days
     if (classSchedule.fixedDays && classSchedule.fixedDays.length > 0) {
       const selectedDays = classSchedule.fixedDays;
@@ -73,7 +74,7 @@ export function generateScheduleRows(
       sessionDates.forEach((date) => {
         students.forEach((student) => {
           rows.push({
-            date: "TBD",
+            date: date,
             time: startTime && endTime ? `${startTime} - ${endTime}` : "TBD",
             student: student.nickname || student.name,
             teacher: teacherData.teacher,
@@ -86,7 +87,10 @@ export function generateScheduleRows(
         });
       });
     }
-  } else if (classSchedule.classType.classMode === "5 days camp") {
+  } else if (
+    classSchedule.classType.classMode === "5 days camp" ||
+    classSchedule.classType.classMode === "2 days camp"
+  ) {
     // Generate sessions based on selected dates
     if (classSchedule.campDates && classSchedule.campDates.length > 0) {
       const startTime = classSchedule.campStartTime;

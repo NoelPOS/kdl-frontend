@@ -415,7 +415,7 @@ export function ClassScheduleForm({
               )}
 
               {/* Camp Class - Calendar selection with start/end time */}
-              {classType === "5 days camp" && (
+              {(classType === "5 days camp" || classType === "2 days camp") && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     Camp Class Schedule

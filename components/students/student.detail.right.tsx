@@ -1,44 +1,37 @@
-import { StudentCourse } from "./student-course";
+import { Suspense } from "react";
 import StudentDetailRightClient from "./student-detail-right-client";
-import { getStudentSession } from "@/lib/axio";
 import { ComfirmStudent } from "@/app/types/course.type";
-import StudentSessionSearch from "./search/student-session.search";
+import StudentSessionsContent from "./student-sessions-content";
+import StudentSessionsLoading from "./student-sessions-loading";
+import StudentSessionFilterComponent from "./student-session-filter";
 
 export default async function StudentDetailRight({
   student,
-  query,
+  searchParams,
 }: {
   student: ComfirmStudent;
-  query: string;
+  searchParams: {
+    courseName?: string;
+    status?: string;
+    payment?: string;
+    page?: string;
+  };
 }) {
-  const sessions = await getStudentSession(Number(student.id));
-  const filtered = query
-    ? sessions.filter((s) =>
-        s.courseTitle.toLowerCase().includes(query.toLowerCase())
-      )
-    : sessions;
+  // Create a key for Suspense to re-trigger when search params change
+  const suspenseKey = `${searchParams.courseName || ""}${
+    searchParams.status || ""
+  }${searchParams.payment || ""}${searchParams.page || ""}`;
 
   return (
-    <>
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div></div>
-          <div className="relative w-[400px]">
-            <StudentSessionSearch />
-          </div>
-          <StudentDetailRightClient studentData={[student]} />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {filtered.length > 0 ? (
-            filtered.map((s) => <StudentCourse key={s.sessionId} course={s} />)
-          ) : (
-            <h1> This student has no session yet. </h1>
-          )}
-        </div>
+    <div className="flex-1 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Student Sessions</h1>
+        <StudentDetailRightClient studentData={[student]} />
       </div>
-
-      {/* {showSchedule && <StudentSchedule />} */}
-    </>
+      <StudentSessionFilterComponent />
+      <Suspense key={suspenseKey} fallback={<StudentSessionsLoading />}>
+        <StudentSessionsContent student={student} searchParams={searchParams} />
+      </Suspense>
+    </div>
   );
 }

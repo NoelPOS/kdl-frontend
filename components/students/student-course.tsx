@@ -53,7 +53,7 @@ export function StudentCourse({ course }: StudentCourseProps) {
             <div className="text-sm  text-gray-600">{course.progress}</div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Tablet className="h-4 w-4" />
-              {/* {course.device} */} Later
+              {course.medium}
             </div>
           </div>
           <div className="flex items-center justify-between mt-auto">
