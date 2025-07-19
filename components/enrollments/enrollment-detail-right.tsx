@@ -51,6 +51,7 @@ const InvoiceDetailRight = ({
   discounts: Discount[];
   session: Enrollment;
 }) => {
+  // console.log("Session Data: ", session);
   const [discountRows, setDiscountRows] = useState<DiscountRow[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");

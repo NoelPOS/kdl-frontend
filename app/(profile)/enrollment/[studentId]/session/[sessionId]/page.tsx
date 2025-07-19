@@ -18,9 +18,17 @@ export default async function StudentDetailPage({
     studentId: -1,
     sessionId: -1,
   };
-  const student = await getStudentById(Number(studentId));
-  const discounts = await fetchActiveDiscounts();
-  const session = await fetchSpedificPendingInvoices(Number(sessionId));
+  // const student = await getStudentById(Number(studentId));
+  // const discounts = await fetchActiveDiscounts();
+  // const session = await fetchSpedificPendingInvoices(Number(sessionId));
+
+  const [student, discounts, session] = await Promise.all([
+    getStudentById(Number(studentId)),
+    fetchActiveDiscounts(),
+    fetchSpedificPendingInvoices(Number(sessionId)),
+  ]);
+
+  console.log("Session Data: ", session);
 
   return (
     <div className="relative">

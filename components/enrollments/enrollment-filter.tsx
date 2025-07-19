@@ -62,7 +62,7 @@ function EnrollmentFilter() {
     if (data.status && data.status !== "all") {
       params.set("status", data.status);
     } else {
-      params.delete("status");
+      params.set("status", "all");
     }
     if (data.course) {
       params.set("course", data.course);
