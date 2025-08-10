@@ -10,6 +10,7 @@ export default async function EnrollmentList({
   course,
   teacher,
   student,
+  transactionType,
   page = 1,
 }: {
   date: string;
@@ -17,6 +18,7 @@ export default async function EnrollmentList({
   course: string;
   teacher: string;
   student: string;
+  transactionType: string;
   page?: number;
 }) {
   const filter: EnrollmentFilter = {
@@ -25,6 +27,7 @@ export default async function EnrollmentList({
     course,
     teacher,
     student,
+    transactionType,
   };
 
   const { enrollments, pagination } = await fetchEnrollments(filter, page, 10);

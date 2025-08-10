@@ -5,6 +5,7 @@ export interface Enrollment {
   student_name: string;
   course_title: string;
   classoption_tuitionfee: string;
+  transaction_type?: "course" | "courseplus" | "package";
 }
 
 export interface DiscountRow {
@@ -19,10 +20,16 @@ export interface InvoiceItem {
 }
 
 export interface InvoiceSubmission {
-  sessionId: number;
+  studentId: number;
+  sessionId: number | string | null;
+  coursePlusId?: number | string | null;
+  packageId?: number | string | null;
   documentId: string;
   date: string;
   paymentMethod: string;
   totalAmount: number;
+  studentName: string;
+  courseName: string;
+  transactionType: "course" | "courseplus" | "package";
   items: InvoiceItem[];
 }

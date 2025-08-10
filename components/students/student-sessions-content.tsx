@@ -1,10 +1,10 @@
 import { getStudentSessionsFiltered, StudentSessionFilter } from "@/lib/axio";
-import { ComfirmStudent } from "@/app/types/course.type";
+import { Student } from "@/app/types/course.type";
 
 import StudentSessionList from "./student-session-list";
 
 interface StudentSessionsContentProps {
-  student: ComfirmStudent;
+  student: Student;
   searchParams: {
     courseName?: string;
     status?: string;

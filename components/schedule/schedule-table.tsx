@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -44,28 +44,31 @@ function ScheduleTable({
               <TableHead className="border h-30 text-center whitespace-normal">
                 Date
               </TableHead>
+              <TableHead className="border h-30 text-center whitespace-normal hidden sm:table-cell">
+                Profile
+              </TableHead>
               <TableHead className="border h-30 text-center whitespace-normal font-semibold">
                 Time
               </TableHead>
               <TableHead className="border h-30 text-center whitespace-normal font-semibold">
                 Student
               </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+              <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
                 Teacher
               </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+              <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
                 Course
               </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+              <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
                 Room
               </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+              <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden sm:table-cell">
                 Attendance
               </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+              <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
                 Remark
               </TableHead>
-              <TableHead className="border h-30 text-center font-semibold w-42 max-w-xs break-words whitespace-normal">
+              <TableHead className="border h-30 text-center font-semibold w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
                 Warning
               </TableHead>
             </TableRow>
@@ -79,7 +82,24 @@ function ScheduleTable({
                 title="Double-click to edit"
               >
                 <TableCell className="border h-30 text-center whitespace-normal">
-                  {new Date(session.schedule_date).toLocaleDateString("en-GB")}
+                  {session.schedule_date
+                    ? new Date(session.schedule_date).toLocaleDateString(
+                        "en-GB"
+                      )
+                    : "TBD"}
+                </TableCell>
+                <TableCell className="border h-30 hidden sm:table-cell text-center whitespace-normal">
+                  <div className="flex items-center justify-center">
+                    <Image
+                      src={
+                        session.student_profilePicture || "/default-profile.png"
+                      }
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="border h-30 text-center whitespace-normal">
                   {`${session.schedule_startTime} - ${session.schedule_endTime}`}
@@ -87,22 +107,22 @@ function ScheduleTable({
                 <TableCell className="border h-30 text-center whitespace-normal">
                   {session.student_name}
                 </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {session.teacher_name}
+                <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                  {session.teacher_name || "TBD"}
                 </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
+                <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
                   {session.course_title}
                 </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
+                <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
                   {session.schedule_room}
                 </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
+                <TableCell className="border h-30 text-center whitespace-normal hidden sm:table-cell">
                   {getAttendanceBadge(session.schedule_attendance)}
                 </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
+                <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
                   {session.schedule_remark || ""}
                 </TableCell>
-                <TableCell className="border h-30 text-center text-red-500    w-42 max-w-xs break-words whitespace-normal">
+                <TableCell className="border h-30 text-center text-red-500    w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
                   {session.schedule_warning}
                 </TableCell>
               </TableRow>

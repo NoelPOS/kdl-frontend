@@ -178,10 +178,10 @@ function CourseClientSide({
         />
         <ClassScheduleForm
           open={courseTypeOpen}
-          onOpenChange={setCourseTypeOpen}
+          // onOpenChange={setCourseTypeOpen}
           afterClassSchedule={handleClassScheduleSubmit}
           onBack={goBackToStudents}
-          onCancel={handleDialogClose}
+          // onCancel={handleDialogClose}
         />
         <AddTeacher
           courseId={courseId}

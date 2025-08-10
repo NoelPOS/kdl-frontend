@@ -3,22 +3,18 @@ import React, { useState } from "react";
 
 import StudentDetailAddCourse from "./student-detail-add-course";
 import AddTeacher from "../courses/add-teacher-dialog";
-import ClassScheduleForm from "../courses/class-schedule-dialog";
+import ClassScheduleDialog from "../courses/class-schedule-dialog";
 import ClassScheduleConfirm from "../courses/class-schedule-confirm";
 import {
   ComfirmClassScheduleData,
-  ComfirmStudent,
+  Student,
   Course,
   TeacherData,
 } from "@/app/types/course.type";
 
 type DialogStep = "course" | "schedule" | "teacher" | "confirm" | "closed";
 
-function StudentDetailRightClient({
-  studentData,
-}: {
-  studentData: ComfirmStudent[];
-}) {
+function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
   // Navigation state
   const [currentStep, setCurrentStep] = useState<DialogStep>("closed");
 
@@ -50,18 +46,12 @@ function StudentDetailRightClient({
   });
 
   // Navigation functions
-  const openCourseDialog = () => {
+  const gotoCourseStep = () => {
     setCurrentStep("course");
     setCourseOpen(true);
   };
 
   const goToScheduleStep = () => {
-    // Validate that course is selected
-    if (courseData.id === -1 || !courseData.title) {
-      alert("Please select a course first!");
-      return;
-    }
-
     setCurrentStep("schedule");
     setCourseOpen(false);
     setCourseTypeOpen(true);
@@ -110,22 +100,19 @@ function StudentDetailRightClient({
   };
 
   // dialog handler functions
-
-  // dialog handler functions
   const handleCourseSubmit = (course: { id: number; title: string }) => {
+    // console.log("Selected Course: ", course);
+    // Validate that course is selected
+    if (course.id === -1 || !course.title || course.title.trim() === "") {
+      alert("Please select a course first!");
+      return;
+    }
     setCourseData(course);
     goToScheduleStep();
   };
 
   const handleClassScheduleSubmit = (schedule: ComfirmClassScheduleData) => {
-    // Validate that course is selected
-    if (courseData.id === -1 || !courseData.title) {
-      alert("Please select a course first!");
-      return;
-    }
-
     setClassScheduleData(schedule);
-
     if (schedule.classType.id === 2) {
       // If class type is 12 times check, go directly to confirm step
       setCurrentStep("confirm");
@@ -137,12 +124,6 @@ function StudentDetailRightClient({
   };
 
   const handleTeacherSubmit = (teacher: TeacherData) => {
-    // Validate that schedule is configured
-    if (classScheduleData.classType.id === -1) {
-      alert("Please configure the class schedule first!");
-      return;
-    }
-
     setTeacherData(teacher);
     goToConfirmStep();
   };
@@ -157,14 +138,10 @@ function StudentDetailRightClient({
     setCurrentStep("closed");
     setConfirmOpen(false);
     resetAllData();
-    alert("Class schedule confirmed successfully!");
   };
 
   const resetAllData = () => {
-    setCourseData({
-      id: -1,
-      title: "",
-    });
+    setCourseData({ id: -1, title: "" });
     setClassScheduleData({
       classType: {
         id: -1,
@@ -188,21 +165,15 @@ function StudentDetailRightClient({
     <>
       <StudentDetailAddCourse
         open={courseOpen}
-        onOpenChange={openCourseDialog}
+        onOpenChange={gotoCourseStep}
         onSubmit={handleCourseSubmit}
         onCancel={handleDialogClose}
+        courseData={courseData}
       />
-      <ClassScheduleForm
+      <ClassScheduleDialog
         open={courseTypeOpen}
-        onOpenChange={(open) => {
-          // Only allow closing, prevent manual opening
-          if (!open) {
-            setCourseTypeOpen(false);
-          }
-        }}
         afterClassSchedule={handleClassScheduleSubmit}
         onBack={goBackToCourse}
-        onCancel={handleDialogClose}
       />
       <AddTeacher
         courseId={courseData.id}

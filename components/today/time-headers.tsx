@@ -12,20 +12,20 @@ interface TimeHeadersProps {
 }
 
 const TimeHeaders: React.FC<TimeHeadersProps> = ({ numCols, timeHeaders }) => (
-  <div className="relative mb-2">
+  <div className="relative mb-1 sm:mb-2">
     <div
-      className="grid gap-0 p-5"
+      className="grid gap-0 p-2 sm:p-5"
       style={{ gridTemplateColumns: `repeat(${numCols}, 1fr)` }}
     >
       {timeHeaders.map(({ key, startTime, endTime }) => (
-        <div key={key} className="h-8 relative">
+        <div key={key} className="h-6 sm:h-8 relative">
           {startTime && (
-            <div className="absolute -left-6 top-1 text-sm font-medium text-gray-600 bg-white px-1">
+            <div className="absolute -left-3 sm:-left-6 top-0 sm:top-1 text-xs sm:text-sm font-medium text-gray-600 bg-white px-1">
               {startTime}
             </div>
           )}
           {endTime && (
-            <div className="absolute -right-6 top-1 text-sm font-medium text-gray-600 bg-white px-1">
+            <div className="absolute -right-3 sm:-right-6 top-0 sm:top-1 text-xs sm:text-sm font-medium text-gray-600 bg-white px-1">
               {endTime}
             </div>
           )}

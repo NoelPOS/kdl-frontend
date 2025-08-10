@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0; // Always revalidate this page
 
 import { Course } from "@/app/types/today.type";
 import RenderSchedule from "@/components/today/render-schedule";
@@ -8,7 +9,7 @@ import Image from "next/image";
 export default async function TodayPage() {
   const raw = await getTodaySchedules();
   const grouped = raw.reduce((acc: Record<string, Course>, item) => {
-    const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}`;
+    const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}-${item.student_nickname}`;
 
     if (!acc[key]) {
       acc[key] = {

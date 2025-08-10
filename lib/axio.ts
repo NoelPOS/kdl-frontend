@@ -9,6 +9,7 @@ import { Discount } from "@/app/types/discount.type";
 import { LoginFormData } from "@/app/(auth)/login/page";
 import { Enrollment, InvoiceSubmission } from "@/app/types/enrollment.type";
 import { FetchAllInvoices, Invoice } from "@/app/types/invoice.type";
+import { Package, PackagePurchaseRequest } from "@/app/types/package.type";
 
 // Extend axios config to include metadata
 declare module "axios" {
@@ -254,7 +255,7 @@ export async function searchTeachers(query: string): Promise<Teacher[]> {
   return response.data;
 }
 
-interface Schedule {
+export interface Schedule {
   date?: string;
   startTime: string;
   endTime: string;
@@ -338,6 +339,7 @@ export interface ScheduleFilter {
   room?: string;
   sessionMode?: string;
   sort?: string;
+  classOption?: string;
 }
 
 export async function getFilteredSchedules(
@@ -365,6 +367,7 @@ export async function getFilteredSchedules(
   if (data.classStatus) params.set("classStatus", data.classStatus);
   if (data.room) params.set("room", data.room);
   if (data.sort) params.set("sort", data.sort);
+  if (data.classOption) params.set("classOption", data.classOption);
 
   // Add pagination params
   params.set("page", page.toString());
@@ -397,7 +400,7 @@ export async function getSchedulesByStudentAndSession(
   return res.data;
 }
 
-interface SessionData {
+export interface SessionData {
   studentId: number;
   courseId: number;
   teacherId?: number;
@@ -405,6 +408,8 @@ interface SessionData {
   classCancel: number;
   payment: string;
   status: string;
+  isFromPackage?: boolean;
+  packageId?: number;
 }
 
 export async function getCourseTypes(): Promise<
@@ -494,6 +499,16 @@ export async function changeSessionStatus(
     return true;
   } catch (error) {
     console.error("Error changing session status:", error);
+    return false;
+  }
+}
+
+export async function completeSession(sessionId: number): Promise<boolean> {
+  try {
+    await api.patch(`/sessions/${sessionId}`, { status: "completed" });
+    return true;
+  } catch (error) {
+    console.error("Error completing session:", error);
     return false;
   }
 }
@@ -652,6 +667,7 @@ export interface EnrollmentFilter {
   course?: string;
   teacher?: string;
   student?: string;
+  transactionType?: string; // "course" | "courseplus" | "package"
 }
 
 export async function fetchEnrollments(
@@ -674,6 +690,8 @@ export async function fetchEnrollments(
   if (filter.course) params.set("course", filter.course);
   if (filter.teacher) params.set("teacher", filter.teacher);
   if (filter.student) params.set("student", filter.student);
+  if (filter.transactionType)
+    params.set("transactionType", filter.transactionType);
 
   // Add pagination params
   params.set("page", page.toString());
@@ -689,6 +707,7 @@ export async function fetchEnrollments(
       hasPrev: boolean;
     };
   }>(`/sessions/pending-invoice?${params.toString()}`);
+  console.log("Enrollments fetched:", response.data);
   return response.data;
 }
 
@@ -698,7 +717,7 @@ export async function fetchPendingInvoices(): Promise<Enrollment[]> {
 }
 
 export async function fetchSpedificPendingInvoices(
-  sessionId: number
+  sessionId: number | string
 ): Promise<Enrollment> {
   const response = await api.get<Enrollment>(
     `/sessions/pending-invoice/${sessionId}`
@@ -808,4 +827,108 @@ export async function searchCourses(query: string): Promise<Course[]> {
 export async function fetchAllCourses(): Promise<Course[]> {
   const response = await api.get<Course[]>("/courses/all");
   return response.data;
+}
+
+export async function getParentById(id: number): Promise<Partial<Parent>> {
+  return api.get(`/users/parents/${id}`).then((res) => res.data);
+}
+
+export async function updateParentById(id: number, data: Partial<Parent>) {
+  return api.put(`/users/parents/${id}`, data).then((res) => res.data);
+}
+
+export async function getTeacherById(id: number): Promise<Partial<Teacher>> {
+  return api.get(`/users/teachers/${id}`).then((res) => res.data);
+}
+
+export async function updateTeacherById(id: number, data: Partial<Teacher>) {
+  return api.put(`/users/teachers/${id}`, data).then((res) => res.data);
+}
+
+// Course Plus functionality
+export async function addCoursePlus(
+  sessionId: number,
+  additionalClasses: number
+): Promise<boolean> {
+  try {
+    const response = await api.post("/sessions/course-plus", {
+      sessionId,
+      additionalClasses,
+      timestamp: new Date().toISOString(), // Add timestamp for tracking
+    });
+    return response.status === 200 || response.status === 201;
+  } catch (error) {
+    console.error("Error adding course plus:", error);
+    // Log additional details for debugging
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+    }
+    return false;
+  }
+}
+
+export interface PackageFilter {
+  query?: string;
+  status?: string;
+  classMode?: string;
+}
+
+export async function fetchFilteredPackages(
+  filters: PackageFilter,
+  page: number = 1,
+  limit: number = 10
+): Promise<{ packages: Package[]; pagination: any }> {
+  const params = new URLSearchParams();
+  if (filters.query) params.set("query", filters.query);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.classMode) params.set("classMode", filters.classMode);
+
+  // Add pagination params
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{ packages: Package[]; pagination: any }>(
+    `/packages/filter?${params.toString()}`
+  );
+  return response.data;
+}
+
+export async function purchasePackage(
+  request: PackagePurchaseRequest
+): Promise<Package> {
+  const response = await api.post<Package>("/packages", request);
+  return response.data;
+}
+
+export async function getPackageById(packageId: number): Promise<Package> {
+  try {
+    const response = await api.get<Package>(`/packages/${packageId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching package:", error);
+    throw error;
+  }
+}
+
+export async function applyPackage(
+  packageId: number,
+  courseId: number,
+  courseName: string
+): Promise<boolean> {
+  try {
+    const response = await api.put(`/packages/${packageId}/apply`, {
+      courseId,
+      courseName,
+      status: "used",
+      isRedeemed: true,
+      redeemedAt: new Date().toISOString(),
+      redeemedCourseId: courseId,
+      redeemedCourseName: courseName,
+      updatedAt: new Date().toISOString(),
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.error("Error applying package:", error);
+    return false;
+  }
 }

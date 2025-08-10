@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   getTeacherByCourseId,
   updateSchedule,
@@ -69,6 +70,7 @@ export function EditSchedule({
   initialData,
   onScheduleUpdate,
 }: EditScheduleProps) {
+  const router = useRouter();
   const { register, handleSubmit, reset } = useForm<FormData>({
     defaultValues: initialData,
   });
@@ -148,6 +150,10 @@ export function EditSchedule({
         if (onScheduleUpdate) {
           onScheduleUpdate(updatedFormData);
         }
+
+        // Refresh the router to update all pages with new schedule data
+        router.refresh();
+
         if (warningMessage) {
           alert(`Schedule updated with warning: ${warningMessage}`);
         }
@@ -166,6 +172,7 @@ export function EditSchedule({
       initialData?.courseId,
       initialData?.scheduleId,
       initialData?.student,
+      router,
     ]
   );
 
@@ -186,9 +193,9 @@ export function EditSchedule({
   }, [initialData?.courseId]);
 
   useEffect(() => {
-    console.log("EditSchedule opened, fetching teachers if needed");
-    console.log("Open state:", open);
-    console.log("Initial data course ID:", initialData?.courseId);
+    // console.log("EditSchedule opened, fetching teachers if needed");
+    // console.log("Open state:", open);
+    // console.log("Initial data course ID:", initialData?.courseId);
     if (open && initialData?.courseId) {
       fetchTeachers();
     }

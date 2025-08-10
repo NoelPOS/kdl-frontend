@@ -18,10 +18,7 @@ export type ComfirmClassScheduleData = {
     classMode: string;
     tuitionFee: number;
   };
-  // For 12 times check
-  // checkStartTime?: string;
-  // checkEndTime?: string;
-  // For 12 times fixed - new structure
+  // For 12 times fixed
   fixedDays?: string[];
   fixedStartTime?: string;
   fixedEndTime?: string;
@@ -68,7 +65,7 @@ export type ComfirmScheduleRow = {
   studentId: number;
 };
 
-export interface ConflictDetail {
+export type ConflictDetail = {
   date: string;
   room: string;
   startTime: string;
@@ -77,23 +74,11 @@ export interface ConflictDetail {
   courseTitle: string;
   teacherName: string;
   studentName: string;
-}
-
-export type ComfirmStudent = {
-  name: string;
-  nickname: string;
-  id: string;
 };
 
-export type ComfirmClassSession = {
-  date: string;
-  startTime: string;
-  endTime: string;
-};
-
-export type ComfirmTeacherData = {
-  teacherId: number;
-  teacher: string;
-  room: string;
-  remark: string;
+export type ClassOption = {
+  id: number;
+  classMode: string;
+  classLimit: number;
+  tuitionFee: number;
 };

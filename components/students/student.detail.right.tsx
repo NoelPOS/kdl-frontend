@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import StudentDetailRightClient from "./student-detail-right-client";
-import { ComfirmStudent } from "@/app/types/course.type";
+import { Student } from "@/app/types/course.type";
 import StudentSessionsContent from "./student-sessions-content";
 import StudentSessionsLoading from "./student-sessions-loading";
 import StudentSessionFilterComponent from "./student-session-filter";
@@ -9,7 +9,7 @@ export default async function StudentDetailRight({
   student,
   searchParams,
 }: {
-  student: ComfirmStudent;
+  student: Student;
   searchParams: {
     courseName?: string;
     status?: string;

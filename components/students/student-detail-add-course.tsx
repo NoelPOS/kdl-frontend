@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +24,7 @@ interface StudentDetailAddCourseProps {
   onOpenChange: (open: boolean) => void;
   onSubmit?: (course: Pick<Course, "id" | "title">) => void;
   onCancel?: () => void;
+  courseData?: Pick<Course, "id" | "title">;
 }
 
 export function StudentDetailAddCourse({
@@ -31,6 +32,7 @@ export function StudentDetailAddCourse({
   onOpenChange,
   onSubmit: afterCourse,
   onCancel,
+  courseData, // Add this
 }: StudentDetailAddCourseProps) {
   const { register, handleSubmit, setValue, reset } = useForm<{
     course: string;
@@ -43,11 +45,24 @@ export function StudentDetailAddCourse({
   const [searchResults, setSearchResults] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course>();
 
+  // Reset form and sync state when dialog opens
+  useEffect(() => {
+    if (open) {
+      if (courseData && courseData.id !== -1) {
+        setValue("course", courseData.title);
+        setSelectedCourse(courseData as Course);
+      } else {
+        reset();
+        setSelectedCourse(undefined);
+        setSearchResults([]);
+      }
+    }
+  }, [open, courseData, setValue, reset]);
+
   const debouncedSearch = useDebouncedCallback(async (value: string) => {
     if (value.length >= 2) {
       try {
         const results = await searchCourses(value);
-        console.log("Search Results: ", results);
         setSearchResults(results);
       } catch (err) {
         console.error("Course search failed", err);
@@ -66,8 +81,6 @@ export function StudentDetailAddCourse({
   const onSubmit = () => {
     if (selectedCourse && afterCourse) {
       afterCourse(selectedCourse);
-    }
-    if (selectedCourse) {
       const query = new URLSearchParams();
       query.set("id", String(selectedCourse.id));
       query.set("course", selectedCourse.title);
@@ -93,14 +106,6 @@ export function StudentDetailAddCourse({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px] p-0 rounded-3xl overflow-hidden max-h-[80vh] overflow-y-auto">
         <div className="bg-white p-6">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              {typeof window !== "undefined"
-                ? new URLSearchParams(window.location.search).get("course")
-                : null}
-            </DialogTitle>
-          </DialogHeader>
-
           <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
             <div className="space-y-6">
               <div className="space-y-2 relative">
@@ -113,13 +118,7 @@ export function StudentDetailAddCourse({
                     {...register("course")}
                     placeholder="Enter course name"
                     onChange={(e) => {
-                      setSelectedCourse({
-                        id: -1,
-                        title: "",
-                        description: "",
-                        ageRange: "",
-                        medium: "",
-                      });
+                      setSelectedCourse(undefined);
                       debouncedSearch(e.target.value);
                     }}
                     autoComplete="off"

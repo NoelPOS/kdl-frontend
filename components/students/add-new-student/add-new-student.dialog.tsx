@@ -32,6 +32,7 @@ export type FormData = {
   phone: string;
   adConcent: boolean;
   profilePicture: string;
+  profilePictureId?: string; // Add this for Cloudinary public_id
 };
 
 export function AddNewStudent() {
@@ -60,12 +61,48 @@ export function AddNewStudent() {
   const dateRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: FormData) => {
+    let imageUrl = "";
+    let key = "";
+    if (imageFile) {
+      // 1. Get a pre-signed S3 upload URL from the backend
+      const getUrlRes = await fetch(
+        `/api/s3-upload-url?fileName=${encodeURIComponent(
+          imageFile.name
+        )}&fileType=${encodeURIComponent(imageFile.type)}`
+      );
+      if (!getUrlRes.ok) {
+        // handle error (show message, etc.)
+        return;
+      }
+      const { url } = await getUrlRes.json();
+
+      // 2. Upload the file directly to S3 using the pre-signed URL
+      const uploadRes = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": imageFile.type },
+        body: imageFile,
+      });
+      if (!uploadRes.ok) {
+        return;
+      }
+
+      key = `students/${imageFile.name}`;
+
+      // 3. Construct the S3 file URL (assuming public bucket)
+      imageUrl = `https://${
+        process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+      }.s3.amazonaws.com/students/${encodeURIComponent(
+        imageFile.name
+      )}&folder=students`;
+    }
+
     await addNewStudent({
       ...data,
       allergic: data.allergic.split(" "),
       doNotEat: data.doNotEat.split(" "),
+      profilePicture: imageUrl,
+      profileKey: key,
     });
-    console.log(imageFile);
     closeRef.current?.click();
     router.refresh();
   };
@@ -106,6 +143,8 @@ export function AddNewStudent() {
               {imagePreview && (
                 <Image
                   src={imagePreview}
+                  width={400}
+                  height={400}
                   alt="Profile Preview"
                   className="w-24 h-24 rounded-full object-cover border border-gray-300 mb-2"
                 />

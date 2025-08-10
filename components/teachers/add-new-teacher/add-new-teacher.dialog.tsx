@@ -66,6 +66,39 @@ export default function AddNewTeacher() {
   const router = useRouter();
 
   const onSubmit = async (data: TeacherFormData) => {
+    console.log("adding...");
+    let imageUrl = "";
+    let key = "";
+    if (imageFile) {
+      // 1. Get a pre-signed S3 upload URL from the backend
+      const getUrlRes = await fetch(
+        `/api/s3-upload-url?fileName=${encodeURIComponent(
+          imageFile.name
+        )}&fileType=${encodeURIComponent(imageFile.type)}&folder=teachers`
+      );
+      if (!getUrlRes.ok) {
+        // handle error (show message, etc.)
+        return;
+      }
+      const { url } = await getUrlRes.json();
+      // 2. Upload the file directly to S3 using the pre-signed URL
+      const uploadRes = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": imageFile.type },
+        body: imageFile,
+      });
+      if (!uploadRes.ok) {
+        console.log(uploadRes);
+        return;
+      }
+      key = `teachers/${imageFile.name}`;
+      // 3. Construct the S3 file URL (assuming public bucket)
+      imageUrl = `https://${
+        process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+      }.s3.amazonaws.com/teachers/${encodeURIComponent(imageFile.name)}`;
+
+      // console.log(imageUrl);
+    }
     try {
       // First, create the teacher without courses
       const teacherData = {
@@ -74,21 +107,18 @@ export default function AddNewTeacher() {
         contactNo: data.contactNo,
         lineId: data.lineId,
         address: data.address,
-        profilePicture: data.profilePicture,
+        profilePicture: imageUrl,
+        profileKey: key,
       };
 
+      console.log(teacherData);
       const newTeacher = await addNewTeacher(teacherData);
-
       // Then, assign courses to the teacher if any courses are selected
       const selectedCourses = data.courses.filter((course) => course.id > 0);
       if (selectedCourses.length > 0) {
         const courseIds = selectedCourses.map((course) => course.id);
         await assignCoursesToTeacher(newTeacher.id, courseIds);
       }
-      console.log("Image file:", imageFile);
-
-      console.log("Teacher created successfully:", newTeacher);
-      console.log("Courses assigned:", selectedCourses);
       closeRef.current?.click();
       router.refresh();
     } catch (error) {
@@ -139,7 +169,6 @@ export default function AddNewTeacher() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
-        setValue("profilePicture", reader.result as string);
       };
       reader.readAsDataURL(file);
     }

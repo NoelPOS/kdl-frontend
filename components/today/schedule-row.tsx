@@ -29,7 +29,7 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
   handleCourseClick,
 }) => (
   <div
-    className="grid gap-0 min-h-[60px]"
+    className="grid gap-0 min-h-[50px] sm:min-h-[60px]"
     style={{ gridTemplateColumns: `repeat(${numCols}, 1fr)` }}
   >
     {/* Empty cells before course starts */}
@@ -40,7 +40,9 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
     {/* Course block */}
     <div
       className={`
-        ${course.color} text-white rounded p-3 flex items-center justify-center 
+        ${
+          course.color
+        } text-white rounded p-1 sm:p-3 flex items-center justify-center 
         font-medium cursor-pointer hover:opacity-90 transition-opacity border border-gray-300
         ${selectedCourse?.id === course.id ? "ring-2 ring-gray-800" : ""}
       `}
@@ -48,7 +50,18 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
       onClick={() => handleCourseClick(course)}
     >
       <div className="text-center">
-        <div className="text-sm font-semibold">{course.title}</div>
+        <div className="text-xs sm:text-sm font-semibold leading-tight">
+          {/* Mobile: Show only course name, Desktop: Show full title */}
+          <span className="block sm:hidden">
+            {course.title.split(" (")[0]}{" "}
+            {/* Extract course name before teacher */}
+          </span>
+          <span className="hidden sm:block">{course.title}</span>
+        </div>
+        {/* Show room on desktop only */}
+        <div className="hidden md:block text-xs opacity-90 mt-1">
+          Room: {course.room}
+        </div>
       </div>
     </div>
 

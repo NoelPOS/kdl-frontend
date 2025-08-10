@@ -4,8 +4,8 @@ import { User, Clock, Phone, Pizza, Ban } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import Link from "next/link";
 import { Student } from "@/app/types/student.type";
+import { useRouter } from "next/navigation";
 
 interface StudentCardProps {
   student: Student;
@@ -28,6 +28,8 @@ function calculateAge(dob: string): number {
 export function StudentCard({ student }: StudentCardProps) {
   const [pizzaHovered, setPizzaHovered] = useState(false);
   const [banHovered, setBanHovered] = useState(false);
+
+  const router = useRouter();
 
   return (
     <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative max-w-[250px]">
@@ -128,11 +130,12 @@ export function StudentCard({ student }: StudentCardProps) {
         </div>
       </div>
 
-      <Link href={`/student/${student.id}`}>
-        <Button className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer">
-          Details
-        </Button>
-      </Link>
+      <Button
+        className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer"
+        onClick={() => router.push(`/student/${student.id}`)}
+      >
+        Details
+      </Button>
     </div>
   );
 }

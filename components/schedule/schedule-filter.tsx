@@ -26,6 +26,7 @@ type ScheduleFilterFormData = {
   room?: string;
   sessionMode?: string;
   sort?: string;
+  classOption?: string;
 };
 
 const ATTENDANCE_STATUS_OPTIONS = [
@@ -34,6 +35,14 @@ const ATTENDANCE_STATUS_OPTIONS = [
   { value: "confirmed", label: "Confirmed" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
+];
+
+const CLASS_TYPE_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "12 times check", label: "12 Times Check" },
+  { value: "12 times fixed", label: "12 Times Fixed" },
+  { value: "5 days camp", label: "5 Days Camp" },
+  { value: "2 days camp", label: "2 Days Camp" },
 ];
 
 const SORT_OPTIONS = [
@@ -45,6 +54,15 @@ const SORT_OPTIONS = [
   { value: "teacher_desc", label: "Teacher Name (Z-A)" },
   { value: "room_asc", label: "Room (A-Z)" },
   { value: "room_desc", label: "Room (Z-A)" },
+];
+
+const ROOM_OPTIONS = [
+  { value: "all", label: "All Rooms" },
+  { value: "Room 1", label: "Room 1" },
+  { value: "Room 2", label: "Room 2" },
+  { value: "Room 3", label: "Room 3" },
+  { value: "Room 4", label: "Room 4" },
+  { value: "Room 5", label: "Room 5" },
 ];
 
 export function ScheduleFilterForm() {
@@ -65,6 +83,7 @@ export function ScheduleFilterForm() {
       classStatus: searchParams.get("classStatus") || "",
       room: searchParams.get("room") || "",
       sort: searchParams.get("sort") || "date_asc",
+      classOption: searchParams.get("classOption") || "",
     },
   });
 
@@ -76,6 +95,8 @@ export function ScheduleFilterForm() {
   // Watch values for controlled Selects
   const attendanceStatus = watch("attendanceStatus");
   const sort = watch("sort");
+  const room = watch("room");
+  const classOption = watch("classOption");
 
   // Watch all form values to show active filter count
   const formValues = watch();
@@ -100,9 +121,11 @@ export function ScheduleFilterForm() {
       if (data.courseName) params.set("courseName", data.courseName);
       if (data.attendanceStatus)
         params.set("attendanceStatus", data.attendanceStatus);
-      if (data.room) params.set("room", data.room);
+      if (data.room && data.room !== "all") params.set("room", data.room);
       if (data.sessionMode) params.set("sessionMode", data.sessionMode);
       if (data.sort) params.set("sort", data.sort);
+      if (data.classOption && data.classOption !== "all")
+        params.set("classOption", data.classOption);
       router.replace(
         `${pathname}${params.toString() ? `?${params.toString()}` : ""}`
       );
@@ -300,12 +323,42 @@ export function ScheduleFilterForm() {
             {/* Room */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="room">Room</Label>
-              <Input
-                id="room"
-                {...register("room")}
-                placeholder="Enter room name/number"
-                className="border-gray-300"
-              />
+              <div className="w-full">
+                <Select value={room} onValueChange={(v) => setValue("room", v)}>
+                  <SelectTrigger id="room" className="w-full">
+                    <SelectValue placeholder="Select room" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROOM_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Class Type */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="classOption">Class Type</Label>
+              <div className="w-full">
+                <Select
+                  value={classOption}
+                  onValueChange={(v) => setValue("classOption", v)}
+                >
+                  <SelectTrigger id="classOption" className="w-full">
+                    <SelectValue placeholder="Select class type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLASS_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

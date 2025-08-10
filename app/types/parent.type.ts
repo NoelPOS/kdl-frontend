@@ -6,4 +6,5 @@ export type Parent = {
   lineId: string;
   address: string;
   profilePicture: string;
+  profileKey: string;
 };

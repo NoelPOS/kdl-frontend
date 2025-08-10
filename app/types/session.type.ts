@@ -8,4 +8,5 @@ export interface SessionOverview {
   courseDescription: string;
   payment: string;
   medium: string;
+  status: string;
 }

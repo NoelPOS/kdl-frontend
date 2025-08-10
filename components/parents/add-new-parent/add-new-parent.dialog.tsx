@@ -44,8 +44,40 @@ export default function AddNewParent() {
   const router = useRouter();
 
   const onSubmit = async (data: ParentFormData) => {
-    await addNewParent(data);
-    console.log(imageFile);
+    let imageUrl = "";
+    let key = "";
+    if (imageFile) {
+      // 1. Get a pre-signed S3 upload URL from the backend
+      const getUrlRes = await fetch(
+        `/api/s3-upload-url?fileName=${encodeURIComponent(
+          imageFile.name
+        )}&fileType=${encodeURIComponent(imageFile.type)}&folder=parents`
+      );
+      if (!getUrlRes.ok) {
+        // handle error (show message, etc.)
+        return;
+      }
+      const { url } = await getUrlRes.json();
+      // 2. Upload the file directly to S3 using the pre-signed URL
+      const uploadRes = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": imageFile.type },
+        body: imageFile,
+      });
+      if (!uploadRes.ok) {
+        return;
+      }
+      key = `parents/${imageFile.name}`;
+      // 3. Construct the S3 file URL (assuming public bucket)
+      imageUrl = `https://${
+        process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+      }.s3.amazonaws.com/parents/${encodeURIComponent(imageFile.name)}`;
+    }
+    await addNewParent({
+      ...data,
+      profilePicture: imageUrl,
+      profileKey: key,
+    });
     closeRef.current?.click();
     router.refresh();
   };
@@ -57,7 +89,6 @@ export default function AddNewParent() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
-        setValue("profilePicture", reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -83,6 +114,8 @@ export default function AddNewParent() {
               {imagePreview && (
                 <Image
                   src={imagePreview}
+                  width={96}
+                  height={96}
                   alt="Profile Preview"
                   className="w-24 h-24 rounded-full object-cover border border-gray-300 mb-2"
                 />

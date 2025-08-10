@@ -1,22 +1,206 @@
-// "use client";
+"use client";
 
-// import { useRef, useState, useMemo, useEffect } from "react";
-// import { useForm } from "react-hook-form";
-// import { Button } from "@/components/ui/button";
-// import {
-//   Dialog,
-//   DialogTrigger,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogFooter,
-//   DialogClose,
-// } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Clock, Plus, ChevronDown, Loader2 } from "lucide-react";
-// import { formatDateLocal, generateCalendarDays } from "@/lib/utils";
-// import { getTeacherByCourseId, checkScheduleConflicts, ScheduleConflictCheck } from "@/lib/axio";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Loader2 } from "lucide-react";
+import { SessionOverview } from "@/app/types/session.type";
+import { addCoursePlus } from "@/lib/axio";
+import { useRouter } from "next/navigation";
+
+interface CoursePlusFormData {
+  additionalClasses: number;
+}
+
+interface CoursePlusDialogProps {
+  course: SessionOverview;
+}
+
+export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CoursePlusFormData>({
+    defaultValues: {
+      additionalClasses: 1,
+    },
+  });
+
+  const onSubmit = async (data: CoursePlusFormData) => {
+    // Client-side validation for session status
+    if (
+      course.status?.toLowerCase() === "completed" ||
+      course.status?.toLowerCase() === "cancelled"
+    ) {
+      alert("Cannot add course plus to completed or cancelled sessions.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const success = await addCoursePlus(
+        course.sessionId,
+        data.additionalClasses
+      );
+      if (success) {
+        setIsOpen(false);
+        reset();
+        router.refresh(); // Refresh to show updated data
+        alert(
+          `Successfully added ${data.additionalClasses} additional classes to the session!`
+        );
+      } else {
+        console.error("Failed to add course plus");
+        alert("Failed to add course plus. Please try again."); // Simple feedback for now
+      }
+    } catch (error) {
+      console.error("Error adding course plus:", error);
+      alert("An error occurred while adding course plus. Please try again."); // Simple feedback for now
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    reset();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="w-full bg-yellow-400 hover:bg-yellow-500"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Course Plus
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add Course Plus</DialogTitle>
+          <DialogDescription>
+            Add additional classes to the existing session. This will create new
+            schedules with separate enrollments and invoices.
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Session Preview */}
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
+          <h4 className="font-semibold text-gray-900 mb-2">Current Session</h4>
+          <div className="space-y-1 text-sm text-gray-600">
+            <div>
+              <strong>Course:</strong> {course.courseTitle}
+            </div>
+            <div>
+              <strong>Mode:</strong> {course.mode}
+            </div>
+            <div>
+              <strong>Progress:</strong> {course.completedCount}/
+              {course.mode.split(" ")[0]} times
+            </div>
+            <div>
+              <strong>Status:</strong> {course.status}
+            </div>
+            <div>
+              <strong>Payment:</strong> {course.payment}
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-sm text-green-800">
+            <strong>What is Course Plus?</strong>
+            <ul className="mt-1 ml-4 list-disc space-y-1">
+              <li>Adds extra classes to your existing session</li>
+              <li>Uses the same session ID (keeps progress together)</li>
+              <li>Creates separate enrollment and invoice for billing</li>
+              <li>New schedules marked as &quot;Course Plus&quot;</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="additionalClasses">
+              Number of Additional Classes{" "}
+              <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="additionalClasses"
+              type="number"
+              min="1"
+              max="20"
+              {...register("additionalClasses", {
+                required: "Number of additional classes is required",
+                min: {
+                  value: 1,
+                  message: "Must be at least 1 class",
+                },
+                max: {
+                  value: 20,
+                  message: "Cannot exceed 20 classes",
+                },
+              })}
+              className="w-full"
+              placeholder="Enter number of classes"
+            />
+            {errors.additionalClasses && (
+              <p className="text-red-500 text-sm">
+                {errors.additionalClasses.message}
+              </p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Course Plus
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // interface CoursePlusFormData {
 //   numberOfClasses: number;
@@ -792,7 +976,7 @@
 //                       <span className="text-gray-600">Payment Status:</span>
 //                       <span
 //                         className={`ml-2 font-medium ${
-//                           formData.payment ? "text-green-600" : "text-red-600"
+//                           formData.payment ? "text-yellow-600" : "text-red-600"
 //                         }`}
 //                       >
 //                         {formData.payment ? "Paid" : "Pending"}
@@ -841,7 +1025,7 @@
 //                                       ⚠ {row.warning}
 //                                     </span>
 //                                   ) : (
-//                                     <span className="text-green-600 text-xs font-medium">
+//                                     <span className="text-yellow-600 text-xs font-medium">
 //                                       ✓ Available
 //                                     </span>
 //                                   )}
@@ -868,7 +1052,7 @@
 //                 <Button
 //                   type="button"
 //                   onClick={onScheduleSubmit}
-//                   className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
+//                   className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1"
 //                 >
 //                   Submit Course Plus
 //                 </Button>

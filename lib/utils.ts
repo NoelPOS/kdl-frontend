@@ -4,8 +4,8 @@ import { twMerge } from "tailwind-merge";
 import {
   ComfirmClassScheduleData,
   ComfirmScheduleRow,
-  ComfirmStudent,
-  ComfirmTeacherData,
+  Student,
+  TeacherData,
 } from "@/app/types/course.type";
 
 export function cn(...inputs: ClassValue[]) {
@@ -23,13 +23,15 @@ export const DAYS_OF_WEEK = [
 ];
 
 export function generateScheduleRows(
-  students: ComfirmStudent[],
+  students: Student[],
   classSchedule: ComfirmClassScheduleData,
-  teacherData: ComfirmTeacherData
+  teacherData: TeacherData
 ): ComfirmScheduleRow[] {
   const rows: ComfirmScheduleRow[] = [];
 
   console.log("Generating schedule rows for class mode:", classSchedule);
+  console.log("Students:", students);
+  console.log("Teacher data:", teacherData);
 
   if (classSchedule.classType.classMode === "12 times check") {
     // For 12 times check, create 12 placeholder rows
@@ -37,7 +39,7 @@ export function generateScheduleRows(
       students.forEach((student) => {
         rows.push({
           date: undefined, // Placeholder, will be set later
-          time: "TBD",
+          time: "TBD - TBD",
           student: student.nickname || student.name,
           teacher: "TBD",
           room: "TBD",
@@ -118,11 +120,10 @@ export function generateScheduleRows(
 }
 
 // Generate calendar days
-export const generateCalendarDays = (currentMonth: Date) => {
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
+export const generateCalendarDays = (currentDate: Date) => {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
-  // const lastDay = new Date(year, month + 1, 0);
   const startDate = new Date(firstDay);
   startDate.setDate(startDate.getDate() - firstDay.getDay());
 

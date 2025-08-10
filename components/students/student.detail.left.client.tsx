@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Student } from "@/app/types/student.type";
 import { updateStudentById } from "@/lib/axio";
+import { useRef } from "react";
 
 interface StudentFormData {
   name: string;
@@ -32,6 +33,9 @@ export default function StudentDetailClient({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -57,6 +61,22 @@ export default function StudentDetailClient({
 
   const adConcentValue = watch("adConcent");
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const onSubmit = async (data: StudentFormData) => {
     if (!student.id) {
       setMessage({ type: "error", text: "Student ID is required" });
@@ -65,6 +85,41 @@ export default function StudentDetailClient({
 
     setIsLoading(true);
     setMessage(null);
+
+    let newImageUrl = student.profilePicture;
+    let newProfileKey = student.profileKey;
+
+    // If a new image is selected, delete the old one and upload the new one
+    if (imageFile) {
+      // 1. Delete old image from S3 if key exists
+      if (student.profileKey) {
+        await fetch("/api/s3-delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: student.profileKey }),
+        });
+      }
+      // 2. Upload new image to S3
+      const getUrlRes = await fetch(
+        `/api/s3-upload-url?fileName=${encodeURIComponent(
+          imageFile.name
+        )}&fileType=${encodeURIComponent(imageFile.type)}`
+      );
+      if (getUrlRes.ok) {
+        const { url } = await getUrlRes.json();
+        const uploadRes = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": imageFile.type },
+          body: imageFile,
+        });
+        if (uploadRes.ok) {
+          newProfileKey = `students/${imageFile.name}`;
+          newImageUrl = `https://${
+            process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+          }.s3.amazonaws.com/students/${encodeURIComponent(imageFile.name)}`;
+        }
+      }
+    }
 
     try {
       const updateData: Partial<Student> = {
@@ -77,6 +132,8 @@ export default function StudentDetailClient({
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
+        profilePicture: newImageUrl,
+        profileKey: newProfileKey,
       };
 
       await updateStudentById(Number(student.id), updateData);
@@ -110,13 +167,23 @@ export default function StudentDetailClient({
       </div>
 
       <div className="flex flex-col items-center mb-4">
-        <div className="relative w-24 h-24 mb-2">
+        <div
+          className="w-24 h-24 mb-2 flex items-center justify-center cursor-pointer"
+          onClick={handleImageClick}
+        >
           <Image
-            src="/student.png"
+            src={imagePreview || student.profilePicture || "./default.png"}
             alt="student profile"
-            width={96}
-            height={96}
+            width={90}
+            height={90}
             className="rounded-full object-cover"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleImageChange}
           />
         </div>
         <h2 className="text-amber-500 font-medium text-lg">
@@ -245,7 +312,7 @@ export default function StudentDetailClient({
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading || !isDirty}
+            disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isLoading ? "Updating..." : "Update Student"}

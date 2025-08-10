@@ -11,10 +11,11 @@ export default async function EnrollmentPage({
     course?: string;
     teacher?: string;
     student?: string;
+    transactionType?: string;
     page?: string;
   }>;
 }) {
-  const { date, status, course, teacher, student, page } =
+  const { date, status, course, teacher, student, transactionType, page } =
     (await searchParams) || {};
   const currentPage = parseInt(page || "1", 10);
 
@@ -26,7 +27,12 @@ export default async function EnrollmentPage({
         </div>
       </div>
       <EnrollmentFilter />
-      {!date && !status && !course && !teacher && !student ? (
+      {!date &&
+      !status &&
+      !course &&
+      !teacher &&
+      !student &&
+      !transactionType ? (
         <div className="text-center text-gray-500 mt-4">
           Please use the filter to search for enrollments.
         </div>
@@ -34,7 +40,7 @@ export default async function EnrollmentPage({
         <Suspense
           key={`${date || ""}${status || ""}${course || ""}${teacher || ""}${
             student || ""
-          }${currentPage}`}
+          }${transactionType || ""}${currentPage}`}
           fallback={<div>Loading...</div>}
         >
           <EnrollmentList
@@ -43,6 +49,7 @@ export default async function EnrollmentPage({
             course={course || ""}
             teacher={teacher || ""}
             student={student || ""}
+            transactionType={transactionType || ""}
             page={currentPage}
           />
         </Suspense>

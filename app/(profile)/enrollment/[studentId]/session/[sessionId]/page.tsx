@@ -25,7 +25,7 @@ export default async function StudentDetailPage({
   const [student, discounts, session] = await Promise.all([
     getStudentById(Number(studentId)),
     fetchActiveDiscounts(),
-    fetchSpedificPendingInvoices(Number(sessionId)),
+    fetchSpedificPendingInvoices(sessionId),
   ]);
 
   console.log("Session Data: ", session);
@@ -38,7 +38,7 @@ export default async function StudentDetailPage({
 
         {/* Right Side  */}
         <EnrollmentDetailRight
-          sessionId={Number(sessionId)}
+          sessionId={sessionId}
           session={session}
           discounts={discounts}
         />

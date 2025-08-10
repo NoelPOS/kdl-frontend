@@ -1,10 +1,15 @@
+"use client";
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Teacher } from "@/app/types/teacher.type";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Mail, Phone, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function TeacherCard({ teacher }: { teacher: Teacher }) {
+  const router = useRouter();
+  console.log(teacher.profilePicture);
   return (
     <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative max-w-[250px]">
       <div className="flex flex-col items-center text-center mb-4">
@@ -28,7 +33,10 @@ export function TeacherCard({ teacher }: { teacher: Teacher }) {
           </div>
         </div>
       </div>
-      <Button className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer">
+      <Button
+        className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer"
+        onClick={() => router.push(`/teacher/${teacher.id}`)}
+      >
         Details
       </Button>
     </div>

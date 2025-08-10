@@ -6,24 +6,20 @@ export interface InvoiceItem {
 }
 
 export interface Invoice {
+  studentId: number;
   id: number;
   documentId: string;
   date: string;
   paymentMethod: string;
   totalAmount: string;
-  sessionId: number;
+  sessionId: number | null;
+  coursePlusId: number | null;
+  packageId: string | null;
   receiptDone: boolean;
+  type: "course" | "courseplus" | "package";
+  studentName: string | null;
+  courseName: string | null;
   items: InvoiceItem[];
-  session: {
-    id: number;
-    student: {
-      id: number;
-      name: string;
-    };
-    course: {
-      title: string;
-    };
-  };
 }
 
 export interface FetchAllInvoices {

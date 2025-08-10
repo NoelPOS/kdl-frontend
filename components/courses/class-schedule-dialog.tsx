@@ -10,18 +10,343 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Clock, ChevronDown } from "lucide-react";
 
-import {
-  DAYS_OF_WEEK,
-  formatDateLocal,
-  generateCalendarDays,
-} from "@/lib/utils";
+import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
 import { getCourseTypes } from "@/lib/axio";
+import { ClassOption, ComfirmClassScheduleData } from "@/app/types/course.type";
+
+// Constants
+const CLASS_TYPES = {
+  TWELVE_TIMES_FIXED: "12 times fixed",
+  FIVE_DAYS_CAMP: "5 days camp",
+  TWO_DAYS_CAMP: "2 days camp",
+} as const;
+
+const VALIDATION_MESSAGES = {
+  SELECT_CLASS_TYPE: "Please select a class type.",
+  SELECT_DAYS_FIXED: "Please select at least one day for 12 times fixed.",
+  SELECT_TIMES_FIXED:
+    "Please select both start and end times for 12 times fixed.",
+  SELECT_DATES_CAMP: "Please select at least one date for camp class.",
+  SELECT_TIMES_CAMP: "Please select both start and end times for camp class.",
+} as const;
+
+const WEEKDAY_HEADERS = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+] as const;
+
+// Helper Components
+interface TimeInputProps {
+  label: string;
+  register: any;
+  fieldName: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onClick: () => void;
+}
+
+const TimeInput: React.FC<TimeInputProps> = ({
+  label,
+  register,
+  fieldName,
+  inputRef,
+  onClick,
+}) => (
+  <div className="space-y-1">
+    <Label className="text-xs text-gray-500">{label}</Label>
+    <div className="relative cursor-pointer" onClick={onClick}>
+      <Input
+        {...register(fieldName)}
+        ref={(e) => {
+          register(fieldName).ref(e);
+          if (e) inputRef.current = e;
+        }}
+        type="time"
+        className="border-gray-300 rounded-lg pr-10 cursor-pointer"
+      />
+      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+    </div>
+  </div>
+);
+
+interface DaySelectorProps {
+  selectedDays: string[];
+  onToggleDay: (day: string) => void;
+}
+
+const DaySelector: React.FC<DaySelectorProps> = ({
+  selectedDays,
+  onToggleDay,
+}) => (
+  <div className="space-y-2">
+    <Label className="text-sm text-gray-700">Select Days</Label>
+    <div className="grid grid-cols-7 gap-2">
+      {DAYS_OF_WEEK.map((day) => (
+        <Button
+          key={day.key}
+          type="button"
+          variant="outline"
+          className={`h-10 text-xs cursor-pointer ${
+            selectedDays.includes(day.key)
+              ? "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-500"
+              : "hover:bg-gray-100"
+          }`}
+          onClick={() => onToggleDay(day.key)}
+        >
+          {day.label}
+        </Button>
+      ))}
+    </div>
+  </div>
+);
+
+interface CalendarProps {
+  selectedDates: string[];
+  onToggleDate: (date: string) => void;
+  currentDate: Date;
+  onNavigateMonth: (direction: "prev" | "next") => void;
+  calendarDays: Date[];
+}
+
+const Calendar: React.FC<CalendarProps> = ({
+  selectedDates,
+  onToggleDate,
+  currentDate,
+  onNavigateMonth,
+  calendarDays,
+}) => (
+  <div className="space-y-2">
+    <Label className="text-sm text-gray-700">Select Dates</Label>
+    <div className="border border-gray-300 rounded-lg p-3 bg-white">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between mb-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigateMonth("prev")}
+        >
+          ←
+        </Button>
+        <h4 className="font-medium">
+          {currentDate.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h4>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => onNavigateMonth("next")}
+        >
+          →
+        </Button>
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {WEEKDAY_HEADERS.map((day) => (
+          <div key={day} className="text-xs font-medium text-gray-500 p-2">
+            {day}
+          </div>
+        ))}
+        {calendarDays.map((date, index) => {
+          const dateStr = date.toISOString().split("T")[0];
+          const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+          const isSelected = selectedDates.includes(dateStr);
+          const isToday = date.toDateString() === new Date().toDateString();
+
+          return (
+            <Button
+              key={index}
+              type="button"
+              variant="ghost"
+              size="sm"
+              className={`h-8 w-8 p-0 text-xs ${
+                !isCurrentMonth
+                  ? "text-gray-300 hover:bg-transparent cursor-default"
+                  : isSelected
+                  ? "bg-yellow-400 text-black hover:bg-yellow-500"
+                  : isToday
+                  ? "bg-blue-100 text-blue-600"
+                  : "hover:bg-gray-100"
+              }`}
+              onClick={() => isCurrentMonth && onToggleDate(dateStr)}
+              disabled={!isCurrentMonth}
+            >
+              {date.getDate()}
+            </Button>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+);
+
+// Validation Functions
+const validateFixedSchedule = (
+  selectedDays: string[],
+  formData: FormData
+): boolean => {
+  if (selectedDays.length === 0) {
+    alert(VALIDATION_MESSAGES.SELECT_DAYS_FIXED);
+    return false;
+  }
+  if (!formData.fixedStartTime || !formData.fixedEndTime) {
+    alert(VALIDATION_MESSAGES.SELECT_TIMES_FIXED);
+    return false;
+  }
+  return true;
+};
+
+const validateCampSchedule = (
+  selectedDates: string[],
+  formData: FormData
+): boolean => {
+  if (selectedDates.length === 0) {
+    alert(VALIDATION_MESSAGES.SELECT_DATES_CAMP);
+    return false;
+  }
+  if (!formData.campStartTime || !formData.campEndTime) {
+    alert(VALIDATION_MESSAGES.SELECT_TIMES_CAMP);
+    return false;
+  }
+  return true;
+};
+
+const validateClassSchedule = (
+  selectedCourseType: ClassOption,
+  selectedDays: string[],
+  selectedDates: string[],
+  formData: FormData
+): boolean => {
+  if (selectedCourseType.classMode === CLASS_TYPES.TWELVE_TIMES_FIXED) {
+    return validateFixedSchedule(selectedDays, formData);
+  } else if (
+    selectedCourseType.classMode === CLASS_TYPES.FIVE_DAYS_CAMP ||
+    selectedCourseType.classMode === CLASS_TYPES.TWO_DAYS_CAMP
+  ) {
+    return validateCampSchedule(selectedDates, formData);
+  }
+  return true;
+};
+
+// Schedule Section Components
+interface FixedScheduleSectionProps {
+  selectedDays: string[];
+  onToggleDay: (day: string) => void;
+  register: any;
+  fixedStartTimeRef: React.RefObject<HTMLInputElement | null>;
+  fixedEndTimeRef: React.RefObject<HTMLInputElement | null>;
+}
+
+const FixedScheduleSection: React.FC<FixedScheduleSectionProps> = ({
+  selectedDays,
+  onToggleDay,
+  register,
+  fixedStartTimeRef,
+  fixedEndTimeRef,
+}) => (
+  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+    <h3 className="font-medium text-gray-900">12 Times Fixed Schedule</h3>
+
+    <DaySelector selectedDays={selectedDays} onToggleDay={onToggleDay} />
+
+    <div className="grid grid-cols-2 gap-4">
+      <TimeInput
+        label="Start Time"
+        register={register}
+        fieldName="fixedStartTime"
+        inputRef={fixedStartTimeRef}
+        onClick={() => fixedStartTimeRef.current?.showPicker()}
+      />
+      <TimeInput
+        label="End Time"
+        register={register}
+        fieldName="fixedEndTime"
+        inputRef={fixedEndTimeRef}
+        onClick={() => fixedEndTimeRef.current?.showPicker()}
+      />
+    </div>
+
+    {selectedDays.length > 0 && (
+      <div className="text-sm text-gray-600">
+        Selected days:{" "}
+        {selectedDays
+          .map((day) => DAYS_OF_WEEK.find((d) => d.key === day)?.label)
+          .join(", ")}
+      </div>
+    )}
+  </div>
+);
+
+interface CampScheduleSectionProps {
+  selectedDates: string[];
+  onToggleDate: (date: string) => void;
+  currentDate: Date;
+  onNavigateMonth: (direction: "prev" | "next") => void;
+  calendarDays: Date[];
+  register: any;
+  campStartTimeRef: React.RefObject<HTMLInputElement | null>;
+  campEndTimeRef: React.RefObject<HTMLInputElement | null>;
+}
+
+const CampScheduleSection: React.FC<CampScheduleSectionProps> = ({
+  selectedDates,
+  onToggleDate,
+  currentDate,
+  onNavigateMonth,
+  calendarDays,
+  register,
+  campStartTimeRef,
+  campEndTimeRef,
+}) => (
+  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+    <h3 className="font-medium text-gray-900">Camp Class Schedule</h3>
+
+    <Calendar
+      selectedDates={selectedDates}
+      onToggleDate={onToggleDate}
+      currentDate={currentDate}
+      onNavigateMonth={onNavigateMonth}
+      calendarDays={calendarDays}
+    />
+
+    <div className="grid grid-cols-2 gap-4">
+      <TimeInput
+        label="Start Time"
+        register={register}
+        fieldName="campStartTime"
+        inputRef={campStartTimeRef}
+        onClick={() => campStartTimeRef.current?.showPicker()}
+      />
+      <TimeInput
+        label="End Time"
+        register={register}
+        fieldName="campEndTime"
+        inputRef={campEndTimeRef}
+        onClick={() => campEndTimeRef.current?.showPicker()}
+      />
+    </div>
+
+    {selectedDates.length > 0 && (
+      <div className="text-sm text-gray-600">
+        Selected dates: {selectedDates.length} day
+        {selectedDates.length !== 1 ? "s" : ""}
+      </div>
+    )}
+  </div>
+);
 
 type FormData = {
   classTypeId: string; // Store the ID as string from select
@@ -38,48 +363,27 @@ type FormData = {
   campEndTime?: string;
 };
 
-interface ClassScheduleFormProps {
+interface ClassScheduleDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  afterClassSchedule: (schedule: {
-    classType: {
-      id: number;
-      classMode: string;
-      classLimit: number;
-      tuitionFee: number;
-    };
-    // checkStartTime?: string;
-    // checkEndTime?: string;
-    fixedDays?: string[];
-    fixedStartTime?: string;
-    fixedEndTime?: string;
-    campDates?: string[];
-    campStartTime?: string;
-    campEndTime?: string;
-  }) => void;
+  afterClassSchedule: (schedule: ComfirmClassScheduleData) => void;
   onBack?: () => void;
-  onCancel?: () => void;
 }
 
-export function ClassScheduleForm({
+export function ClassScheduleDialog({
   open,
-  onOpenChange,
   afterClassSchedule,
   onBack,
-  onCancel,
-}: ClassScheduleFormProps) {
+}: ClassScheduleDialogProps) {
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    reset,
+    getValues,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
       classTypeId: "",
-      // checkStartTime: "",
-      // checkEndTime: "",
       fixedDays: [],
       fixedStartTime: "",
       fixedEndTime: "",
@@ -91,29 +395,27 @@ export function ClassScheduleForm({
 
   // State for day selection (12 times fixed)
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-
   // State for calendar selection (camp class)
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-
-  const [courseOptions, setCourseOptions] = useState<
-    {
-      id: number;
-      classMode: string;
-      classLimit: number;
-      tuitionFee: number;
-    }[]
-  >();
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [courseOptions, setCourseOptions] = useState<ClassOption[]>([]);
 
   // Refs for time inputs
-  // const checkStartTimeRef = useRef<HTMLInputElement>(null);
-  // const checkEndTimeRef = useRef<HTMLInputElement>(null);
   const fixedStartTimeRef = useRef<HTMLInputElement>(null);
   const fixedEndTimeRef = useRef<HTMLInputElement>(null);
   const campStartTimeRef = useRef<HTMLInputElement>(null);
   const campEndTimeRef = useRef<HTMLInputElement>(null);
 
   const classTypeId = watch("classTypeId");
+
+  // Sync state with form values
+  useEffect(() => {
+    setValue("fixedDays", selectedDays);
+  }, [selectedDays, setValue]);
+
+  useEffect(() => {
+    setValue("campDates", selectedDates);
+  }, [selectedDates, setValue]);
 
   // Get the selected course option object
   const selectedCourseOption = useMemo(() => {
@@ -124,8 +426,6 @@ export function ClassScheduleForm({
 
   const classType = selectedCourseOption?.classMode;
 
-  console.log("Class Type:", classType);
-
   // Handle day selection for 12 times fixed
   const toggleDay = (day: string) => {
     const newSelectedDays = selectedDays.includes(day)
@@ -133,84 +433,67 @@ export function ClassScheduleForm({
       : [...selectedDays, day];
 
     setSelectedDays(newSelectedDays);
-    setValue("fixedDays", newSelectedDays);
   };
 
   // Handle date selection for camp class
   const toggleDate = (date: string) => {
-    console.log("Toggling date:", date);
     const newSelectedDates = selectedDates.includes(date)
       ? selectedDates.filter((d) => d !== date)
       : [...selectedDates, date];
 
     setSelectedDates(newSelectedDates);
-    setValue("campDates", newSelectedDates);
   };
 
   // Generate calendar days for the current month
   const calendarDays = useMemo(
-    () => generateCalendarDays(currentMonth),
-    [currentMonth]
+    () => generateCalendarDays(currentDate),
+    [currentDate]
   );
 
   // Navigate to previous/next month
   const navigateMonth = (direction: "prev" | "next") => {
-    const newMonth = new Date(currentMonth);
+    const newMonth = new Date(currentDate);
     newMonth.setMonth(newMonth.getMonth() + (direction === "next" ? 1 : -1));
-    setCurrentMonth(newMonth);
+    setCurrentDate(newMonth);
   };
 
   const onSubmit = (data: FormData) => {
-    console.log("Form submitted with data:", data);
+    // Get fresh form values to ensure we have the latest data
+    const currentFormData = getValues();
 
     // Get the complete course type object
-    const selectedCourse = courseOptions?.find(
+    const selectedCourseType = courseOptions?.find(
       (option) => option.id.toString() === data.classTypeId
     );
 
-    if (!selectedCourse) {
-      alert("Please select a class type.");
+    if (!selectedCourseType) {
+      alert(VALIDATION_MESSAGES.SELECT_CLASS_TYPE);
       return;
     }
 
-    // Validate based on class type
-    if (selectedCourse.classMode === "12 times fixed") {
-      if (selectedDays.length === 0) {
-        alert("Please select at least one day for 12 times fixed.");
-        return;
-      }
-      if (!data.fixedStartTime || !data.fixedEndTime) {
-        alert("Please select both start and end times for 12 times fixed.");
-        return;
-      }
-    } else if (selectedCourse.classMode === "5 days camp") {
-      if (selectedDates.length === 0) {
-        alert("Please select at least one date for camp class.");
-        return;
-      }
-      if (!data.campStartTime || !data.campEndTime) {
-        alert("Please select both start and end times for camp class.");
-        return;
-      }
-    }
+    // Validate the schedule using our validation helper
+    const isValid = validateClassSchedule(
+      selectedCourseType,
+      selectedDays,
+      selectedDates,
+      currentFormData
+    );
+
+    if (!isValid) return;
 
     // Update form data with selected days/dates and complete course object
     const updatedData = {
-      classType: selectedCourse, // Complete course object
-      // checkStartTime: data.checkStartTime,
-      // checkEndTime: data.checkEndTime,
+      classType: selectedCourseType,
       fixedDays: selectedDays,
-      fixedStartTime: data.fixedStartTime,
-      fixedEndTime: data.fixedEndTime,
+      fixedStartTime: currentFormData.fixedStartTime,
+      fixedEndTime: currentFormData.fixedEndTime,
       campDates: selectedDates,
-      campStartTime: data.campStartTime,
-      campEndTime: data.campEndTime,
+      campStartTime: currentFormData.campStartTime,
+      campEndTime: currentFormData.campEndTime,
     };
 
-    // console.log("Class Schedule Submitted:", updatedData);
+    console.log("Sending updated data:", updatedData);
     afterClassSchedule(updatedData);
-    console.log("success");
-    onOpenChange(false);
   };
 
   const handleBack = () => {
@@ -229,7 +512,7 @@ export function ClassScheduleForm({
   }, []);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open}>
       <DialogContent className="sm:max-w-[500px] p-0 rounded-3xl overflow-hidden max-h-[80vh] overflow-y-auto">
         <div className="bg-white p-6">
           <DialogHeader>
@@ -252,305 +535,40 @@ export function ClassScheduleForm({
                   >
                     <option value="">Select a class type</option>
                     {courseOptions &&
-                      courseOptions.map(
-                        (option: {
-                          id: number;
-                          classMode: string;
-                          classLimit: number;
-                          tuitionFee: number;
-                        }) => (
-                          <option key={option.id} value={option.id.toString()}>
-                            {option.classMode}
-                          </option>
-                        )
-                      )}
+                      courseOptions.map((option: ClassOption) => (
+                        <option key={option.id} value={option.id.toString()}>
+                          {option.classMode}
+                        </option>
+                      ))}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
-              {/* 12 Times Check - Show start and end time */}
-              {/* {classType === "12 times check" && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium text-gray-900">
-                    12 Times Check Schedule
-                  </h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label
-                        htmlFor="checkStartTime"
-                        className="text-xs text-gray-500"
-                      >
-                        Start Time
-                      </Label>
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => checkStartTimeRef.current?.showPicker()}
-                      >
-                        <Input
-                          {...register("checkStartTime")}
-                          ref={(e) => {
-                            register("checkStartTime").ref(e);
-                            checkStartTimeRef.current = e;
-                          }}
-                          type="time"
-                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label
-                        htmlFor="checkEndTime"
-                        className="text-xs text-gray-500"
-                      >
-                        End Time
-                      </Label>
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => checkEndTimeRef.current?.showPicker()}
-                      >
-                        <Input
-                          {...register("checkEndTime")}
-                          ref={(e) => {
-                            register("checkEndTime").ref(e);
-                            checkEndTimeRef.current = e;
-                          }}
-                          type="time"
-                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )} */}
-
               {/* 12 Times Fixed - Day selection with start/end time */}
-              {classType === "12 times fixed" && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium text-gray-900">
-                    12 Times Fixed Schedule
-                  </h3>
-
-                  {/* Day Selection */}
-                  <div className="space-y-2">
-                    <Label className="text-sm text-gray-700">Select Days</Label>
-                    <div className="grid grid-cols-7 gap-2">
-                      {DAYS_OF_WEEK.map((day) => (
-                        <Button
-                          key={day.key}
-                          type="button"
-                          variant="outline"
-                          className={`h-10 text-xs ${
-                            selectedDays.includes(day.key)
-                              ? "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-500"
-                              : "hover:bg-gray-100"
-                          }`}
-                          onClick={() => toggleDay(day.key)}
-                        >
-                          {day.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Time Selection */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">
-                        Start Time
-                      </Label>
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => fixedStartTimeRef.current?.showPicker()}
-                      >
-                        <Input
-                          {...register("fixedStartTime")}
-                          ref={(e) => {
-                            register("fixedStartTime").ref(e);
-                            fixedStartTimeRef.current = e;
-                          }}
-                          type="time"
-                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">End Time</Label>
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => fixedEndTimeRef.current?.showPicker()}
-                      >
-                        <Input
-                          {...register("fixedEndTime")}
-                          ref={(e) => {
-                            register("fixedEndTime").ref(e);
-                            fixedEndTimeRef.current = e;
-                          }}
-                          type="time"
-                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedDays.length > 0 && (
-                    <div className="text-sm text-gray-600">
-                      Selected days:{" "}
-                      {selectedDays
-                        .map(
-                          (day) =>
-                            DAYS_OF_WEEK.find((d) => d.key === day)?.label
-                        )
-                        .join(", ")}
-                    </div>
-                  )}
-                </div>
+              {classType === CLASS_TYPES.TWELVE_TIMES_FIXED && (
+                <FixedScheduleSection
+                  selectedDays={selectedDays}
+                  onToggleDay={toggleDay}
+                  register={register}
+                  fixedStartTimeRef={fixedStartTimeRef}
+                  fixedEndTimeRef={fixedEndTimeRef}
+                />
               )}
 
               {/* Camp Class - Calendar selection with start/end time */}
-              {(classType === "5 days camp" || classType === "2 days camp") && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium text-gray-900">
-                    Camp Class Schedule
-                  </h3>
-
-                  {/* Calendar */}
-                  <div className="space-y-2">
-                    <Label className="text-sm text-gray-700">
-                      Select Dates
-                    </Label>
-                    <div className="border border-gray-300 rounded-lg p-3 bg-white">
-                      {/* Calendar Header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigateMonth("prev")}
-                        >
-                          ←
-                        </Button>
-                        <h4 className="font-medium">
-                          {currentMonth.toLocaleDateString("en-US", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigateMonth("next")}
-                        >
-                          →
-                        </Button>
-                      </div>
-
-                      {/* Calendar Grid */}
-                      <div className="grid grid-cols-7 gap-1 text-center">
-                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                          (day) => (
-                            <div
-                              key={day}
-                              className="text-xs font-medium text-gray-500 p-2"
-                            >
-                              {day}
-                            </div>
-                          )
-                        )}
-                        {calendarDays.map((date, index) => {
-                          const dateStr = formatDateLocal(date);
-                          const isCurrentMonth =
-                            date.getMonth() === currentMonth.getMonth();
-                          const isSelected = selectedDates.includes(dateStr);
-                          const isToday =
-                            date.toDateString() === new Date().toDateString();
-
-                          return (
-                            <Button
-                              key={index}
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className={`h-8 w-8 p-0 text-xs ${
-                                !isCurrentMonth
-                                  ? "text-gray-300 hover:bg-transparent cursor-default"
-                                  : isSelected
-                                  ? "bg-yellow-400 text-black hover:bg-yellow-500"
-                                  : isToday
-                                  ? "bg-blue-100 text-blue-600"
-                                  : "hover:bg-gray-100"
-                              }`}
-                              onClick={() =>
-                                isCurrentMonth && toggleDate(dateStr)
-                              }
-                              disabled={!isCurrentMonth}
-                            >
-                              {date.getDate()}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Time Selection */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">
-                        Start Time
-                      </Label>
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => campStartTimeRef.current?.showPicker()}
-                      >
-                        <Input
-                          {...register("campStartTime")}
-                          ref={(e) => {
-                            register("campStartTime").ref(e);
-                            campStartTimeRef.current = e;
-                          }}
-                          type="time"
-                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-500">End Time</Label>
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => campEndTimeRef.current?.showPicker()}
-                      >
-                        <Input
-                          {...register("campEndTime")}
-                          ref={(e) => {
-                            register("campEndTime").ref(e);
-                            campEndTimeRef.current = e;
-                          }}
-                          type="time"
-                          className="border-gray-300 rounded-lg pr-10 cursor-pointer"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedDates.length > 0 && (
-                    <div className="text-sm text-gray-600">
-                      Selected dates: {selectedDates.length} day
-                      {selectedDates.length !== 1 ? "s" : ""}
-                    </div>
-                  )}
-                </div>
+              {(classType === CLASS_TYPES.FIVE_DAYS_CAMP ||
+                classType === CLASS_TYPES.TWO_DAYS_CAMP) && (
+                <CampScheduleSection
+                  selectedDates={selectedDates}
+                  onToggleDate={toggleDate}
+                  currentDate={currentDate}
+                  onNavigateMonth={navigateMonth}
+                  calendarDays={calendarDays}
+                  register={register}
+                  campStartTimeRef={campStartTimeRef}
+                  campEndTimeRef={campEndTimeRef}
+                />
               )}
             </div>
 
@@ -581,4 +599,4 @@ export function ClassScheduleForm({
   );
 }
 
-export default ClassScheduleForm;
+export default ClassScheduleDialog;

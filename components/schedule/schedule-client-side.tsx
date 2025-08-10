@@ -5,25 +5,37 @@ import EditSchedule from "./dialogs/edit-schedule-dialog";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import ScheduleTable from "./schedule-table";
 import { formatDateLocal } from "@/lib/utils";
-import { getFilteredSchedules, ScheduleFilter } from "@/lib/axio";
 import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/ui/pagination";
 
-function ScheduleClientSide() {
+interface ScheduleClientSideProps {
+  initialSchedules?: ClassSchedule[];
+  initialPagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+function ScheduleClientSide({
+  initialSchedules = [],
+  initialPagination,
+}: ScheduleClientSideProps) {
   const params = useSearchParams();
   const [open, setOpen] = useState<boolean>(false);
-  const [schedules, setSchedules] = useState<ClassSchedule[]>([]);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalCount: 0,
-    hasNext: false,
-    hasPrev: false,
-  });
+  const [schedules, setSchedules] = useState<ClassSchedule[]>(initialSchedules);
+  const [pagination, setPagination] = useState(
+    initialPagination || {
+      currentPage: 1,
+      totalPages: 1,
+      totalCount: 0,
+      hasNext: false,
+      hasPrev: false,
+    }
+  );
   const [selectedSession, setSelectedSession] = useState<FormData>();
-
-  // Extract params values to variables for stable dependency array
-  const paramsString = params.toString();
 
   const handleRowDoubleClick = useCallback((session: ClassSchedule) => {
     console.log("Row double clicked:", session);
@@ -46,32 +58,14 @@ function ScheduleClientSide() {
   }, []);
 
   useEffect(() => {
-    const fetchSchedules = async () => {
-      const currentPage = parseInt(params.get("page") || "1", 10);
-      const filter: ScheduleFilter = {
-        startDate: params.get("startDate") || undefined,
-        endDate: params.get("endDate") || undefined,
-        studentName: params.get("studentName") || undefined,
-        teacherName: params.get("teacherName") || undefined,
-        courseName: params.get("courseName") || undefined,
-        attendanceStatus: params.get("attendanceStatus") || undefined,
-        classStatus: params.get("classStatus") || undefined,
-        room: params.get("room") || undefined,
-        sessionMode: params.get("sessionMode") || undefined,
-        sort: params.get("sort") || undefined,
-      };
-      // console.log("Fetching schedules with:", { filter, currentPage, limit: 10 });
-      const data = await getFilteredSchedules(filter, currentPage, 10);
-      console.log("Received data:", {
-        schedulesCount: data.schedules?.length,
-        pagination: data.pagination,
-        data: data,
-      });
-      setSchedules(data.schedules);
-      setPagination(data.pagination);
-    };
-    fetchSchedules();
-  }, [params, paramsString]);
+    // Set initial data when component mounts
+    if (initialSchedules.length > 0) {
+      setSchedules(initialSchedules);
+    }
+    if (initialPagination) {
+      setPagination(initialPagination);
+    }
+  }, [initialSchedules, initialPagination]);
 
   const handleScheduleUpdate = (updatedFormData: FormData) => {
     // Convert FormData back to ClassSchedule format and update the schedule in the list
@@ -100,6 +94,7 @@ function ScheduleClientSide() {
         initialData={selectedSession}
         onScheduleUpdate={handleScheduleUpdate}
       />
+
       {params.size > 0 && (
         <>
           <ScheduleTable

@@ -25,6 +25,9 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
             Course Title
           </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
+            Type
+          </TableHead>
+          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
             Total Amount
           </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
@@ -42,10 +45,23 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
               {invoice.documentId}
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {invoice.session.student.name}
+              {invoice.studentName || "N/A"}
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {invoice.session.course.title}
+              {invoice.courseName || "N/A"}
+            </TableCell>
+            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  invoice.type === "course"
+                    ? "bg-blue-100 text-blue-800"
+                    : invoice.type === "courseplus"
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {invoice.type.charAt(0).toUpperCase() + invoice.type.slice(1)}
+              </span>
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {invoice.totalAmount}
@@ -65,7 +81,7 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               <Link
-                href={`/invoice/${invoice.id}/student/${invoice.session.student.id}`}
+                href={`/invoice/${invoice.id}/student/${invoice.studentId}`}
               >
                 <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
                   Details

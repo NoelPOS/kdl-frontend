@@ -15,12 +15,20 @@ import { cn } from "@/lib/utils";
 //   { label: "All", value: "all" },
 // ];
 
+const transactionTypeOptions = [
+  { label: "All Types", value: "" },
+  { label: "Course", value: "course" },
+  { label: "Course Plus", value: "courseplus" },
+  { label: "Package", value: "package" },
+];
+
 type FilterFormData = {
   date: string;
   status: string;
   course: string;
   teacher: string;
   student: string;
+  transactionType: string;
 };
 
 function EnrollmentFilter() {
@@ -36,6 +44,7 @@ function EnrollmentFilter() {
       course: searchParams.get("course") || "",
       teacher: searchParams.get("teacher") || "",
       student: searchParams.get("student") || "",
+      transactionType: searchParams.get("transactionType") || "",
     },
   });
 
@@ -79,12 +88,18 @@ function EnrollmentFilter() {
     } else {
       params.delete("student");
     }
+    if (data.transactionType && data.transactionType !== "") {
+      params.set("transactionType", data.transactionType);
+    } else {
+      params.delete("transactionType");
+    }
     if (
       !data.date &&
       !data.status &&
       !data.course &&
       !data.teacher &&
-      !data.student
+      !data.student &&
+      !data.transactionType
     ) {
       params.delete("query");
       params.delete("status");
@@ -104,6 +119,7 @@ function EnrollmentFilter() {
       course: "",
       teacher: "",
       student: "",
+      transactionType: "",
     });
     router.replace(pathname);
   }, [reset, router, pathname]);
@@ -208,6 +224,24 @@ function EnrollmentFilter() {
                 placeholder="Enter teacher name"
                 className="border-gray-300"
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="transactionType">Transaction Type</Label>
+              <div className="relative">
+                <select
+                  id="transactionType"
+                  {...register("transactionType")}
+                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none text-sm text-gray-500"
+                >
+                  {transactionTypeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* <div className="flex flex-col gap-2">

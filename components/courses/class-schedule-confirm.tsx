@@ -31,8 +31,8 @@ import { generateScheduleRows } from "@/lib/utils";
 import {
   ComfirmClassScheduleData,
   ComfirmScheduleRow,
-  ComfirmStudent,
-  ComfirmTeacherData,
+  Student,
+  TeacherData,
   ConflictDetail,
   Course,
   EditScheduleFormData,
@@ -42,12 +42,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 interface ClassScheduleConfirmProps {
   courseName: string;
   course?: Pick<Course, "id" | "title">;
-  students: ComfirmStudent[];
+  students: Student[];
   classSchedule: ComfirmClassScheduleData;
-  teacherData: ComfirmTeacherData;
+  teacherData: TeacherData;
   onCancel: () => void;
   onConfirm: () => void;
   onBack?: () => void;
+  // Package-related props
+  isFromPackage?: boolean;
+  packageId?: number;
 }
 
 const normalizeDate = (d?: string) => {
@@ -88,6 +91,8 @@ export default function ClassScheduleConfirm({
   onConfirm,
   onCancel,
   onBack,
+  isFromPackage = false,
+  packageId,
 }: ClassScheduleConfirmProps) {
   const router = useRouter();
 
@@ -156,7 +161,7 @@ export default function ClassScheduleConfirm({
       date: row.date,
       starttime: startTime,
       endtime: endTime,
-      course: courseName || "", // Use the actual course name instead of empty string
+      course: courseName || "", 
       teacher: row.teacher,
       teacherId: row.teacherId,
       student: row.student,
@@ -221,8 +226,10 @@ export default function ClassScheduleConfirm({
             teacherData.teacherId == -1 ? undefined : teacherData.teacherId,
           classOptionId: Number(classSchedule.classType.id),
           classCancel: 0,
-          payment: "Unpaid",
+          payment: isFromPackage ? "Paid" : "Unpaid",
           status: "Pending",
+          isFromPackage: isFromPackage,
+          packageId: packageId,
         });
         sessionsMap[student.id] = session.id;
       }

@@ -21,6 +21,9 @@ export function EnrollmentTable({
       <TableHeader>
         <TableRow>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold ">
+            No.
+          </TableHead>
+          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold ">
             Date
           </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
@@ -41,8 +44,11 @@ export function EnrollmentTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {enrollments.map((enrollment) => (
+        {enrollments.map((enrollment, index) => (
           <TableRow key={enrollment.session_id}>
+            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+              {index + 1}
+            </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {new Date(enrollment.session_createdat).toLocaleDateString()}
             </TableCell>

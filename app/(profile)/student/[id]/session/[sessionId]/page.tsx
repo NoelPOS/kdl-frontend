@@ -2,6 +2,7 @@ import StudentSchedule from "@/components/students/student-schedule";
 import { getSchedulesByStudentAndSession } from "@/lib/axio";
 import Link from "next/link";
 import React from "react";
+import { CompleteSessionDialog } from "@/components/students/complete-session-dialog";
 
 export default async function StudentSession({
   params,
@@ -16,25 +17,33 @@ export default async function StudentSession({
 
   return (
     <div className="p-6">
-      <nav className="flex items-center font-medium mb-4">
-        <Link
-          href="/students"
-          className="text-gray-900 hover:underline text-3xl font-bold cursor-pointer"
-        >
-          Students
-        </Link>
-        <span className="mx-1 text-3xl">&gt;</span>
-        <Link
-          href={`/student/${id}`}
-          className="text-gray-900 text-3xl font-bold hover:underline cursor-pointer"
-        >
-          {schedules[0].student_name}
-        </Link>
-        <span className="mx-1 text-3xl">&gt;</span>
-        <span className="text-gray-900 text-3xl font-bold">
-          {schedules[0].course_title}
-        </span>
-      </nav>
+      <div className="flex items-center justify-between mb-4">
+        <nav className="flex items-center font-medium">
+          <Link
+            href="/students"
+            className="text-gray-900 hover:underline text-3xl font-bold cursor-pointer"
+          >
+            Students
+          </Link>
+          <span className="mx-1 text-3xl">&gt;</span>
+          <Link
+            href={`/student/${id}`}
+            className="text-gray-900 text-3xl font-bold hover:underline cursor-pointer"
+          >
+            {schedules[0].student_name}
+          </Link>
+          <span className="mx-1 text-3xl">&gt;</span>
+          <span className="text-gray-900 text-3xl font-bold">
+            {schedules[0].course_title}
+          </span>
+        </nav>
+
+        <CompleteSessionDialog
+          sessionId={sessionId}
+          sessionTitle={schedules[0].course_title}
+        />
+      </div>
+
       <StudentSchedule initialSchedules={schedules} />
     </div>
   );

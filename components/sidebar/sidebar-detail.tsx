@@ -12,6 +12,9 @@ import {
   MessageSquare,
   FileText,
   PlusCircleIcon,
+  Receipt,
+  ReceiptIcon,
+  Package,
 } from "lucide-react";
 
 import {
@@ -40,6 +43,11 @@ const menuItems = [
     title: "courses",
     icon: BookOpen,
     url: "/courses",
+  },
+  {
+    title: "packages",
+    icon: Package,
+    url: "/packages",
   },
   {
     title: "students",
@@ -78,13 +86,13 @@ const menuItems = [
   },
   {
     title: "invoices",
-    icon: FileText,
+    icon: ReceiptIcon,
     url: "/invoices",
   },
   {
-    title: "courseplus",
-    icon: PlusCircleIcon,
-    url: "/courseplus",
+    title: "receipts",
+    icon: Receipt,
+    url: "/receipts",
   },
 ];
 

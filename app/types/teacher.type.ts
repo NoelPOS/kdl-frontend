@@ -6,4 +6,5 @@ export type Teacher = {
   lineId: string;
   address: string;
   profilePicture: string;
+  profileKey: string;
 };

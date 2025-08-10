@@ -47,15 +47,27 @@ const InvoiceDetailRight = ({
   discounts,
   session,
 }: {
-  sessionId: number;
+  sessionId: number | string;
   discounts: Discount[];
   session: Enrollment;
 }) => {
-  // console.log("Session Data: ", session);
   const [discountRows, setDiscountRows] = useState<DiscountRow[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const router = useRouter();
+
+  // Function to check transaction type based on sessionId
+  const checkType = (
+    sessionId: number | string
+  ): "course" | "courseplus" | "package" => {
+    if (sessionId.toString().startsWith("cp-")) {
+      return "courseplus";
+    }
+    if (sessionId.toString().startsWith("pkg-")) {
+      return "package";
+    }
+    return "course";
+  };
 
   // Generate document ID in format YYYYMMDD + random number
   const generateDocumentId = () => {
@@ -120,16 +132,23 @@ const InvoiceDetailRight = ({
   };
 
   const handleCreateInvoice = async () => {
+    const transactionType = checkType(sessionId);
     const invoiceData: InvoiceSubmission = {
-      sessionId,
+      studentId: session.student_id,
+      sessionId: transactionType === "course" ? sessionId : null,
+      coursePlusId: transactionType === "courseplus" ? sessionId : null,
+      packageId: transactionType === "package" ? sessionId : null,
       documentId,
       date: new Date().toISOString().split("T")[0],
       paymentMethod,
       totalAmount,
+      studentName: session.student_name,
+      courseName: session.course_title,
+      transactionType,
       items: [
         {
           description: `Invoice for session ${sessionId}`,
-          amount: 100.0,
+          amount: Number(session.classoption_tuitionfee),
         },
         ...discountRows.map((discount) => ({
           description: discount.description,
@@ -138,9 +157,10 @@ const InvoiceDetailRight = ({
       ],
     };
 
-    console.log("Invoice submission data:", invoiceData);
+    console.log("=== INVOICE SUBMISSION DATA ===", invoiceData);
     // Here you would typically call an API to submit the invoice
     try {
+      console.log("Submitting invoice...");
       const result = await addNewInvoice(invoiceData);
       console.log("Invoice created successfully:", result);
       router.replace("/invoices");
@@ -150,6 +170,14 @@ const InvoiceDetailRight = ({
   };
   return (
     <div className="flex flex-col py-5 px-10 w-full h-screen ">
+      {/* Component Title */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Invoice Generation</h1>
+        <p className="text-gray-600 mt-1">
+          Create and manage invoice for this session
+        </p>
+      </div>
+
       <div className="flex items-center justify-between flex-1/5">
         <div className="flex flex-col">
           <p className="text-lg ">Document Id: {documentId}</p>
@@ -239,7 +267,8 @@ const InvoiceDetailRight = ({
                 1
               </TableCell>
               <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                {session.course_title}
+                {session.course_title} - {session.student_name} (
+                {session.transaction_type || "course"})
               </TableCell>
               <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                 {session.classoption_tuitionfee}
@@ -323,7 +352,11 @@ const InvoiceDetailRight = ({
           >
             Cancel
           </Button>
-          <Button variant="outline" onClick={handleCreateInvoice}>
+          <Button
+            variant="outline"
+            onClick={handleCreateInvoice}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white "
+          >
             Create Invoice
           </Button>
         </div>
