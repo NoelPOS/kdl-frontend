@@ -161,7 +161,7 @@ export default function ClassScheduleConfirm({
       date: row.date,
       starttime: startTime,
       endtime: endTime,
-      course: courseName || "", 
+      course: courseName || "",
       teacher: row.teacher,
       teacherId: row.teacherId,
       student: row.student,

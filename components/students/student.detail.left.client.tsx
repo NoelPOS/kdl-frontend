@@ -28,6 +28,7 @@ export default function StudentDetailClient({
 }: {
   student: Partial<Student>;
 }) {
+  console.log("student", student.profilePicture);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -103,7 +104,7 @@ export default function StudentDetailClient({
       const getUrlRes = await fetch(
         `/api/s3-upload-url?fileName=${encodeURIComponent(
           imageFile.name
-        )}&fileType=${encodeURIComponent(imageFile.type)}`
+        )}&fileType=${encodeURIComponent(imageFile.type)}&folder=students`
       );
       if (getUrlRes.ok) {
         const { url } = await getUrlRes.json();

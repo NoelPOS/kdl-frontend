@@ -11,24 +11,47 @@ const s3 = new S3Client({
 });
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const fileName = searchParams.get("fileName");
-  const fileType = searchParams.get("fileType");
-  const folder = searchParams.get("folder");
-  if (!fileName || !fileType) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const fileName = searchParams.get("fileName");
+    const fileType = searchParams.get("fileType");
+    const folder = searchParams.get("folder");
+
+    if (!fileName || !fileType) {
+      return NextResponse.json(
+        { error: "Missing fileName or fileType" },
+        { status: 400 }
+      );
+    }
+
+    // Validate environment variables
+    if (
+      !process.env.AWS_REGION ||
+      !process.env.AWS_ACCESS_KEY_ID ||
+      !process.env.AWS_SECRET_ACCESS_KEY ||
+      !process.env.AWS_S3_BUCKET_NAME
+    ) {
+      console.error("Missing AWS configuration environment variables");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: `${folder}/${fileName}`,
+      ContentType: fileType,
+    });
+
+    const url = await getSignedUrl(s3, command, { expiresIn: 60 }); // 1 minute expiry
+
+    return NextResponse.json({ url });
+  } catch (error) {
+    console.error("S3 upload URL generation failed:", error);
     return NextResponse.json(
-      { error: "Missing fileName or fileType" },
-      { status: 400 }
+      { error: "Failed to generate upload URL" },
+      { status: 500 }
     );
   }
-
-  const command = new PutObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME,
-    Key: `${folder}/${fileName}`,
-    ContentType: fileType,
-  });
-
-  const url = await getSignedUrl(s3, command, { expiresIn: 60 }); // 1 minute expiry
-
-  return NextResponse.json({ url });
 }

@@ -99,8 +99,7 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
         <DialogHeader>
           <DialogTitle>Add Course Plus</DialogTitle>
           <DialogDescription>
-            Add additional classes to the existing session. This will create new
-            schedules with separate enrollments and invoices.
+            Add additional classes to the existing session.
           </DialogDescription>
         </DialogHeader>
 
@@ -128,7 +127,7 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-sm text-green-800">
+          {/* <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-sm text-green-800">
             <strong>What is Course Plus?</strong>
             <ul className="mt-1 ml-4 list-disc space-y-1">
               <li>Adds extra classes to your existing session</li>
@@ -136,7 +135,7 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
               <li>Creates separate enrollment and invoice for billing</li>
               <li>New schedules marked as &quot;Course Plus&quot;</li>
             </ul>
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="additionalClasses">

@@ -66,7 +66,8 @@ const FilterPackage = () => {
     if (data.classMode && data.classMode !== "all") {
       params.set("classMode", data.classMode);
     } else {
-      params.delete("classMode");
+      // params.delete("classMode");
+      params.set("classMode", "all");
     }
     // Reset to page 1 when filtering
     params.delete("page");

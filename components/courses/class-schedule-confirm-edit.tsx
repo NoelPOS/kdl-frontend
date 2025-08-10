@@ -249,9 +249,11 @@ export function EditScheduleDialog({
                   <option value="" disabled hidden>
                     Select a room
                   </option>
-                  <option value="Online">Online</option>
-                  <option value="Room 101">Room 101</option>
-                  <option value="Auditorium">Auditorium</option>
+                  <option value="Room 1">Room 1</option>
+                  <option value="Room 2">Room 2</option>
+                  <option value="Room 3">Room 3</option>
+                  <option value="Room 4">Room 4</option>
+                  <option value="Room 5">Room 5</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>

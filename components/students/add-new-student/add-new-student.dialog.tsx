@@ -19,6 +19,7 @@ import { addNewStudent } from "@/lib/axio";
 import { Checkbox } from "../../ui/checkbox";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { profile } from "console";
 
 export type FormData = {
   name: string;
@@ -68,7 +69,7 @@ export function AddNewStudent() {
       const getUrlRes = await fetch(
         `/api/s3-upload-url?fileName=${encodeURIComponent(
           imageFile.name
-        )}&fileType=${encodeURIComponent(imageFile.type)}`
+        )}&fileType=${encodeURIComponent(imageFile.type)}&folder=students`
       );
       if (!getUrlRes.ok) {
         // handle error (show message, etc.)
@@ -91,10 +92,18 @@ export function AddNewStudent() {
       // 3. Construct the S3 file URL (assuming public bucket)
       imageUrl = `https://${
         process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
-      }.s3.amazonaws.com/students/${encodeURIComponent(
-        imageFile.name
-      )}&folder=students`;
+      }.s3.amazonaws.com/students/${encodeURIComponent(imageFile.name)}`;
     }
+
+    // console.log all the data to add to addnewstudent functin
+
+    console.log({
+      ...data,
+      allergic: data.allergic.split(" "),
+      doNotEat: data.doNotEat.split(" "),
+      profilePicture: imageUrl,
+      profileKey: key,
+    });
 
     await addNewStudent({
       ...data,

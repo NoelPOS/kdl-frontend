@@ -71,10 +71,10 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
 
   const goToConfirmStep = () => {
     // For class types other than 2, validate that teacher is selected
-    if (classScheduleData.classType.id !== 2 && teacherData.teacherId === -1) {
-      alert("Please select a teacher first!");
-      return;
-    }
+    // if (classScheduleData.classType.id !== 2 && teacherData.teacherId === -1) {
+    //   alert("Please select a teacher first!");
+    //   return;
+    // }
 
     setCurrentStep("confirm");
     setTeacherOpen(false);
