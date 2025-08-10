@@ -397,6 +397,7 @@ export async function getSchedulesByStudentAndSession(
   const res = await api.get<ClassSchedule[]>(
     `/schedules/session/${sessionId}/student/${studentId}`
   );
+  console.log("API response:", res.data);
   return res.data;
 }
 

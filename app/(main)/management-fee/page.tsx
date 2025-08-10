@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import DiscountSearch from "@/components/discounts/search/discount.search";
+import DiscountFilter from "@/components/discounts/filter-discount";
 import { AddNewDiscount } from "@/components/discounts/add-new-discount/add-new-discount.dialog";
 import DiscountList from "@/components/discounts/discount.list";
 
@@ -14,13 +14,13 @@ export default async function DiscountsPage({
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-center mb-6 ">
-        <div className="flex items-center justify-around w-full gap-4">
-          <div className="flex-1/4 text-3xl font-medium">Management Fees</div>
-          <DiscountSearch />
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-medium">Management Fees</h1>
         <AddNewDiscount />
       </div>
+
+      <DiscountFilter />
+
       <Suspense key={`${query || ""}`} fallback={<div>Loading...</div>}>
         <DiscountList query={query || ""} />
       </Suspense>

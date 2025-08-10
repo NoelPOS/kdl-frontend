@@ -13,6 +13,9 @@ export function DiscountTable({ discounts }: { discounts: Discount[] }) {
     <Table className="bg-white table-fixed rounded-2xl ">
       <TableHeader>
         <TableRow>
+          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-16">
+            No.
+          </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold ">
             Title
           </TableHead>
@@ -25,8 +28,11 @@ export function DiscountTable({ discounts }: { discounts: Discount[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {discounts.map((discount) => (
+        {discounts.map((discount, index) => (
           <TableRow key={discount.id}>
+            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+              {index + 1}
+            </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {discount.title}
             </TableCell>

@@ -35,6 +35,7 @@ function ScheduleTable({
   schedules,
   handleRowDoubleClick,
 }: ScheduleTableProps) {
+  // console.log("scheduleTable rendered", schedules);
   return (
     <>
       {schedules.length > 0 ? (
