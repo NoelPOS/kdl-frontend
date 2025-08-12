@@ -30,32 +30,46 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
 
   const handleConfirmPayment = async (invoiceId: number) => {
     try {
-      // Determine which ID to use for status update based on invoice type
-      let statusId: number | null = null;
+      let updateResults: boolean[] = [];
 
-      if (invoice.type === "course" && invoice.sessionId) {
-        statusId = invoice.sessionId;
-      } else if (invoice.type === "courseplus" && invoice.coursePlusId) {
-        statusId = invoice.coursePlusId;
-      } else if (invoice.type === "package" && invoice.packageId) {
-        // For package, we might need a different approach since packageId could be a string
-        // You may need to update the changeSessionStatus function or create a new one for packages
-        console.log("Package payment confirmation - ID:", invoice.packageId);
-      }
+      // Handle multiple sessions if sessionGroups exists (new structure)
+      if (invoice.sessionGroups && invoice.sessionGroups.length > 0) {
+        console.log(
+          "Processing multiple sessions from sessionGroups:",
+          invoice.sessionGroups
+        );
 
-      if (statusId) {
-        const success = await changeSessionStatus(statusId, "paid");
-        if (!success) {
-          console.error("Failed to change session status to paid");
-          return;
+        for (const sessionGroup of invoice.sessionGroups) {
+          const { sessionId } = sessionGroup;
+          console.log("Processing session id:", sessionId);
+
+          // Use the unified changeSessionStatus function that handles both course and courseplus
+          const success = await changeSessionStatus(sessionId, "paid");
+          console.log(`Updated session ${sessionId}:`, success);
+          updateResults.push(success);
         }
       }
 
+      // Check if all updates were successful
+      const allUpdatesSuccessful = updateResults.every(
+        (result) => result === true
+      );
+
+      if (!allUpdatesSuccessful) {
+        console.error("Some session status updates failed:", updateResults);
+        alert("Some session status updates failed. Please try again.");
+        return;
+      }
+
+      console.log("All session statuses updated successfully");
+
+      // Create receipt after all statuses are updated
       const result = await createReceipt(invoiceId);
       console.log("Receipt created successfully:", result);
       router.push("/invoices");
     } catch (error) {
       console.error("Error creating receipt:", error);
+      alert("Error processing payment confirmation. Please try again.");
     }
   };
   return (
@@ -65,7 +79,7 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
         <h1 className="text-3xl font-bold text-gray-900">Invoice Details</h1>
         <p className="text-gray-600 mt-1">
           View and manage invoice for {invoice.studentName || "N/A"} -{" "}
-          {invoice.courseName || "N/A"} ({invoice.type})
+          {invoice.courseName || "N/A"}
         </p>
       </div>
 
@@ -75,10 +89,6 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
           <p className="text-lg">
             Date: {new Date(invoice.date).toLocaleDateString()}
           </p>
-        </div>
-        <div className="flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-lg">
-          <Receipt className="h-5 w-5" />
-          <span className="text-sm font-medium">Receipt Generated</span>
         </div>
       </div>
 
@@ -98,22 +108,10 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                1
-              </TableCell>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                {invoice.courseName || "Main Invoice"} -{" "}
-                {invoice.studentName || "N/A"} ({invoice.type})
-              </TableCell>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                {invoice.totalAmount}
-              </TableCell>
-            </TableRow>
             {invoice.items.map((item, index) => (
               <TableRow key={item.id}>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                  {index + 2}
+                  {index + 1}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   {item.description}

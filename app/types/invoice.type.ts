@@ -5,6 +5,12 @@ export interface InvoiceItem {
   amount: string;
 }
 
+export interface SessionGroup {
+  sessionId: string; // could be 12 for session, cp-12 for course plus
+  transactionType: "course" | "courseplus" | "package";
+  actualId: string;
+}
+
 export interface Invoice {
   studentId: number;
   id: number;
@@ -12,11 +18,9 @@ export interface Invoice {
   date: string;
   paymentMethod: string;
   totalAmount: string;
-  sessionId: number | null;
-  coursePlusId: number | null;
-  packageId: string | null;
+  sessionGroups?: SessionGroup[]; // New field for multiple sessions
   receiptDone: boolean;
-  type: "course" | "courseplus" | "package";
+  // type: "course" | "courseplus" | "package";
   studentName: string | null;
   courseName: string | null;
   items: InvoiceItem[];

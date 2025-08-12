@@ -15,6 +15,9 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
     <Table className="bg-white table-fixed rounded-2xl ">
       <TableHeader>
         <TableRow>
+          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-16">
+            No.
+          </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold ">
             Document Id
           </TableHead>
@@ -24,9 +27,7 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
             Course Title
           </TableHead>
-          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
-            Type
-          </TableHead>
+
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
             Total Amount
           </TableHead>
@@ -39,8 +40,11 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {invoices.map((invoice) => (
+        {invoices.map((invoice, index) => (
           <TableRow key={invoice.id}>
+            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+              {index + 1}
+            </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {invoice.documentId}
             </TableCell>
@@ -50,19 +54,7 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {invoice.courseName || "N/A"}
             </TableCell>
-            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  invoice.type === "course"
-                    ? "bg-blue-100 text-blue-800"
-                    : invoice.type === "courseplus"
-                    ? "bg-purple-100 text-purple-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {invoice.type.charAt(0).toUpperCase() + invoice.type.slice(1)}
-              </span>
-            </TableCell>
+
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               {invoice.totalAmount}
             </TableCell>

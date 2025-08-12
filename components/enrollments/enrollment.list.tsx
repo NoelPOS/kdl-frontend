@@ -1,5 +1,5 @@
 import React from "react";
-import { EnrollmentTable } from "./enrollment-table";
+import { EnrollmentTableWithSelection } from "./enrollment-table-with-selection";
 import { fetchEnrollments, EnrollmentFilter } from "@/lib/axio";
 import { Enrollment } from "@/app/types/enrollment.type";
 import { Pagination } from "@/components/ui/pagination";
@@ -44,7 +44,7 @@ export default async function EnrollmentList({
           No enrollments found
         </div>
       ) : (
-        <EnrollmentTable enrollments={enrollments} />
+        <EnrollmentTableWithSelection enrollments={enrollments} />
       )}
 
       {enrollments.length > 0 && (

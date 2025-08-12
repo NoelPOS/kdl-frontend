@@ -35,6 +35,7 @@ import {
   DiscountRow,
   Enrollment,
   InvoiceSubmission,
+  SessionGroup,
 } from "@/app/types/enrollment.type";
 import { addNewInvoice } from "@/lib/axio";
 
@@ -42,14 +43,14 @@ interface FormData {
   discountId: string;
 }
 
-const InvoiceDetailRight = ({
-  sessionId,
+const EnrollmentDetailRightMultiple = ({
+  sessionIds,
   discounts,
-  session,
+  sessions,
 }: {
-  sessionId: number | string;
+  sessionIds: string[];
   discounts: Discount[];
-  session: Enrollment;
+  sessions: Enrollment[];
 }) => {
   const [discountRows, setDiscountRows] = useState<DiscountRow[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,15 +85,18 @@ const InvoiceDetailRight = ({
   // Generate document ID once when component mounts
   const [documentId] = useState(() => generateDocumentId());
 
-  // Calculate total amount
+  // Calculate total amount from all sessions
   const totalAmount: number = useMemo(() => {
-    const sessionAmount = Number(session.classoption_tuitionfee);
+    const sessionTotal = sessions.reduce(
+      (sum, session) => sum + Number(session.classoption_tuitionfee),
+      0
+    );
     const discountTotal = discountRows.reduce(
       (sum, discount) => sum + discount.amount,
       0
     );
-    return sessionAmount + discountTotal;
-  }, [discountRows, session.classoption_tuitionfee]);
+    return sessionTotal + discountTotal;
+  }, [discountRows, sessions]);
 
   const {
     control,
@@ -132,24 +136,55 @@ const InvoiceDetailRight = ({
   };
 
   const handleCreateInvoice = async () => {
-    const transactionType = checkType(sessionId);
+    if (sessions.length === 0) {
+      alert("No sessions available to create invoice.");
+      return;
+    }
+
+    const firstSession = sessions[0];
+
+    // Create invoice items for all sessions
+    const sessionItems = sessions.map((session, index) => ({
+      description: `${session.course_title} - ${session.student_name} (Session ${sessionIds[index]})`,
+      amount: Number(session.classoption_tuitionfee),
+    }));
+
+    // Group sessions by their transaction type and extract the correct IDs
+    const sessionGroups = sessions.map((session, index) => {
+      const sessionId = sessionIds[index];
+      const transactionType = session.transaction_type || checkType(sessionId);
+
+      // Extract the actual ID based on transaction type
+      let actualId = sessionId;
+
+      // If it's courseplus (cp-123), extract the number part
+      if (transactionType === "courseplus" && sessionId.startsWith("cp-")) {
+        actualId = sessionId.replace("cp-", "");
+      }
+      // If it's package (pkg-123), extract the number part
+      else if (transactionType === "package" && sessionId.startsWith("pkg-")) {
+        actualId = sessionId.replace("pkg-", "");
+      }
+      // For regular courses, sessionId is already the correct ID
+
+      return {
+        sessionId: sessionId,
+        transactionType: transactionType,
+        actualId: actualId,
+      };
+    });
+
     const invoiceData: InvoiceSubmission = {
-      studentId: session.student_id,
-      sessionId: transactionType === "course" ? sessionId : null,
-      coursePlusId: transactionType === "courseplus" ? sessionId : null,
-      packageId: transactionType === "package" ? sessionId : null,
+      studentId: firstSession.student_id,
       documentId,
       date: new Date().toISOString().split("T")[0],
       paymentMethod,
       totalAmount,
-      studentName: session.student_name,
-      courseName: session.course_title,
-      transactionType,
+      studentName: firstSession.student_name,
+      courseName: `${sessions.map((s) => s.course_title).join(", ")}`,
+      sessionGroups: sessionGroups,
       items: [
-        {
-          description: `Invoice for session ${sessionId}`,
-          amount: Number(session.classoption_tuitionfee),
-        },
+        ...sessionItems,
         ...discountRows.map((discount) => ({
           description: discount.description,
           amount: discount.amount,
@@ -157,24 +192,32 @@ const InvoiceDetailRight = ({
       ],
     };
 
-    console.log("=== INVOICE SUBMISSION DATA ===", invoiceData);
-    // Here you would typically call an API to submit the invoice
+    console.log(
+      "=== MULTIPLE SESSIONS INVOICE SUBMISSION DATA ===",
+      invoiceData
+    );
+
     try {
-      console.log("Submitting invoice...");
+      console.log("Submitting invoice for multiple sessions...");
       const result = await addNewInvoice(invoiceData);
       console.log("Invoice created successfully:", result);
-      router.replace("/invoices");
+      router.replace(
+        `/invoice/${result.id}/student/${firstSession.student_id}`
+      );
     } catch (error) {
       console.error("Error creating invoice:", error);
     }
   };
+
   return (
     <div className="flex flex-col py-5 px-10 w-full h-screen ">
       {/* Component Title */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Invoice Generation</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Invoice Generation - Multiple Sessions
+        </h1>
         <p className="text-gray-600 mt-1">
-          Create and manage invoice for this session
+          Create invoice for {sessions.length} selected sessions
         </p>
       </div>
 
@@ -262,31 +305,36 @@ const InvoiceDetailRight = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                1
-              </TableCell>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                {session.course_title} - {session.student_name} (
-                {session.transaction_type || "course"})
-              </TableCell>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                {session.classoption_tuitionfee}
-              </TableCell>
-              <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                -
-              </TableCell>
-            </TableRow>
+            {/* Render each session as a row */}
+            {sessions.map((session, index) => (
+              <TableRow key={sessionIds[index]}>
+                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                  {index + 1}
+                </TableCell>
+                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                  {session.course_title} - {session.student_name} (Session{" "}
+                  {sessionIds[index]})
+                </TableCell>
+                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                  ${Number(session.classoption_tuitionfee).toFixed(2)}
+                </TableCell>
+                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                  -
+                </TableCell>
+              </TableRow>
+            ))}
+
+            {/* Render discount rows */}
             {discountRows.map((discount, index) => (
               <TableRow key={discount.id}>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                  {index + 2}
+                  {sessions.length + index + 1}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   {discount.description}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal text-red-600">
-                  {discount.amount.toFixed(2)}
+                  ${discount.amount.toFixed(2)}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   <Button
@@ -300,6 +348,7 @@ const InvoiceDetailRight = ({
                 </TableCell>
               </TableRow>
             ))}
+
             {/* Total Row */}
             <TableRow className="bg-gray-50 font-semibold">
               <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal"></TableCell>
@@ -357,7 +406,7 @@ const InvoiceDetailRight = ({
             onClick={handleCreateInvoice}
             className="bg-yellow-500 hover:bg-yellow-600 text-white "
           >
-            Create Invoice
+            Create Invoice for {sessions.length} Sessions
           </Button>
         </div>
       </div>
@@ -365,4 +414,4 @@ const InvoiceDetailRight = ({
   );
 };
 
-export default InvoiceDetailRight;
+export default EnrollmentDetailRightMultiple;

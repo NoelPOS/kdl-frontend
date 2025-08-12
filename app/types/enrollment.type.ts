@@ -19,17 +19,20 @@ export interface InvoiceItem {
   amount: number;
 }
 
+export interface SessionGroup {
+  sessionId: string; // could be 12 for session, cp-12 for course plus
+  transactionType: "course" | "courseplus" | "package";
+  actualId: string; // The actual ID to send to backend (could be session_id, courseplus_id)
+}
+
 export interface InvoiceSubmission {
   studentId: number;
-  sessionId: number | string | null;
-  coursePlusId?: number | string | null;
-  packageId?: number | string | null;
   documentId: string;
   date: string;
   paymentMethod: string;
   totalAmount: number;
   studentName: string;
   courseName: string;
-  transactionType: "course" | "courseplus" | "package";
+  sessionGroups: SessionGroup[]; // Array of sessions with their types and IDs
   items: InvoiceItem[];
 }
