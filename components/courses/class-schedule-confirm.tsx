@@ -180,6 +180,7 @@ export default function ClassScheduleConfirm({
     editedData: EditScheduleFormData,
     originalIndex: number
   ) => {
+    console.log("Saving edited data:", editedData);
     const updatedRows = [...scheduleRows];
 
     const startTime = editedData.starttime;
@@ -256,7 +257,7 @@ export default function ClassScheduleConfirm({
           feedback: "",
           verifyFb: false,
           classNumber: row.class,
-          warning: row.warning || "none",
+          warning: row.warning || "",
         };
       });
 

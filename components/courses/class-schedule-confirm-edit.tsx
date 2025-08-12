@@ -38,21 +38,23 @@ export function EditScheduleDialog({
   courseName,
 }: EditScheduleDialogProps) {
   console.log("Class Name:", courseName);
-  const { register, handleSubmit, reset } = useForm<EditScheduleFormData>({
-    defaultValues: {
-      date: "",
-      starttime: "",
-      endtime: "",
-      course: courseName,
-      teacher: "",
-      student: "",
-      room: "",
-      nickname: "",
-      studentId: "",
-      remark: "",
-      status: "",
-    },
-  });
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<EditScheduleFormData>({
+      defaultValues: {
+        date: "",
+        starttime: "",
+        endtime: "",
+        course: courseName,
+        teacher: "",
+        teacherId: undefined,
+        student: "",
+        room: "",
+        nickname: "",
+        studentId: "",
+        remark: "",
+        status: "",
+      },
+    });
 
   // console.log("EditScheduleDialog initialData:", initialData);
 
@@ -61,6 +63,18 @@ export function EditScheduleDialog({
   const { ref: endtimeRHFRef } = register("endtime");
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
+
+  // Handle teacher selection change
+  const handleTeacherChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedTeacherName = event.target.value;
+    const selectedTeacher = teachers.find(
+      (teacher) => teacher.name === selectedTeacherName
+    );
+
+    // Update both teacher name and teacherId
+    setValue("teacher", selectedTeacherName);
+    setValue("teacherId", selectedTeacher?.id);
+  };
 
   useEffect(() => {
     if (initialData && open) {
@@ -80,6 +94,7 @@ export function EditScheduleDialog({
         starttime: initialData.starttime,
         endtime: initialData.endtime,
         course: initialData.course || courseName || "", // Ensure course name is preserved
+        teacherId: initialData.teacherId, // Preserve teacherId
       });
     }
   }, [initialData, reset, open, courseName]);
@@ -104,7 +119,8 @@ export function EditScheduleDialog({
   const endtimeRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = (data: EditScheduleFormData) => {
-    // console.log("Schedule Updated:", data);
+    console.log("Schedule Updated:", data);
+    console.log("Teacher ID:", data.teacherId); // Log the teacherId to verify it's being captured
     onSave(data, originalIndex);
     onOpenChange(false);
   };
@@ -206,6 +222,7 @@ export function EditScheduleDialog({
                 <select
                   id="teacher"
                   {...register("teacher")}
+                  onChange={handleTeacherChange}
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
                 >
