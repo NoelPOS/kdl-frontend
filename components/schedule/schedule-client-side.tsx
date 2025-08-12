@@ -100,6 +100,7 @@ function ScheduleClientSide({
           <ScheduleTable
             schedules={schedules}
             handleRowDoubleClick={handleRowDoubleClick}
+            showStudentHeader={false}
           />
           {schedules.length > 0 && (
             <Pagination

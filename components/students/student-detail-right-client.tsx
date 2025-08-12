@@ -58,12 +58,6 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
   };
 
   const goToTeacherStep = () => {
-    // Validate that schedule is configured
-    if (classScheduleData.classType.id === -1) {
-      alert("Please configure the class schedule first!");
-      return;
-    }
-
     setCurrentStep("teacher");
     setCourseTypeOpen(false);
     setTeacherOpen(true);

@@ -16,7 +16,13 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
   const [selectedSession, setSelectedSession] = useState<FormData>();
 
   useEffect(() => {
-    setSchedules(initialSchedules);
+    // Sort initial schedules by date
+    const sortedInitialSchedules = [...initialSchedules].sort((a, b) => {
+      const dateA = new Date(a.schedule_date);
+      const dateB = new Date(b.schedule_date);
+      return dateA.getTime() - dateB.getTime();
+    });
+    setSchedules(sortedInitialSchedules);
   }, [initialSchedules]);
 
   const handleScheduleUpdate = useCallback((updatedSchedule: FormData) => {
@@ -51,8 +57,16 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
         }
         return schedule;
       });
-      console.log("Updated schedules:", updatedSchedules);
-      return updatedSchedules;
+
+      // Sort schedules by date to maintain proper order
+      const sortedSchedules = updatedSchedules.sort((a, b) => {
+        const dateA = new Date(a.schedule_date);
+        const dateB = new Date(b.schedule_date);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      console.log("Updated and sorted schedules:", sortedSchedules);
+      return sortedSchedules;
     });
   }, []);
 
@@ -94,6 +108,7 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
       <ScheduleTable
         schedules={schedules}
         handleRowDoubleClick={handleRowDoubleClick}
+        showStudentHeader={true}
       />
     </div>
   );
