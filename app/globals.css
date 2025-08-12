@@ -170,10 +170,11 @@ body {
   overflow-x: hidden;
 }
 
-/* scroll bar */
+/* scroll bar - hidden but still scrollable */
 /* Scrollbar styling for WebKit (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-track {
@@ -181,14 +182,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgb(255, 213, 0);
-  border-radius: 4px;
+  background: transparent;
 }
 
-/* Firefox (limited support) */
+/* Firefox - completely hide scrollbar */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(255, 213, 0) transparent;
+  scrollbar-width: none;
 }
 
 

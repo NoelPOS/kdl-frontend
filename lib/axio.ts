@@ -448,6 +448,65 @@ export async function getStudentSession(
   return res.data;
 }
 
+// Parent-Children relationship types and API functions
+export interface ParentChild {
+  id: number;
+  parentId: number;
+  studentId: number;
+  isPrimary: boolean;
+  student: Student;
+}
+
+export interface ParentChildFilter {
+  query?: string;
+}
+
+export interface ConnectParentStudentData {
+  parentId: number;
+  studentId: number;
+  isPrimary: boolean;
+}
+
+export async function getParentChildren(
+  parentId: number,
+  filter: ParentChildFilter = {},
+  page: number = 1,
+  limit: number = 12
+): Promise<{
+  children: ParentChild[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.query) params.set("query", filter.query);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    children: ParentChild[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/users/parents/${parentId}/children?${params.toString()}`);
+  return response.data;
+}
+
+export async function connectParentToStudent(
+  data: ConnectParentStudentData
+): Promise<ParentChild> {
+  const response = await api.post<ParentChild>("/users/parent-children", data);
+  return response.data;
+}
+
 export interface StudentSessionFilter {
   courseName?: string;
   status?: string; // "completed" | "wip"
@@ -492,12 +551,25 @@ export async function getStudentSessionsFiltered(
 }
 
 export async function changeSessionStatus(
-  sessionId: number,
+  sessionId: string | number,
   status: string
 ): Promise<boolean> {
   try {
-    await api.patch(`/sessions/${sessionId}`, { payment: status });
-    return true;
+    const sessionIdStr = sessionId.toString();
+    let endpoint: string;
+    let actualId: string;
+
+    // Check if it's courseplus (starts with cp-)
+    if (sessionIdStr.startsWith("cp-")) {
+      actualId = sessionIdStr.replace("cp-", "");
+      endpoint = `/course-plus/${actualId}/status`;
+    } else {
+      // Regular course session
+      endpoint = `/sessions/${sessionId}/payment`;
+    }
+
+    const response = await api.patch(endpoint, { status });
+    return response.status === 200;
   } catch (error) {
     console.error("Error changing session status:", error);
     return false;
@@ -568,6 +640,40 @@ export async function assignCoursesToTeacher(
   courseIds: number[]
 ): Promise<void> {
   await api.post(`/users/teachers/${teacherId}/courses`, { courseIds });
+}
+
+// Get courses that a teacher can teach
+export async function getTeacherCourses(
+  teacherId: number,
+  filter: { query?: string } = {},
+  page: number = 1,
+  limit: number = 12
+): Promise<{
+  courses: Course[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.query) params.set("query", filter.query);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await api.get<{
+    courses: Course[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/users/teachers/${teacherId}/courses?${params.toString()}`);
+  return response.data;
 }
 
 // parents
@@ -780,11 +886,8 @@ export async function fetchInvoices(
 
 export async function addNewInvoice(
   invoice: InvoiceSubmission
-): Promise<InvoiceSubmission> {
-  const response = await api.post<InvoiceSubmission>(
-    "/sessions/invoices",
-    invoice
-  );
+): Promise<Invoice> {
+  const response = await api.post<Invoice>("/sessions/invoices", invoice);
   return response.data;
 }
 
