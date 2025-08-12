@@ -30,7 +30,7 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
 
   const handleConfirmPayment = async (invoiceId: number) => {
     try {
-      let updateResults: boolean[] = [];
+      const updateResults: boolean[] = [];
 
       // Handle multiple sessions if sessionGroups exists (new structure)
       if (invoice.sessionGroups && invoice.sessionGroups.length > 0) {

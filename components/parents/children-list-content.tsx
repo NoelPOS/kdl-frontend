@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getParentChildren, ParentChild, ParentChildFilter } from "@/lib/axio";
 import { Pagination } from "@/components/ui/pagination";
 import { StudentCard } from "../students/student-card";
@@ -30,7 +30,7 @@ export default function ChildrenListContent({
   const currentPage = parseInt(searchParams.page || "1");
   const searchQuery = searchParams.query;
 
-  const fetchChildren = async () => {
+  const fetchChildren = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getParentChildren(
@@ -54,7 +54,7 @@ export default function ChildrenListContent({
     } finally {
       setLoading(false);
     }
-  };
+  }, [parentId, searchQuery, currentPage]);
 
   useEffect(() => {
     fetchChildren();

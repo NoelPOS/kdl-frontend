@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getTeacherCourses } from "@/lib/axio";
 import { Course } from "@/app/types/course.type";
 import { CourseCard } from "../courses/course-card";
@@ -31,7 +31,7 @@ export default function TeacherCoursesListContent({
   const currentPage = parseInt(searchParams.page || "1");
   const searchQuery = searchParams.query;
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getTeacherCourses(
@@ -55,7 +55,7 @@ export default function TeacherCoursesListContent({
     } finally {
       setLoading(false);
     }
-  };
+  }, [teacherId, searchQuery, currentPage]);
 
   useEffect(() => {
     fetchCourses();
