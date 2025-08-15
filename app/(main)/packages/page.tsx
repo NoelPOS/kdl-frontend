@@ -1,6 +1,6 @@
-import PackageList from "@/components/packages/package-list";
-import { BuyPackageDialog } from "@/components/packages/buy-package-dialog";
-import FilterPackage from "@/components/packages/filter-package";
+import PackageList from "@/components/entities/packages/lists/package-list";
+import { BuyPackageDialog } from "@/components/entities/packages/dialogs/buy-package-dialog";
+import FilterPackage from "@/components/entities/packages/filters/filter-package";
 import { Suspense } from "react";
 
 export default async function PackagesPage({

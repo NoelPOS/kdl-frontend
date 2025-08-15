@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import ScheduleClientSide from "@/components/schedule/schedule-client-side";
-import { ScheduleFilterForm } from "@/components/schedule/schedule-filter";
+import ScheduleClientSide from "@/components/entities/schedule/lists/schedule-client-side";
+import { ScheduleFilterForm } from "@/components/entities/schedule/filters/schedule-filter";
 import { getFilteredSchedules, ScheduleFilter } from "@/lib/axio";
 
 async function ScheduleData({

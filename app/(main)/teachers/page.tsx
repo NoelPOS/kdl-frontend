@@ -1,6 +1,6 @@
-import AddNewTeacher from "@/components/teachers/add-new-teacher/add-new-teacher.dialog";
-import TeacherFilter from "@/components/teachers/filter-teacher";
-import TeacherList from "@/components/teachers/teacher.list";
+import AddNewTeacher from "@/components/entities/teachers/dialogs/add-new-teacher/add-new-teacher.dialog";
+import TeacherFilter from "@/components/entities/teachers/filters/filter-teacher";
+import TeacherList from "@/components/entities/teachers/lists/teacher.list";
 import { Suspense } from "react";
 
 export default async function TeachersPage({

@@ -93,7 +93,7 @@ export async function fetchStudents(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>("/users/students", {
+  }>("/students", {
     params: { query, active, course, page, limit },
   });
   return response.data;
@@ -101,14 +101,14 @@ export async function fetchStudents(
 
 export async function searchStudents(query: string): Promise<Student[]> {
   const response = await api.get<Student[]>(
-    `/users/students/search?name=${encodeURIComponent(query)}`
+    `/students/search?name=${encodeURIComponent(query)}`
   );
   return response.data;
 }
 
 export async function getStudentById(id: number): Promise<Partial<Student>> {
   try {
-    const response = await api.get(`/users/students/${id}`);
+    const response = await api.get(`/students/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching student ${id}:`, error);
@@ -121,7 +121,7 @@ export async function updateStudentById(
   studentData: Partial<Student>
 ): Promise<Student> {
   try {
-    const response = await api.put(`/users/students/${id}`, studentData);
+    const response = await api.put(`/students/${id}`, studentData);
     return response.data;
   } catch (error) {
     console.error(`Error updating student ${id}:`, error);
@@ -132,17 +132,17 @@ export async function updateStudentById(
 type NewStudentData = Omit<Student, "id">;
 
 export async function addNewStudent(student: NewStudentData): Promise<Student> {
-  const response = await api.post<Student>("/users/students", student);
+  const response = await api.post<Student>("/students", student);
   return response.data;
 }
 
 export async function fetchActiveStudents(): Promise<Student[]> {
-  const response = await api.get<Student[]>("/users/students/active");
+  const response = await api.get<Student[]>("/students/active");
   return response.data;
 }
 
 export async function fetchInactiveStudents(): Promise<Student[]> {
-  const response = await api.get<Student[]>("/users/students/inactive");
+  const response = await api.get<Student[]>("/students/inactive");
   return response.data;
 }
 
@@ -234,7 +234,7 @@ export async function getTeacherByCourseId(
   courseId: number
 ): Promise<Pick<Teacher, "id" | "name">[]> {
   const response = await api.get<Pick<Teacher, "id" | "name">[]>(
-    `/users/teachers/course/${courseId}`
+    `/teachers/course/${courseId}`
   );
   return response.data;
 }
@@ -243,14 +243,14 @@ export async function getTeacherByName(
   name: string
 ): Promise<Pick<Teacher, "id" | "name">> {
   const response = await api.get<Pick<Teacher, "id" | "name">>(
-    `/users/teachers/name/${encodeURIComponent(name)}`
+    `/teachers/name/${encodeURIComponent(name)}`
   );
   return response.data;
 }
 
 export async function searchTeachers(query: string): Promise<Teacher[]> {
   const response = await api.get<Teacher[]>(
-    `/users/teachers/search?name=${encodeURIComponent(query)}`
+    `/teachers/search?name=${encodeURIComponent(query)}`
   );
   return response.data;
 }
@@ -428,8 +428,50 @@ export async function getCourseTypes(): Promise<
       tuitionFee: number;
       classLimit: number;
     }[]
-  >("sessions/class-options");
+  >("class-options");
   return res.data;
+}
+
+// New class-options endpoints
+export async function getClassOptionById(id: number): Promise<{
+  id: number;
+  classMode: string;
+  tuitionFee: number;
+  classLimit: number;
+}> {
+  const res = await api.get<{
+    id: number;
+    classMode: string;
+    tuitionFee: number;
+    classLimit: number;
+  }>(`/class-options/${id}`);
+  return res.data;
+}
+
+export async function updateClassOption(
+  id: number,
+  data: Partial<{
+    classMode: string;
+    tuitionFee: number;
+    classLimit: number;
+  }>
+): Promise<{
+  id: number;
+  classMode: string;
+  tuitionFee: number;
+  classLimit: number;
+}> {
+  const res = await api.patch<{
+    id: number;
+    classMode: string;
+    tuitionFee: number;
+    classLimit: number;
+  }>(`/class-options/${id}`, data);
+  return res.data;
+}
+
+export async function deleteClassOption(id: number): Promise<void> {
+  await api.delete(`/class-options/${id}`);
 }
 
 export async function createSession(
@@ -496,14 +538,14 @@ export async function getParentChildren(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/users/parents/${parentId}/children?${params.toString()}`);
+  }>(`/parents/${parentId}/children?${params.toString()}`);
   return response.data;
 }
 
 export async function connectParentToStudent(
   data: ConnectParentStudentData
 ): Promise<ParentChild> {
-  const response = await api.post<ParentChild>("/users/parent-children", data);
+  const response = await api.post<ParentChild>("/parents/connections", data);
   return response.data;
 }
 
@@ -619,19 +661,19 @@ export async function fetchTeachers(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/users/teachers?${params.toString()}`);
+  }>(`/teachers?${params.toString()}`);
   return response.data;
 }
 
 export async function fetchAllTeachers(): Promise<Teacher[]> {
-  const response = await api.get<Teacher[]>("/users/teachers/all");
+  const response = await api.get<Teacher[]>("/teachers/all");
   return response.data;
 }
 
 type NewTeacherData = Omit<Teacher, "id">;
 
 export async function addNewTeacher(teacher: NewTeacherData): Promise<Teacher> {
-  const response = await api.post<Teacher>("/users/teachers", teacher);
+  const response = await api.post<Teacher>("/teachers", teacher);
   return response.data;
 }
 
@@ -639,7 +681,7 @@ export async function assignCoursesToTeacher(
   teacherId: number,
   courseIds: number[]
 ): Promise<void> {
-  await api.post(`/users/teachers/${teacherId}/courses`, { courseIds });
+  await api.post(`/teachers/${teacherId}/courses`, { courseIds });
 }
 
 // Get courses that a teacher can teach
@@ -672,7 +714,7 @@ export async function getTeacherCourses(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/users/teachers/${teacherId}/courses?${params.toString()}`);
+  }>(`/teachers/${teacherId}/courses?${params.toString()}`);
   return response.data;
 }
 
@@ -710,13 +752,13 @@ export async function fetchParents(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/users/parents/search?${params.toString()}`);
+  }>(`/parents/search?${params.toString()}`);
   return response.data;
 }
 
 export async function searchParents(query: string): Promise<Parent[]> {
   const response = await api.get<Parent[]>(
-    `/users/parents/search?name=${encodeURIComponent(query)}`
+    `/parents/search?name=${encodeURIComponent(query)}`
   );
   return response.data;
 }
@@ -724,12 +766,12 @@ export async function searchParents(query: string): Promise<Parent[]> {
 type NewParentData = Omit<Parent, "id">;
 
 export async function addNewParent(parent: NewParentData): Promise<Parent> {
-  const response = await api.post<Parent>("/users/parents", parent);
+  const response = await api.post<Parent>("/parents", parent);
   return response.data;
 }
 
 export async function fetchAllParents(): Promise<Parent[]> {
-  const response = await api.get<Parent[]>("/users/parents/all");
+  const response = await api.get<Parent[]>("/parents/all");
   return response.data;
 }
 
@@ -880,14 +922,14 @@ export async function fetchInvoices(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/sessions/invoices?${params.toString()}`);
+  }>(`/invoices?${params.toString()}`);
   return response.data;
 }
 
 export async function addNewInvoice(
   invoice: InvoiceSubmission
 ): Promise<Invoice> {
-  const response = await api.post<Invoice>("/sessions/invoices", invoice);
+  const response = await api.post<Invoice>("/invoices", invoice);
   return response.data;
 }
 
@@ -896,17 +938,32 @@ export async function fetchAllInvoices(
 ): Promise<FetchAllInvoices> {
   console.log("Fetching invoices with status:", status);
   if (!status) {
-    const response = await api.get<FetchAllInvoices>("/sessions/invoices");
+    const response = await api.get<FetchAllInvoices>("/invoices");
     return response.data;
   }
   const response = await api.get<FetchAllInvoices>(
-    `/sessions/invoices?receiptDone=${status}`
+    `/invoices?receiptDone=${status}`
   );
   return response.data;
 }
 
 export async function getInvoiceById(id: number): Promise<Invoice> {
-  const response = await api.get<Invoice>(`/sessions/invoices/${id}`);
+  const response = await api.get<Invoice>(`/invoices/${id}`);
+  return response.data;
+}
+
+// New invoice endpoints
+export async function markInvoiceReceiptDone(id: number): Promise<Invoice> {
+  const response = await api.patch<Invoice>(
+    `/invoices/${id}/mark-receipt-done`
+  );
+  return response.data;
+}
+
+export async function getNextDocumentId(): Promise<{ nextDocumentId: string }> {
+  const response = await api.get<{ nextDocumentId: string }>(
+    `/invoices/next-document-id`
+  );
   return response.data;
 }
 
@@ -914,11 +971,26 @@ export async function getInvoiceById(id: number): Promise<Invoice> {
 export async function createReceipt(
   invoiceId: number
 ): Promise<{ receiptId: number }> {
-  const response = await api.post<{ receiptId: number }>(`/sessions/receipts`, {
+  const response = await api.post<{ receiptId: number }>(`/receipts`, {
     invoiceId,
     date: new Date().toISOString().split("T")[0],
   });
   return response.data;
+}
+
+// New receipt endpoints
+export async function getAllReceipts(): Promise<any[]> {
+  const response = await api.get<any[]>(`/receipts`);
+  return response.data;
+}
+
+export async function getReceiptById(id: number): Promise<any> {
+  const response = await api.get<any>(`/receipts/${id}`);
+  return response.data;
+}
+
+export async function deleteReceipt(id: number): Promise<void> {
+  await api.delete(`/receipts/${id}`);
 }
 
 export async function searchCourses(query: string): Promise<Course[]> {
@@ -934,19 +1006,34 @@ export async function fetchAllCourses(): Promise<Course[]> {
 }
 
 export async function getParentById(id: number): Promise<Partial<Parent>> {
-  return api.get(`/users/parents/${id}`).then((res) => res.data);
+  return api.get(`/parents/${id}`).then((res) => res.data);
 }
 
 export async function updateParentById(id: number, data: Partial<Parent>) {
-  return api.put(`/users/parents/${id}`, data).then((res) => res.data);
+  return api.put(`/parents/${id}`, data).then((res) => res.data);
 }
 
 export async function getTeacherById(id: number): Promise<Partial<Teacher>> {
-  return api.get(`/users/teachers/${id}`).then((res) => res.data);
+  return api.get(`/teachers/${id}`).then((res) => res.data);
 }
 
 export async function updateTeacherById(id: number, data: Partial<Teacher>) {
-  return api.put(`/users/teachers/${id}`, data).then((res) => res.data);
+  return api.put(`/teachers/${id}`, data).then((res) => res.data);
+}
+
+// New parent endpoints based on your backend structure
+export async function getParentsByStudentId(
+  studentId: number
+): Promise<Parent[]> {
+  const response = await api.get<Parent[]>(`/parents/by-student/${studentId}`);
+  return response.data;
+}
+
+export async function assignChildrenToParent(
+  parentId: number,
+  childrenData: { studentIds: number[]; isPrimary?: boolean }
+): Promise<void> {
+  await api.post(`/parents/${parentId}/children`, childrenData);
 }
 
 // Course Plus functionality

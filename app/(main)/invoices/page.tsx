@@ -1,5 +1,5 @@
-import InvoiceFilterNew from "@/components/invoices/invoice-filter-new";
-import InvoiceList from "@/components/invoices/invoice.list";
+import InvoiceFilterNew from "@/components/entities/invoices/filters/invoice-filter-new";
+import InvoiceList from "@/components/entities/invoices/lists/invoice.list";
 import { Suspense } from "react";
 
 export default async function InvoicePage({

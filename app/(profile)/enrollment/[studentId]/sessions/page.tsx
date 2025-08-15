@@ -1,5 +1,5 @@
-import EnrollmentDetailRightMultiple from "@/components/enrollments/enrollment-detail-right-multiple";
-import StudentDetail from "@/components/students/student.detail.left";
+import EnrollmentDetailRightMultiple from "@/components/entities/enrollments/details/enrollment-detail-right";
+import StudentDetail from "@/components/entities/students/details/student.detail.left";
 import {
   fetchActiveDiscounts,
   fetchSpedificPendingInvoices,

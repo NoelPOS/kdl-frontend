@@ -1,8 +1,8 @@
-import StudentSchedule from "@/components/students/student-schedule";
+import StudentSchedule from "@/components/entities/students/details/student-schedule";
 import { getSchedulesByStudentAndSession } from "@/lib/axio";
 import Link from "next/link";
 import React from "react";
-import { CompleteSessionDialog } from "@/components/students/complete-session-dialog";
+import { CompleteSessionDialog } from "@/components/entities/students/dialogs/complete-session-dialog";
 
 export default async function StudentSession({
   params,

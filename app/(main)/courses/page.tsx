@@ -1,6 +1,6 @@
-import CourseList from "@/components/courses/course-list";
-import AddNewCourse from "@/components/courses/add-new-course.dialog";
-import FilterCourse from "@/components/courses/filter-course";
+import CourseList from "@/components/entities/courses/lists/course-list";
+import AddNewCourse from "@/components/entities/courses/dialogs/add-new-course.dialog";
+import FilterCourse from "@/components/entities/courses/filters/filter-course";
 import { Suspense } from "react";
 
 export default async function CoursesPage({

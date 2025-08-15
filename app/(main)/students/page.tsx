@@ -1,6 +1,6 @@
-import AddNewStudent from "@/components/students/add-new-student/add-new-student.dialog";
-import StudentFilter from "@/components/students/filter-student";
-import StudentList from "@/components/students/student.list";
+import AddNewStudent from "@/components/entities/students/dialogs/add-new-student/add-new-student.dialog";
+import StudentFilter from "@/components/entities/students/filters/filter-student";
+import StudentList from "@/components/entities/students/lists/student.list";
 import { Suspense } from "react";
 
 export default async function StudentsPage({

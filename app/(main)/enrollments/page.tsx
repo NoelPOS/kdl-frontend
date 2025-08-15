@@ -1,5 +1,5 @@
-import EnrollmentList from "@/components/enrollments/enrollment.list";
-import EnrollmentFilter from "@/components/enrollments/enrollment-filter";
+import EnrollmentList from "@/components/entities/enrollments/lists/enrollment.list";
+import EnrollmentFilter from "@/components/entities/enrollments/filters/enrollment-filter";
 import { Suspense } from "react";
 
 export default async function EnrollmentPage({

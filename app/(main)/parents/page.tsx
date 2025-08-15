@@ -1,6 +1,6 @@
-import AddNewParent from "@/components/parents/add-new-parent/add-new-parent.dialog";
-import ParentFilter from "@/components/parents/filter-parent";
-import ParentList from "@/components/parents/parent.list";
+import AddNewParent from "@/components/entities/parents/dialogs/add-new-parent.dialog";
+import ParentFilter from "@/components/entities/parents/filters/filter-parent";
+import ParentList from "@/components/entities/parents/lists/parent.list";
 import { Suspense } from "react";
 
 export default async function ParentsPage({

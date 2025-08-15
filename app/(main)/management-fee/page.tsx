@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import DiscountFilter from "@/components/discounts/filter-discount";
-import { AddNewDiscount } from "@/components/discounts/add-new-discount/add-new-discount.dialog";
-import DiscountList from "@/components/discounts/discount.list";
+import DiscountFilter from "@/components/entities/discounts/filters/filter-discount";
+import { AddNewDiscount } from "@/components/entities/discounts/dialogs/add-new-discount/add-new-discount.dialog";
+import DiscountList from "@/components/entities/discounts/lists/discount.list";
 
 export default async function DiscountsPage({
   searchParams,

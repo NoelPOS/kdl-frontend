@@ -2,7 +2,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0; // Always revalidate this page
 
 import { Course } from "@/app/types/today.type";
-import RenderSchedule from "@/components/today/render-schedule";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DialogTrigger } from "@/components/ui/dialog";
+import RenderSchedule from "@/components/entities/today/render-schedule";
 import { getTodaySchedules } from "@/lib/axio";
 import Image from "next/image";
 

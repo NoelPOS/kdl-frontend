@@ -1,5 +1,5 @@
-import TeacherDetail from "@/components/teachers/teacher.detail.left";
-import { TeacherDetailRight } from "@/components/teachers/teacher-detail-right";
+import TeacherDetail from "@/components/entities/teachers/details/teacher.detail.left";
+import { TeacherDetailRight } from "@/components/entities/teachers/details/teacher-detail-right";
 import { getTeacherById } from "@/lib/axio";
 
 interface TeacherDetailPageProps {
