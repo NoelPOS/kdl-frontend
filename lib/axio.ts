@@ -6,10 +6,12 @@ import { SessionOverview } from "@/app/types/session.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Parent } from "@/app/types/parent.type";
 import { Discount } from "@/app/types/discount.type";
-import { LoginFormData } from "@/app/(auth)/login/page";
+import { LoginFormData, AuthResponse } from "@/app/types/auth.type";
 import { Enrollment, InvoiceSubmission } from "@/app/types/enrollment.type";
 import { FetchAllInvoices, Invoice } from "@/app/types/invoice.type";
 import { Package, PackagePurchaseRequest } from "@/app/types/package.type";
+import { ClientCookies } from "@/lib/cookies";
+import { storeToken } from "@/lib/jwt";
 
 // Extend axios config to include metadata
 declare module "axios" {
@@ -27,11 +29,27 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for logging and error handling
+// Request interceptor to add auth token and logging
 api.interceptors.request.use(
   (config) => {
     // Add timestamp for debugging
     config.metadata = { startTime: new Date() };
+
+    // Skip auth header for login endpoint
+    if (config.url?.includes("/auth/login")) {
+      console.log("Login request - skipping auth header");
+      return config;
+    }
+
+    // Add auth token to requests (except login)
+    const token = ClientCookies.get();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log("Added auth header with token");
+    } else {
+      console.log("No token available - request without auth header");
+    }
+
     return config;
   },
   (error) => {
@@ -59,13 +77,49 @@ api.interceptors.response.use(
       status: error.response?.status,
       message: error.message,
     });
+
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      // Token expired or invalid - redirect to login
+      if (typeof window !== "undefined") {
+        // Clear stored token
+        ClientCookies.remove();
+
+        // Redirect to login unless already there
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
+      }
+    } else if (error.response?.status === 403) {
+      // Forbidden - user doesn't have permission
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/unauthorized")
+      ) {
+        window.location.href = "/unauthorized";
+      }
+    }
+
     return Promise.reject(error);
   }
 );
 
-export async function login(info: LoginFormData) {
-  const response = await api.post("/auth/login", info);
+export async function login(info: LoginFormData): Promise<AuthResponse> {
+  const response = await api.post<AuthResponse>("/auth/login", info);
+  const { user, accessToken } = response.data;
+
+  console.log("user", user);
+  console.log("token", accessToken);
+
+  // Store token in regular cookie with synchronized expiration
+  storeToken(accessToken);
+
   return response.data;
+}
+
+export async function logout(): Promise<void> {
+  // Clear the cookie
+  ClientCookies.remove();
 }
 
 export async function fetchStudents(
@@ -323,8 +377,14 @@ export async function updateSchedule(
   return res.data;
 }
 
-export async function getTodaySchedules(): Promise<ClassSchedule[]> {
-  const res = await api.get<ClassSchedule[]>("/schedules/today");
+export async function getTodaySchedules(
+  accessToken: string
+): Promise<ClassSchedule[]> {
+  const res = await api.get<ClassSchedule[]>("/schedules/today", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
   return res.data;
 }
 
