@@ -1,11 +1,12 @@
 "use client";
 
-import { Info, Tablet, Plus } from "lucide-react";
+import { Info, Tablet, Plus, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SessionOverview } from "@/app/types/session.type";
 import { CoursePlusDialog } from "../dialogs/course-plus.dialog";
+import AssignCourseFlow from "../dialogs/assign-course-flow";
 
 interface StudentCourseProps {
   course: SessionOverview;
@@ -55,6 +56,11 @@ export function StudentCourse({ course }: StudentCourseProps) {
     }
   };
 
+  // Check if this is a TBC (To Be Confirmed) course
+  const isTBCCourse =
+    course.courseTitle?.toLowerCase() === "tbc" ||
+    course.courseTitle?.toLowerCase() === "to be confirmed";
+
   return (
     <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[350px] max-h-[400px] w-[250px]">
       {!isHovered ? (
@@ -75,7 +81,7 @@ export function StudentCourse({ course }: StudentCourseProps) {
                 className={`px-2 py-1 rounded-md text-xs font-medium ${
                   course.payment === "Unpaid"
                     ? "bg-yellow-400 text-yellow-900"
-                    : "bg-green-400 text-green-900"
+                    : "bg-blue-400 text-blue-900"
                 }`}
               >
                 Payment: {course.payment}
@@ -109,17 +115,33 @@ export function StudentCourse({ course }: StudentCourseProps) {
           </div>
 
           <div className="mt-auto pt-2 space-y-2">
-            <Button
-              className="bg-blue-400 hover:bg-blue-500 text-white w-full"
-              onClick={() => handleClick(course.sessionId)}
-            >
-              Details
-            </Button>
-            {/* Only show Course Plus for active sessions */}
-            {course.status?.toLowerCase() !== "completed" &&
-              course.status?.toLowerCase() !== "cancelled" && (
-                <CoursePlusDialog course={course} />
-              )}
+            {/* Show different buttons based on whether it's a TBC course */}
+            {isTBCCourse ? (
+              <AssignCourseFlow
+                session={course}
+                studentId={Number(params.id)}
+                trigger={
+                  <Button className="bg-green-500 hover:bg-green-600 text-white w-full">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Assign Course
+                  </Button>
+                }
+              />
+            ) : (
+              <>
+                <Button
+                  className="bg-blue-400 hover:bg-blue-500 text-white w-full"
+                  onClick={() => handleClick(course.sessionId)}
+                >
+                  Details
+                </Button>
+                {/* Only show Course Plus for active sessions */}
+                {course.status?.toLowerCase() !== "completed" &&
+                  course.status?.toLowerCase() !== "cancelled" && (
+                    <CoursePlusDialog course={course} />
+                  )}
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -138,7 +160,17 @@ export function StudentCourse({ course }: StudentCourseProps) {
               msOverflowStyle: "none",
             }}
           >
-            <p className="whitespace-pre-line">{course.courseDescription}</p>
+            {isTBCCourse ? (
+              <div className="text-center text-gray-600">
+                <p className="mb-2">This is a blank course session.</p>
+                <p>
+                  Click Assign Course to select a specific course, teacher, and
+                  class type.
+                </p>
+              </div>
+            ) : (
+              <p className="whitespace-pre-line">{course.courseDescription}</p>
+            )}
           </div>
         </div>
       )}

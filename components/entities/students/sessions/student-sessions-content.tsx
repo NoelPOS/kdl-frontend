@@ -1,7 +1,8 @@
-import { getStudentSessionsFiltered, StudentSessionFilter } from "@/lib/axio";
+import { getStudentSessionsFiltered, StudentSessionFilter } from "@/lib/api";
 import { Student } from "@/app/types/course.type";
 
 import StudentSessionList from "./student-session-list";
+import { cookies } from "next/headers";
 
 interface StudentSessionsContentProps {
   student: Student;
@@ -17,6 +18,9 @@ export default async function StudentSessionsContent({
   student,
   searchParams,
 }: StudentSessionsContentProps) {
+  const cookie = await cookies();
+  const accessToken = cookie.get("accessToken")?.value;
+
   const page = parseInt(searchParams.page || "1");
   const filters: StudentSessionFilter = {
     courseName: searchParams.courseName,
@@ -28,7 +32,8 @@ export default async function StudentSessionsContent({
     Number(student.id),
     filters,
     page,
-    12
+    12,
+    accessToken
   );
 
   return (

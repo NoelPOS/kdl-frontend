@@ -1,8 +1,9 @@
 import React from "react";
 import { EnrollmentTableWithSelection } from "../tables/enrollment-table";
-import { fetchEnrollments, EnrollmentFilter } from "@/lib/axio";
+import { fetchEnrollments, EnrollmentFilter } from "@/lib/api";
 import { Enrollment } from "@/app/types/enrollment.type";
 import { Pagination } from "@/components/ui/pagination";
+import { cookies } from "next/headers";
 
 export default async function EnrollmentList({
   date,
@@ -21,6 +22,9 @@ export default async function EnrollmentList({
   transactionType: string;
   page?: number;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const filter: EnrollmentFilter = {
     date,
     status,
@@ -30,7 +34,12 @@ export default async function EnrollmentList({
     transactionType,
   };
 
-  const { enrollments, pagination } = await fetchEnrollments(filter, page, 10);
+  const { enrollments, pagination } = await fetchEnrollments(
+    filter,
+    page,
+    10,
+    accessToken
+  );
 
   // console.log("Enrollment List Data:", {
   //   enrollments,

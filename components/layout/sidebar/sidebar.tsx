@@ -1,5 +1,8 @@
+"use client";
+
 import type * as React from "react";
 import { LogOut, MenuIcon } from "lucide-react";
+import { useAuth } from "@/context/auth.context";
 
 import {
   Sidebar,
@@ -15,6 +18,12 @@ import { Button } from "@/components/ui/button";
 import SidebarDetail from "./sidebar-detail";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <>
       {/* SidebarTrigger rendered separately so it's not hidden when sidebar is closed */}
@@ -28,14 +37,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarHeader className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src="/student.png" alt="Leo" />
+              <AvatarImage src="/student.png" alt={user?.name || "User"} />
               <AvatarFallback className="bg-gray-200 text-gray-600">
-                L
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-semibold text-gray-900">Leo</span>
-              <span className="text-sm text-gray-500">Super Manager</span>
+              <span className="font-semibold text-gray-900">
+                {user?.name || "User"}
+              </span>
+              <span className="text-sm text-gray-500 capitalize">
+                {user?.role || "User"}
+              </span>
             </div>
           </div>
         </SidebarHeader>
@@ -50,6 +63,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         <SidebarFooter className="p-4">
           <Button
+            onClick={handleLogout}
             variant="ghost"
             className="group w-full justify-start h-10 px-3 text-gray-700 hover:text-yellow-500 hover:scale-105 transition-all duration-200 hover:border hover:border-yellow-500"
           >

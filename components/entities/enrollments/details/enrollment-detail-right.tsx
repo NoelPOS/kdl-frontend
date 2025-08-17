@@ -37,7 +37,7 @@ import {
   InvoiceSubmission,
   SessionGroup,
 } from "@/app/types/enrollment.type";
-import { addNewInvoice } from "@/lib/axio";
+import { addNewInvoice } from "@/lib/api";
 
 interface FormData {
   discountId: string;

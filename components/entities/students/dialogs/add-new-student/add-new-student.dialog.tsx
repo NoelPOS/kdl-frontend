@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Calendar, ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
-import { addNewStudent } from "@/lib/axio";
+import { addNewStudent } from "@/lib/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

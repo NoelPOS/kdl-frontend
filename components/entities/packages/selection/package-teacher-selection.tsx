@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { User, MapPin } from "lucide-react";
 import { Course, TeacherData } from "@/app/types/course.type";
-import { getTeacherByCourseId } from "@/lib/axio";
+import { getTeacherByCourseId } from "@/lib/api";
 
 const ROOM_OPTIONS = [
   { value: "Room 1", label: "Room 1" },
@@ -119,7 +119,7 @@ export function PackageTeacherSelection({
                   p-4 rounded-lg border text-left transition-colors
                   ${
                     selectedTeacher?.id === teacher.id
-                      ? "bg-green-50 border-green-300 text-green-900"
+                      ? "bg-blue-50 border-blue-300 text-blue-900"
                       : "bg-white border-gray-200 hover:bg-gray-50"
                   }
                 `}
@@ -127,7 +127,7 @@ export function PackageTeacherSelection({
                 <div className="flex items-center justify-between">
                   <div className="font-medium">{teacher.name}</div>
                   {selectedTeacher?.id === teacher.id && (
-                    <div className="text-green-600 text-sm font-medium">
+                    <div className="text-blue-600 text-sm font-medium">
                       Selected
                     </div>
                   )}

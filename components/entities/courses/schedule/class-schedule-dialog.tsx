@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Clock, ChevronDown } from "lucide-react";
 
 import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
-import { getCourseTypes } from "@/lib/axio";
+import { getCourseTypes } from "@/lib/api";
 import { ClassOption, ComfirmClassScheduleData } from "@/app/types/course.type";
 
 // Constants
@@ -587,7 +587,7 @@ export function ClassScheduleDialog({
               </div>
               <Button
                 type="submit"
-                className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
+                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
               >
                 Next
               </Button>

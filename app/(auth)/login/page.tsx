@@ -5,31 +5,44 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth.context";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { login } from "@/lib/axio";
-
-export type LoginFormData = {
-  email: string;
-  password: string;
-};
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { login } from "@/lib/api";
+import {
+  LoginFormData,
+  UserRole,
+  USER_ROLE_LABELS,
+} from "@/app/types/auth.type";
 
 const Login = () => {
   const auth = useAuth();
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>();
+
+  const selectedRole = watch("role");
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await login(data);
 
-      const userData = response.user;
-      if (!userData.email) {
-        throw new Error("User data is missing required fields");
+      console.log("response", response);
+
+      if (!response.accessToken || !response.user) {
+        throw new Error("Invalid response from server");
       }
 
-      auth.login(userData);
+      // Pass the full response (token is already stored by axios login function)
+      auth.login(response);
     } catch (error) {
       console.error("Login failed:", error);
       // You might want to show an error message to the user here
@@ -45,17 +58,15 @@ const Login = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="email" className="sr-only">
-                email
-              </Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                {...register("email", { required: "email is required" })}
+                {...register("email", { required: "Email is required" })}
                 id="email"
-                type="text"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="email"
+                type="email"
+                className="mt-1"
+                placeholder="Enter your email"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">
@@ -63,20 +74,43 @@ const Login = () => {
                 </p>
               )}
             </div>
+
             <div>
-              <Label htmlFor="password" className="sr-only">
-                Password
-              </Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 {...register("password", { required: "Password is required" })}
                 id="password"
                 type="password"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                className="mt-1"
+                placeholder="Enter your password"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="role">Sign in as</Label>
+              <Select
+                onValueChange={(value) => setValue("role", value as UserRole)}
+                {...register("role", { required: "Please select a role" })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(USER_ROLE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.role && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.role.message}
                 </p>
               )}
             </div>

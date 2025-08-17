@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search } from "lucide-react";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { searchCourses } from "@/lib/axio";
+import { searchCourses } from "@/lib/api";
 import { useDebouncedCallback } from "use-debounce";
 import { Course } from "@/app/types/course.type";
 
@@ -156,7 +156,7 @@ export function StudentDetailAddCourse({
               </DialogClose>
               <Button
                 type="submit"
-                className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
+                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
                 disabled={!selectedCourse}
               >
                 Next

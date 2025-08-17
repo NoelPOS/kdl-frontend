@@ -1,13 +1,17 @@
 import { Suspense } from "react";
 import ScheduleClientSide from "@/components/entities/schedule/lists/schedule-client-side";
 import { ScheduleFilterForm } from "@/components/entities/schedule/filters/schedule-filter";
-import { getFilteredSchedules, ScheduleFilter } from "@/lib/axio";
+import { getFilteredSchedules, ScheduleFilter } from "@/lib/api";
+import { cookies } from "next/headers";
 
 async function ScheduleData({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const currentPage = parseInt((searchParams.page as string) || "1", 10);
   const filter: ScheduleFilter = {
     startDate: (searchParams.startDate as string) || undefined,
@@ -23,7 +27,7 @@ async function ScheduleData({
     classOption: (searchParams.classOption as string) || undefined,
   };
 
-  const data = await getFilteredSchedules(filter, currentPage, 10);
+  const data = await getFilteredSchedules(filter, currentPage, 10, accessToken);
 
   return (
     <ScheduleClientSide

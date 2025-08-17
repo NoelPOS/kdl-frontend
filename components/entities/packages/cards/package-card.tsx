@@ -12,7 +12,7 @@ export function PackageCard({ package: pkg }: PackageCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "used":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "not_used":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
@@ -90,13 +90,13 @@ export function PackageCard({ package: pkg }: PackageCardProps) {
 
         {/* Redeemed Info (if redeemed) */}
         {pkg.isRedeemed && pkg.redeemedCourseName && (
-          <div className="bg-green-50 p-2 rounded border-l-4 border-green-400">
-            <div className="text-xs text-green-600">Redeemed for</div>
-            <div className="font-medium text-green-800">
+          <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
+            <div className="text-xs text-blue-600">Redeemed for</div>
+            <div className="font-medium text-blue-800">
               {pkg.redeemedCourseName}
             </div>
             {pkg.redeemedAt && (
-              <div className="text-xs text-green-600">
+              <div className="text-xs text-blue-600">
                 on {formatDate(pkg.redeemedAt)}
               </div>
             )}

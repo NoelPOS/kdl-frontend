@@ -1,6 +1,6 @@
 import TeacherDetail from "@/components/entities/teachers/details/teacher.detail.left";
 import { TeacherDetailRight } from "@/components/entities/teachers/details/teacher-detail-right";
-import { getTeacherById } from "@/lib/axio";
+import { getTeacherById } from "@/lib/api";
 
 interface TeacherDetailPageProps {
   params: Promise<{ id: string }>;

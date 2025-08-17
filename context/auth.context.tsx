@@ -1,57 +1,136 @@
 "use client";
-import { createContext, useContext, useState } from "react";
-import { useRouter } from "next/navigation";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { AuthUser, AuthResponse, UserRole } from "@/app/types/auth.type";
+import {
+  getStoredToken,
+  removeStoredToken,
+  getUserFromToken,
+  isTokenExpired,
+  hasRoutePermission,
+  getDefaultRouteForRole,
+} from "@/lib/jwt";
 
-type AuthUser = {
-  name: string;
-  email: string;
-  // Add any other user properties that come from your API
-};
-
-interface ProviderProps {
+interface AuthContextProps {
   user: AuthUser | null;
-  login(data: AuthUser): void;
+  isLoading: boolean;
+  login(response: AuthResponse): void;
   logout(): void;
+  hasPermission(route: string): boolean;
 }
 
-const AuthContext = createContext<ProviderProps>({
+const AuthContext = createContext<AuthContextProps>({
   user: null,
+  isLoading: true,
   login: () => {},
   logout: () => {},
+  hasPermission: () => false,
 });
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("storedUser");
-      return storedUser ? JSON.parse(storedUser) : null;
-    }
-    return null;
-  });
+  const pathname = usePathname();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = (data: AuthUser) => {
-    try {
-      // console.log("login is called", data);
-      if (!data || !data.email) {
-        console.error("Invalid user data received:", data);
+  // Initialize auth state from stored token
+  useEffect(() => {
+    const initializeAuth = () => {
+      try {
+        const token = getStoredToken();
+        if (token) {
+          if (isTokenExpired(token)) {
+            // Token expired, clear storage and redirect
+            removeStoredToken();
+            setUser(null);
+            if (
+              !pathname.startsWith("/login") &&
+              !pathname.startsWith("/unauthorized")
+            ) {
+              router.push("/login");
+            }
+          } else {
+            // Valid token, extract user
+            const userData = getUserFromToken(token);
+            if (userData) {
+              setUser(userData);
+            } else {
+              removeStoredToken();
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        removeStoredToken();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, [router, pathname]);
+
+  // Check route permissions on pathname change
+  useEffect(() => {
+    if (!isLoading && user && pathname) {
+      // Allow auth pages and profile pages for all authenticated users
+      if (
+        pathname.startsWith("/login") ||
+        pathname.startsWith("/forgot-password") ||
+        pathname.startsWith("/unauthorized") ||
+        pathname.startsWith("/not-found")
+      ) {
         return;
       }
-      setUser(data);
-      localStorage.setItem("storedUser", JSON.stringify(data));
-      router.push("/today");
+
+      // Check if user has permission for current route
+      if (!hasRoutePermission(user.role, pathname)) {
+        router.push("/unauthorized");
+      }
+    }
+  }, [user, pathname, isLoading, router]);
+
+  const login = (response: AuthResponse) => {
+    try {
+      if (!response.accessToken || !response.user) {
+        throw new Error("Invalid authentication response");
+      }
+
+      // Token is already stored in cookie by axios login function
+      setUser(response.user);
+
+      // Redirect to appropriate dashboard
+      const defaultRoute = getDefaultRouteForRole(response.user.role);
+      router.push(defaultRoute);
     } catch (error) {
       console.error("Error during login:", error);
+      logout();
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("storedUser");
+  const logout = async () => {
+    try {
+      // Clear cookie and state
+      removeStoredToken();
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Always clear state and redirect even on error
+      setUser(null);
+      router.push("/login");
+    }
+  };
+
+  const hasPermission = (route: string): boolean => {
+    if (!user) return false;
+    return hasRoutePermission(user.role, route);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, logout, hasPermission }}
+    >
       {children}
     </AuthContext.Provider>
   );

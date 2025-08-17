@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getTeacherByCourseId } from "@/lib/axio";
+import { getTeacherByCourseId } from "@/lib/api";
 import { EditScheduleFormData } from "@/app/types/course.type";
 import { Teacher } from "@/app/types/teacher.type";
 

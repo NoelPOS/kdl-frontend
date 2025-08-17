@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, ChevronDown } from "lucide-react";
 
-import { addNewCourse } from "@/lib/axio";
+import { addNewCourse } from "@/lib/api";
 import { useRef } from "react";
 import { Course } from "@/app/types/course.type";
 

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/context/auth.context";
+import AuthGuard from "@/components/auth/auth-guard";
 import NProgressProvider from "@/components/layout/nprogress-provider";
 
 const geistSans = Geist({
@@ -31,7 +32,9 @@ const RootLayout = ({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NProgressProvider />
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <AuthGuard>{children}</AuthGuard>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
-import { fetchFilteredCourses } from "@/lib/axio";
+import { fetchFilteredCourses } from "@/lib/api";
+import { cookies } from "next/headers";
 import CourseClientSide from "./course-client-side";
 
 export default async function CourseList({
@@ -12,10 +13,14 @@ export default async function CourseList({
   medium: string;
   page?: number;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const { courses, pagination } = await fetchFilteredCourses(
     { query, ageRange, medium },
     page,
-    10
+    10,
+    accessToken
   );
 
   return <CourseClientSide courses={courses} pagination={pagination} />;

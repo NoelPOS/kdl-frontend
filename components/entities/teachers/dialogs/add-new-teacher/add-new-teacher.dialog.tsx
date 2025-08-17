@@ -18,7 +18,7 @@ import {
   addNewTeacher,
   searchCourses,
   assignCoursesToTeacher,
-} from "@/lib/axio";
+} from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Course } from "@/app/types/course.type";
@@ -338,7 +338,7 @@ export default function AddNewTeacher() {
             </DialogClose>
             <Button
               type="submit"
-              className="bg-green-500 text-white hover:bg-green-400 rounded-2xl w-[5rem]"
+              className="bg-blue-500 text-white hover:bg-blue-400 rounded-2xl w-[5rem]"
             >
               Add
             </Button>

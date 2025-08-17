@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
-import { getTeacherByCourseId } from "@/lib/axio";
+import { getTeacherByCourseId } from "@/lib/api";
 import { Teacher } from "@/app/types/teacher.type";
 
 export type FormData = {

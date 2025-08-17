@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Gift } from "lucide-react";
 import { Package } from "@/app/types/package.type";
-import { applyPackage } from "@/lib/axio";
+import { applyPackage } from "@/lib/api";
 import ClassScheduleConfirm from "@/components/entities/courses/schedule/class-schedule-confirm";
 
 // Create simplified components for package application

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { Parent } from "@/app/types/parent.type";
-import { updateParentById } from "@/lib/axio";
+import { updateParentById } from "@/lib/api";
 
 interface ParentFormData {
   name: string;

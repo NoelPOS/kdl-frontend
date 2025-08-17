@@ -22,7 +22,7 @@ import { CheckCircle2, Receipt } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/app/types/invoice.type";
-import { changeSessionStatus, createReceipt } from "@/lib/axio";
+import { changeSessionStatus, createReceipt } from "@/lib/api";
 
 const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
   console.log("Invoice Detail Right Component Rendered", invoice);

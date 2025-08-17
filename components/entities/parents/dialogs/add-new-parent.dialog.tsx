@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useRef, useState } from "react";
-import { addNewParent } from "@/lib/axio";
+import { addNewParent } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 

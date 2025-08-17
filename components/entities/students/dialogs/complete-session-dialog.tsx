@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { completeSession } from "@/lib/axio";
+import { completeSession } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 interface CompleteSessionDialogProps {
@@ -49,7 +49,7 @@ export function CompleteSessionDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
           <CheckCircle className="h-4 w-4" />
           Complete Session
         </Button>

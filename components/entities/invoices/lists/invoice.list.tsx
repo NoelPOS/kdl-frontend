@@ -1,8 +1,9 @@
 import React from "react";
-import { fetchInvoices, InvoiceFilter } from "@/lib/axio";
+import { fetchInvoices, InvoiceFilter } from "@/lib/api";
 import { Invoice } from "@/app/types/invoice.type";
 import { InvoiceTable } from "../tables/invoice-table";
 import { Pagination } from "@/components/ui/pagination";
+import { cookies } from "next/headers";
 
 export default async function InvoiceList({
   documentId,
@@ -17,6 +18,9 @@ export default async function InvoiceList({
   receiptDone: string;
   page?: number;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const filter: InvoiceFilter = {
     documentId,
     student,
@@ -24,7 +28,12 @@ export default async function InvoiceList({
     receiptDone,
   };
 
-  const { invoices, pagination } = await fetchInvoices(filter, page, 10);
+  const { invoices, pagination } = await fetchInvoices(
+    filter,
+    page,
+    10,
+    accessToken
+  );
 
   return (
     <div className="space-y-6">
