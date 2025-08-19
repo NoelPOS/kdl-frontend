@@ -20,6 +20,7 @@ import {
   searchCourses,
   assignCoursesToTeacher,
 } from "@/lib/api";
+} from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Course } from "@/app/types/course.type";

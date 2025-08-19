@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
 
 import { searchCourses, assignCoursesToTeacher } from "@/lib/api";
+import { searchCourses, assignCoursesToTeacher } from "@/lib/api";
 import { Course } from "@/app/types/course.type";
 
 interface CourseFormData {

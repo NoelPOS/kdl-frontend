@@ -340,6 +340,8 @@ export function PackageConfirmation({
         {/* Schedule Preview */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="font-medium text-blue-900 flex items-center gap-2 mb-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 flex items-center gap-2 mb-3">
             <Calendar className="h-4 w-4" />
             Schedule Preview
           </h4>
@@ -397,6 +399,7 @@ export function PackageConfirmation({
                               <span className="text-xs">{row.warning}</span>
                             </div>
                           ) : (
+                            <span className="text-blue-600 text-xs">
                             <span className="text-blue-600 text-xs">
                               Available
                             </span>

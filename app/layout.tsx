@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/context/auth.context";
 import AuthGuard from "@/components/auth/auth-guard";
+import AuthGuard from "@/components/auth/auth-guard";
 import NProgressProvider from "@/components/layout/nprogress-provider";
 import { Toaster } from "@/components/ui/sonner";
 

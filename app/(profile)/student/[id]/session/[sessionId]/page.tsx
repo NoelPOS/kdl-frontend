@@ -1,5 +1,6 @@
 import StudentSchedule from "@/components/entities/students/details/student-schedule";
 import { getSchedulesByStudentAndSession } from "@/lib/api";
+import { getSchedulesByStudentAndSession } from "@/lib/api";
 import Link from "next/link";
 import React from "react";
 import { CompleteSessionDialog } from "@/components/entities/students/dialogs/complete-session-dialog";
@@ -13,9 +14,13 @@ export default async function StudentSession({
 }) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
   const { sessionId, id } = await params;
   const schedules = await getSchedulesByStudentAndSession(
     sessionId,
+    Number(id),
+    accessToken
     Number(id),
     accessToken
   );
