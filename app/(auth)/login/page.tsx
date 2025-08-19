@@ -2,6 +2,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/context/auth.context";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,8 @@ import {
   UserRole,
   USER_ROLE_LABELS,
 } from "@/app/types/auth.type";
+
+import logo from "@/public/logo.png"; // Adjust the path as necessary
 
 const Login = () => {
   const auth = useAuth();
@@ -52,7 +55,14 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
+        <div className="text-center">
+          <Image
+            src={logo}
+            alt="Company Logo"
+            width={120}
+            height={120}
+            className="mx-auto mb-4"
+          />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
@@ -97,7 +107,7 @@ const Login = () => {
                 onValueChange={(value) => setValue("role", value as UserRole)}
                 {...register("role", { required: "Please select a role" })}
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1 w-full">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -117,21 +127,21 @@ const Login = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="text-sm">
+            {/* <div className="text-sm">
               <Link
                 href="/forgot-password"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="font-medium text-yellow-600 hover:text-yellow-500"
               >
                 Forgot your password?
               </Link>
-            </div>
+            </div> */}
           </div>
 
           <div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>

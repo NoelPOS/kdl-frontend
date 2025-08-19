@@ -93,16 +93,6 @@ export function EditSchedule({
 
   const { ref: dateRHFRef } = register("date", {
     required: "Date is required",
-    validate: (value) => {
-      if (!value) return "Date is required";
-      const selectedDate = new Date(value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        return "Cannot select a past date";
-      }
-      return true;
-    },
   });
 
   const dateRef = useRef<HTMLInputElement>(null);
