@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Search, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { searchStudents, purchasePackage, getCourseTypes } from "@/lib/axio";
+import { searchStudents, purchasePackage, getCourseTypes } from "@/lib/api";
 import { PackagePurchaseRequest } from "@/app/types/package.type";
 import { Student } from "@/app/types/student.type";
 import { useRouter } from "next/navigation";

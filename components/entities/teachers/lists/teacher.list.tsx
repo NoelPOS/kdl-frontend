@@ -1,7 +1,8 @@
 import React from "react";
 import { TeacherCard } from "../cards/teacher-card";
-import { fetchTeachers, searchTeachers } from "@/lib/axio";
+import { fetchTeachers } from "@/lib/api";
 import { Pagination } from "@/components/ui/pagination";
+import { cookies } from "next/headers";
 
 export default async function TeacherList({
   query = "",
@@ -14,12 +15,16 @@ export default async function TeacherList({
   course?: string;
   page?: number;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const { teachers, pagination } = await fetchTeachers(
     query,
     status,
     course,
     page,
-    10
+    10,
+    accessToken
   );
   return (
     <div className="space-y-6">

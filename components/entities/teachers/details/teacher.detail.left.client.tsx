@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { Teacher } from "@/app/types/teacher.type";
-import { updateTeacherById } from "@/lib/axio";
+import { updateTeacherById } from "@/lib/api";
 
 interface TeacherFormData {
   name: string;

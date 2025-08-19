@@ -12,6 +12,8 @@ export interface ClassSchedule {
   schedule_room: string;
   schedule_attendance: string;
   schedule_remark: string;
+  schedule_feedback?: string; // Teacher feedback field
+  schedule_feedbackDate?: string; // When feedback was submitted
   schedule_classNumber: number;
   schedule_warning: string;
   schedule_courseId: string;
@@ -43,6 +45,8 @@ export type FormData = {
   room: string;
   nickname: string;
   remark: string;
+  feedback?: string; // Teacher feedback field
+  feedbackDate?: string; // When feedback was submitted
   status?: string;
   courseId: number;
   studentId?: number;

@@ -17,9 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, ChevronDown } from "lucide-react";
 
-import { addNewCourse } from "@/lib/axio";
+import { addNewCourse } from "@/lib/api";
 import { useRef } from "react";
 import { Course } from "@/app/types/course.type";
+import { showToast } from "@/lib/toast";
 
 export type CourseFormData = {
   title: string;
@@ -35,22 +36,41 @@ export function AddNewCourse({
 }) {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const { register, handleSubmit, reset } = useForm<CourseFormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting, errors },
+  } = useForm<CourseFormData>({
     defaultValues: {
       title: "",
       description: "",
-      ageRange: "7-8 yrs",
-      medium: "iPad",
+      ageRange: "",
+      medium: "",
     },
   });
 
   const onSubmit = async (data: CourseFormData) => {
-    const newCourse = await addNewCourse(data);
-    if (onCourseAdded && newCourse) {
-      onCourseAdded(newCourse);
+    try {
+      const newCourse = await addNewCourse(data);
+      if (newCourse) {
+        showToast.success(
+          "Course created successfully!",
+          "The new course has been added to your course list."
+        );
+        if (onCourseAdded) {
+          onCourseAdded(newCourse);
+        }
+        reset();
+        closeRef.current?.click();
+      }
+    } catch (error) {
+      console.error("Failed to create course:", error);
+      showToast.error(
+        "Failed to create course",
+        "Please try again or contact support if the problem persists."
+      );
     }
-    reset();
-    closeRef.current?.click();
   };
 
   return (
@@ -74,40 +94,81 @@ export function AddNewCourse({
             {/* Course Title */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="title" className="text-sm text-gray-500">
-                Course Title
+                Course Title *
               </Label>
               <Input
                 id="title"
-                {...register("title")}
+                {...register("title", {
+                  required: "Course title is required",
+                  minLength: {
+                    value: 3,
+                    message: "Course title must be at least 3 characters long",
+                  },
+                  maxLength: {
+                    value: 100,
+                    message: "Course title must not exceed 100 characters",
+                  },
+                })}
                 placeholder="Animation & Game Creator"
-                className="border-gray-300"
+                className={`border-gray-300 ${
+                  errors.title ? "border-red-500 focus:border-red-500" : ""
+                }`}
               />
+              {errors.title && (
+                <span className="text-red-500 text-sm">
+                  {errors.title.message}
+                </span>
+              )}
             </div>
 
             {/* Description */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="description" className="text-sm text-gray-500">
-                Description
+                Description *
               </Label>
               <Input
                 id="description"
-                {...register("description")}
+                {...register("description", {
+                  required: "Course description is required",
+                  minLength: {
+                    value: 10,
+                    message: "Description must be at least 10 characters long",
+                  },
+                  maxLength: {
+                    value: 5000,
+                    message: "Description must not exceed 500 characters",
+                  },
+                })}
                 placeholder="Lorem ipsum dolor sit"
-                className="border-gray-300"
+                className={`border-gray-300 ${
+                  errors.description
+                    ? "border-red-500 focus:border-red-500"
+                    : ""
+                }`}
               />
+              {errors.description && (
+                <span className="text-red-500 text-sm">
+                  {errors.description.message}
+                </span>
+              )}
             </div>
 
             {/* Age Range */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="ageRange" className="text-sm text-gray-500">
-                Age Range
+                Age Range *
               </Label>
               <div className="relative">
                 <select
                   id="ageRange"
-                  {...register("ageRange")}
-                  className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none"
+                  {...register("ageRange", {
+                    required: "Please select an age range",
+                  })}
+                  className={`w-full border border-gray-300 rounded-md py-2 px-3 appearance-none ${
+                    errors.ageRange ? "border-red-500 focus:border-red-500" : ""
+                  }`}
                 >
+                  <option value="">Select age range</option>
                   <option value="5-6 yrs">5-6 yrs</option>
                   <option value="7-8 yrs">7-8 yrs</option>
                   <option value="9-10 yrs">9-12 yrs</option>
@@ -115,19 +176,29 @@ export function AddNewCourse({
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
+              {errors.ageRange && (
+                <span className="text-red-500 text-sm">
+                  {errors.ageRange.message}
+                </span>
+              )}
             </div>
 
             {/* Medium */}
             <div className="flex flex-col gap-1">
               <Label htmlFor="medium" className="text-sm text-gray-500">
-                Learning Medium
+                Learning Medium *
               </Label>
               <div className="relative">
                 <select
                   id="medium"
-                  {...register("medium")}
-                  className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none"
+                  {...register("medium", {
+                    required: "Please select a learning medium",
+                  })}
+                  className={`w-full border border-gray-300 rounded-md py-2 px-3 appearance-none ${
+                    errors.medium ? "border-red-500 focus:border-red-500" : ""
+                  }`}
                 >
+                  <option value="">Select learning medium</option>
                   <option value="iPad">iPad</option>
                   <option value="Computer">Computer</option>
                   <option value="Tablet">Tablet</option>
@@ -135,6 +206,11 @@ export function AddNewCourse({
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
+              {errors.medium && (
+                <span className="text-red-500 text-sm">
+                  {errors.medium.message}
+                </span>
+              )}
             </div>
           </div>
 
@@ -152,9 +228,10 @@ export function AddNewCourse({
 
             <Button
               type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6"
+              disabled={isSubmitting}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create
+              {isSubmitting ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </form>

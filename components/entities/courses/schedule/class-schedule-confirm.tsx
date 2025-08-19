@@ -19,7 +19,7 @@ import {
   createBulkSchedules,
   checkScheduleConflict,
   checkScheduleConflicts,
-} from "@/lib/axio";
+} from "@/lib/api";
 
 // component import
 import EditScheduleDialog from "./class-schedule-confirm-edit";
@@ -305,7 +305,7 @@ export default function ClassScheduleConfirm({
           </Button>
           <Button
             onClick={handleConfirmSubmit}
-            className="bg-green-500 text-white hover:bg-green-600 rounded-full px-6"
+            className="bg-blue-500 text-white hover:bg-blue-600 rounded-full px-6"
           >
             Confirm
           </Button>

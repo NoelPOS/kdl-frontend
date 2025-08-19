@@ -1,5 +1,6 @@
 import CourseList from "@/components/entities/courses/lists/course-list";
 import AddNewCourse from "@/components/entities/courses/dialogs/add-new-course.dialog";
+import AddBlankCoursesDialog from "@/components/entities/courses/dialogs/add-blank-courses.dialog";
 import FilterCourse from "@/components/entities/courses/filters/filter-course";
 import { Suspense } from "react";
 
@@ -21,7 +22,10 @@ export default async function CoursesPage({
       <div className="flex items-center justify-center mb-6">
         <div className="flex items-center justify-around w-full gap-4">
           <div className="flex-1/4 text-3xl font-medium">Courses</div>
-          <AddNewCourse />
+          <div className="flex gap-2">
+            <AddBlankCoursesDialog />
+            <AddNewCourse />
+          </div>
         </div>
       </div>
       <FilterCourse />

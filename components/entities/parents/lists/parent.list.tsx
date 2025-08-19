@@ -2,7 +2,8 @@ import React from "react";
 import { ParentCard } from "../cards/parent-card";
 import { Parent } from "@/app/types/parent.type";
 import { Pagination } from "@/components/ui/pagination";
-import { fetchParents } from "@/lib/axio";
+import { fetchParents } from "@/lib/api";
+import { cookies } from "next/headers";
 
 interface PaginationData {
   currentPage: number;
@@ -23,12 +24,16 @@ export default async function ParentList({
   address?: string;
   page?: number;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const { parents, pagination } = await fetchParents(
     query,
     child,
     address,
     page,
-    10
+    10,
+    accessToken
   );
   return (
     <div className="space-y-6">

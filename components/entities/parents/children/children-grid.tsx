@@ -1,4 +1,4 @@
-import { ParentChild } from "@/lib/axio";
+import { ParentChild } from "@/lib/api";
 import React from "react";
 import { StudentCard } from "@/components/entities/students/cards/student-card";
 

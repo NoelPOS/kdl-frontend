@@ -1,8 +1,9 @@
 import React from "react";
 import { StudentCard } from "../cards/student-card";
-import { fetchStudents } from "@/lib/axio";
+import { fetchStudents } from "@/lib/api";
 import { Student } from "@/app/types/student.type";
 import { Pagination } from "@/components/ui/pagination";
+import { cookies } from "next/headers";
 
 export default async function StudentList({
   query,
@@ -15,12 +16,16 @@ export default async function StudentList({
   course: string;
   page?: number;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
   const { students, pagination } = await fetchStudents(
     query,
     active,
     course,
     page,
-    10
+    10,
+    accessToken
   );
 
   return (

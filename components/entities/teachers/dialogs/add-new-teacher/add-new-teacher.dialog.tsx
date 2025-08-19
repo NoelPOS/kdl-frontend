@@ -1,5 +1,6 @@
 "use client";
 import { useForm, useFieldArray } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +19,7 @@ import {
   addNewTeacher,
   searchCourses,
   assignCoursesToTeacher,
-} from "@/lib/axio";
+} from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Course } from "@/app/types/course.type";
@@ -29,6 +30,8 @@ export type TeacherFormData = {
   contactNo: string;
   lineId: string;
   address: string;
+  password: string;
+  confirmPassword: string;
   profilePicture: string;
   courses: Pick<Course, "id" | "title">[];
 };
@@ -40,23 +43,31 @@ export default function AddNewTeacher() {
   const [activeSearchIndex, setActiveSearchIndex] = useState<number>(-1);
   const [searchResults, setSearchResults] = useState<Course[]>([]);
 
-  const { register, handleSubmit, setValue, control } =
-    useForm<TeacherFormData>({
-      defaultValues: {
-        name: "",
-        email: "",
-        contactNo: "",
-        lineId: "",
-        address: "",
-        profilePicture: "",
-        courses: [
-          {
-            id: 0,
-            title: "",
-          },
-        ],
-      },
-    });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<TeacherFormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      contactNo: "",
+      lineId: "",
+      address: "",
+      password: "",
+      confirmPassword: "",
+      profilePicture: "",
+      courses: [
+        {
+          id: 0,
+          title: "",
+        },
+      ],
+    },
+    mode: "onSubmit",
+  });
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -66,62 +77,71 @@ export default function AddNewTeacher() {
   const router = useRouter();
 
   const onSubmit = async (data: TeacherFormData) => {
-    console.log("adding...");
     let imageUrl = "";
     let key = "";
-    if (imageFile) {
-      // 1. Get a pre-signed S3 upload URL from the backend
-      const getUrlRes = await fetch(
-        `/api/s3-upload-url?fileName=${encodeURIComponent(
-          imageFile.name
-        )}&fileType=${encodeURIComponent(imageFile.type)}&folder=teachers`
-      );
-      if (!getUrlRes.ok) {
-        // handle error (show message, etc.)
-        return;
-      }
-      const { url } = await getUrlRes.json();
-      // 2. Upload the file directly to S3 using the pre-signed URL
-      const uploadRes = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": imageFile.type },
-        body: imageFile,
-      });
-      if (!uploadRes.ok) {
-        console.log(uploadRes);
-        return;
-      }
-      key = `teachers/${imageFile.name}`;
-      // 3. Construct the S3 file URL (assuming public bucket)
-      imageUrl = `https://${
-        process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
-      }.s3.amazonaws.com/teachers/${encodeURIComponent(imageFile.name)}`;
-
-      // console.log(imageUrl);
-    }
     try {
-      // First, create the teacher without courses
+      let toastId: string | number | undefined;
+      if (imageFile) {
+        toastId = showToast.loading("Uploading image...");
+        const getUrlRes = await fetch(
+          `/api/s3-upload-url?fileName=${encodeURIComponent(
+            imageFile.name
+          )}&fileType=${encodeURIComponent(imageFile.type)}&folder=teachers`
+        );
+        if (!getUrlRes.ok) {
+          showToast.dismiss(toastId);
+          showToast.error("Failed to get upload URL");
+          return;
+        }
+        const { url } = await getUrlRes.json();
+        const uploadRes = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": imageFile.type },
+          body: imageFile,
+        });
+        if (!uploadRes.ok) {
+          showToast.dismiss(toastId);
+          showToast.error("Image upload failed");
+          return;
+        }
+        key = `teachers/${imageFile.name}`;
+        imageUrl = `https://${
+          process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+        }.s3.amazonaws.com/teachers/${encodeURIComponent(imageFile.name)}`;
+        showToast.dismiss(toastId);
+        showToast.success("Image uploaded");
+      }
+      toastId = showToast.loading("Creating teacher...");
       const teacherData = {
         name: data.name,
         email: data.email,
         contactNo: data.contactNo,
         lineId: data.lineId,
         address: data.address,
+        password: data.password,
         profilePicture: imageUrl,
         profileKey: key,
       };
-
-      console.log(teacherData);
       const newTeacher = await addNewTeacher(teacherData);
-      // Then, assign courses to the teacher if any courses are selected
+      showToast.dismiss(toastId);
+      showToast.success("Teacher created successfully");
       const selectedCourses = data.courses.filter((course) => course.id > 0);
       if (selectedCourses.length > 0) {
+        toastId = showToast.loading("Assigning courses...");
         const courseIds = selectedCourses.map((course) => course.id);
         await assignCoursesToTeacher(newTeacher.id, courseIds);
+        showToast.dismiss(toastId);
+        showToast.success("Courses assigned");
       }
       closeRef.current?.click();
       router.refresh();
     } catch (error) {
+      showToast.dismiss();
+      const errorMsg =
+        typeof error === "object" && error && "message" in error
+          ? (error as any).message
+          : String(error);
+      showToast.error("Error creating teacher or assigning courses", errorMsg);
       console.error("Error creating teacher or assigning courses:", error);
     }
   };
@@ -206,46 +226,119 @@ export default function AddNewTeacher() {
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                {...register("name")}
+                {...register("name", { required: "Name is required" })}
                 placeholder="Enter teacher name"
                 className="border-black "
               />
+              {errors.name && (
+                <span className="text-red-500 text-xs">
+                  {errors.name.message}
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                {...register("email")}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Invalid email address",
+                  },
+                })}
                 placeholder="Enter email"
                 className="border-black "
               />
+              {errors.email && (
+                <span className="text-red-500 text-xs">
+                  {errors.email.message}
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="contactNo">Contact No</Label>
               <Input
                 id="contactNo"
-                {...register("contactNo")}
+                {...register("contactNo", {
+                  required: "Contact number is required",
+                })}
                 placeholder="Enter contact number"
                 className="border-black "
               />
+              {errors.contactNo && (
+                <span className="text-red-500 text-xs">
+                  {errors.contactNo.message}
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="lineId">Line ID</Label>
               <Input
                 id="lineId"
-                {...register("lineId")}
+                {...register("lineId", { required: "Line ID is required" })}
                 placeholder="Enter Line ID"
                 className="border-black "
               />
+              {errors.lineId && (
+                <span className="text-red-500 text-xs">
+                  {errors.lineId.message}
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
-                {...register("address")}
+                {...register("address", { required: "Address is required" })}
                 placeholder="Enter address"
                 className="border-black "
               />
+              {errors.address && (
+                <span className="text-red-500 text-xs">
+                  {errors.address.message}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                })}
+                placeholder="Enter password"
+                className="border-black "
+              />
+              {errors.password && (
+                <span className="text-red-500 text-xs">
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                  validate: (value, formValues) =>
+                    value === formValues.password || "Passwords do not match",
+                })}
+                placeholder="Confirm password"
+                className="border-black "
+              />
+              {errors.confirmPassword && (
+                <span className="text-red-500 text-xs">
+                  {errors.confirmPassword.message}
+                </span>
+              )}
             </div>
 
             {/* Courses Section */}
@@ -338,9 +431,10 @@ export default function AddNewTeacher() {
             </DialogClose>
             <Button
               type="submit"
-              className="bg-green-500 text-white hover:bg-green-400 rounded-2xl w-[5rem]"
+              className="bg-yellow-500 text-white hover:bg-yellow-400 rounded-2xl w-[5rem]"
+              disabled={isSubmitting}
             >
-              Add
+              {isSubmitting ? "Adding..." : "Add"}
             </Button>
           </DialogFooter>
         </form>

@@ -19,7 +19,7 @@ import {
   getTeacherByCourseId,
   updateSchedule,
   checkScheduleConflict,
-} from "@/lib/axio";
+} from "@/lib/api";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
 

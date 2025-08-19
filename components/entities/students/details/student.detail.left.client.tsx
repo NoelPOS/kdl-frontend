@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { Student } from "@/app/types/student.type";
-import { updateStudentById } from "@/lib/axio";
+import { updateStudentById } from "@/lib/api";
 import { useRef } from "react";
 
 interface StudentFormData {
@@ -302,7 +302,7 @@ export default function StudentDetailClient({
           <div
             className={`p-2 text-xs rounded ${
               message.type === "success"
-                ? "bg-green-100 text-green-800"
+                ? "bg-blue-100 text-blue-800"
                 : "bg-red-100 text-red-800"
             }`}
           >

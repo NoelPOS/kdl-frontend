@@ -1,6 +1,6 @@
 import StudentDetail from "@/components/entities/students/details/student.detail.left";
 import StudentDetailRight from "@/components/entities/students/details/student.detail.right";
-import { getStudentById } from "@/lib/axio";
+import { getStudentById } from "@/lib/api";
 
 export default async function StudentDetailPage({
   params,

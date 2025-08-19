@@ -8,39 +8,10 @@ import CourseDetails from "./course-details";
 import { Course, ScheduleData } from "@/app/types/today.type";
 import { timeSlots } from "@/lib/data";
 
-// Helper function to generate dynamic time slots based on schedule data
+// Helper function to always return fixed time slots from 9 AM to 5 PM
 function generateTimeSlots(courses: Course[]): string[] {
-  if (courses.length === 0) {
-    return timeSlots; // fallback to default
-  }
-
-  // Get all start and end times
-  const allTimes = courses.flatMap((course) => [
-    course.startTime,
-    course.endTime,
-  ]);
-
-  // Convert to minutes for easier calculation
-  const timeInMinutes = allTimes.map((time) => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-  });
-
-  // Find min and max, round to 30-minute boundaries
-  const minTime = Math.floor(Math.min(...timeInMinutes) / 30) * 30;
-  const maxTime = Math.ceil(Math.max(...timeInMinutes) / 30) * 30;
-
-  // Generate slots
-  const slots = [];
-  for (let time = minTime; time <= maxTime; time += 30) {
-    const hours = Math.floor(time / 60);
-    const mins = time % 60;
-    slots.push(
-      `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
-    );
-  }
-
-  return slots;
+  // Always return the default time slots (9 AM to 5 PM) regardless of actual schedule times
+  return timeSlots;
 }
 
 interface RenderScheduleProps {

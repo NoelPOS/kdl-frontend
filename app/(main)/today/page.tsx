@@ -1,17 +1,17 @@
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // Always revalidate this page
+export const revalidate = 0;
 
 import { Course } from "@/app/types/today.type";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { DialogTrigger } from "@/components/ui/dialog";
 import RenderSchedule from "@/components/entities/today/render-schedule";
-import { getTodaySchedules } from "@/lib/axio";
+import { getTodaySchedules } from "@/lib/api";
+import { cookies } from "next/headers";
 import Image from "next/image";
 
 export default async function TodayPage() {
-  const raw = await getTodaySchedules();
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
+  const raw = await getTodaySchedules(accessToken || "");
   const grouped = raw.reduce((acc: Record<string, Course>, item) => {
     const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}-${item.student_nickname}`;
 

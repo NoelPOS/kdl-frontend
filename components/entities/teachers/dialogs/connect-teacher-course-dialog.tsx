@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
 
-import { searchCourses, assignCoursesToTeacher } from "@/lib/axio";
+import { searchCourses, assignCoursesToTeacher } from "@/lib/api";
 import { Course } from "@/app/types/course.type";
 
 interface CourseFormData {
@@ -256,7 +256,7 @@ export function ConnectTeacherCourseDialog({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
+                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
               >
                 {isLoading ? "Connecting..." : "Connect"}
               </Button>

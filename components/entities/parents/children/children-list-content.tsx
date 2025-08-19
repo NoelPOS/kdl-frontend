@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getParentChildren, ParentChild, ParentChildFilter } from "@/lib/axio";
+import { getParentChildren, ParentChild, ParentChildFilter } from "@/lib/api";
 import { Pagination } from "@/components/ui/pagination";
 import { StudentCard } from "@/components/entities/students/cards/student-card";
 
@@ -58,7 +58,7 @@ export default function ChildrenListContent({
 
   useEffect(() => {
     fetchChildren();
-  }, [parentId, searchQuery, currentPage]);
+  }, [parentId, searchQuery, currentPage, fetchChildren]);
 
   if (loading) {
     return (

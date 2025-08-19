@@ -4,8 +4,8 @@ import {
   fetchActiveDiscounts,
   fetchSpedificPendingInvoices,
   getStudentById,
-} from "@/lib/axio";
-import Link from "next/link";
+} from "@/lib/api";
+import { cookies } from "next/headers";
 
 export default async function StudentSessionsPage({
   params,
@@ -26,7 +26,8 @@ export default async function StudentSessionsPage({
     ? sessionIds.split(",").filter((id) => id.trim() !== "")
     : [];
 
-  // console.log("Query Params - Session IDs: ", sessionIdArray);
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
 
   // If no session IDs provided, redirect or show error
   if (sessionIdArray.length === 0) {
@@ -46,8 +47,8 @@ export default async function StudentSessionsPage({
 
   // Fetch student data and discounts in parallel
   const [student, discounts] = await Promise.all([
-    getStudentById(Number(studentId)),
-    fetchActiveDiscounts(),
+    getStudentById(Number(studentId), accessToken),
+    fetchActiveDiscounts(accessToken),
   ]);
 
   // Fetch all sessions for the selected session IDs

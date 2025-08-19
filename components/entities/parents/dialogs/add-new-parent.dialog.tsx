@@ -1,5 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useRef, useState } from "react";
-import { addNewParent } from "@/lib/axio";
+import { addNewParent } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -31,7 +32,12 @@ export default function AddNewParent() {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const { register, handleSubmit, setValue } = useForm<ParentFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm<ParentFormData>({
     defaultValues: {
       name: "",
       email: "",
@@ -46,40 +52,57 @@ export default function AddNewParent() {
   const onSubmit = async (data: ParentFormData) => {
     let imageUrl = "";
     let key = "";
-    if (imageFile) {
-      // 1. Get a pre-signed S3 upload URL from the backend
-      const getUrlRes = await fetch(
-        `/api/s3-upload-url?fileName=${encodeURIComponent(
-          imageFile.name
-        )}&fileType=${encodeURIComponent(imageFile.type)}&folder=parents`
-      );
-      if (!getUrlRes.ok) {
-        // handle error (show message, etc.)
-        return;
+    try {
+      let toastId: string | number | undefined;
+      if (imageFile) {
+        toastId = showToast.loading("Uploading image...");
+        const getUrlRes = await fetch(
+          `/api/s3-upload-url?fileName=${encodeURIComponent(
+            imageFile.name
+          )}&fileType=${encodeURIComponent(imageFile.type)}&folder=parents`
+        );
+        if (!getUrlRes.ok) {
+          showToast.dismiss(toastId);
+          showToast.error("Failed to get upload URL");
+          return;
+        }
+        const { url } = await getUrlRes.json();
+        const uploadRes = await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": imageFile.type },
+          body: imageFile,
+        });
+        if (!uploadRes.ok) {
+          showToast.dismiss(toastId);
+          showToast.error("Image upload failed");
+          return;
+        }
+        key = `parents/${imageFile.name}`;
+        imageUrl = `https://${
+          process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+        }.s3.amazonaws.com/parents/${encodeURIComponent(imageFile.name)}`;
+        showToast.dismiss(toastId);
+        showToast.success("Image uploaded");
       }
-      const { url } = await getUrlRes.json();
-      // 2. Upload the file directly to S3 using the pre-signed URL
-      const uploadRes = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": imageFile.type },
-        body: imageFile,
+      toastId = showToast.loading("Creating parent...");
+      await addNewParent({
+        ...data,
+        profilePicture: imageUrl,
+        profileKey: key,
       });
-      if (!uploadRes.ok) {
-        return;
-      }
-      key = `parents/${imageFile.name}`;
-      // 3. Construct the S3 file URL (assuming public bucket)
-      imageUrl = `https://${
-        process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
-      }.s3.amazonaws.com/parents/${encodeURIComponent(imageFile.name)}`;
+      showToast.dismiss(toastId);
+      showToast.success("Parent created successfully");
+      closeRef.current?.click();
+      router.refresh();
+    } catch (error) {
+      showToast.dismiss();
+      const errorMsg =
+        typeof error === "object" && error && "message" in error
+          ? (error as any).message
+          : String(error);
+      showToast.error("Error creating parent", errorMsg);
+      console.error("Error creating parent:", error);
     }
-    await addNewParent({
-      ...data,
-      profilePicture: imageUrl,
-      profileKey: key,
-    });
-    closeRef.current?.click();
-    router.refresh();
   };
 
   const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,8 +205,9 @@ export default function AddNewParent() {
             <Button
               type="submit"
               className="bg-yellow-500 text-white hover:bg-yellow-400 rounded-2xl w-[5rem]"
+              disabled={isSubmitting}
             >
-              Add
+              {isSubmitting ? "Adding..." : "Add"}
             </Button>
           </DialogFooter>
         </form>

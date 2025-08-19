@@ -1,6 +1,6 @@
 import ParentDetail from "@/components/entities/parents/details/parent.detail.left";
 import ParentDetailRight from "@/components/entities/parents/details/parent-detail-right";
-import { getParentById } from "@/lib/axio";
+import { getParentById } from "@/lib/api";
 
 export default async function ParentDetailPage({
   params,

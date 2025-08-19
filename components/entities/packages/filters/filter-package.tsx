@@ -8,7 +8,7 @@ import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { getCourseTypes } from "@/lib/axio";
+import { getCourseTypes } from "@/lib/api";
 
 type FilterFormData = {
   query: string;

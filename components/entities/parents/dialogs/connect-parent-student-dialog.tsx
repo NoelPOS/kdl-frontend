@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
 
-import { searchStudents, connectParentToStudent } from "@/lib/axio";
+import { searchStudents, connectParentToStudent } from "@/lib/api";
 import { Student } from "@/app/types/student.type";
 
 interface StudentFormData {
@@ -302,7 +302,7 @@ export function ConnectParentStudentDialog({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-green-500 text-white hover:bg-green-600 rounded-full flex-1"
+                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
               >
                 {isLoading ? "Connecting..." : "Connect"}
               </Button>

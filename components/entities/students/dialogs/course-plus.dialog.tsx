@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2 } from "lucide-react";
 import { SessionOverview } from "@/app/types/session.type";
-import { addCoursePlus } from "@/lib/axio";
+import { addCoursePlus } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 interface CoursePlusFormData {
@@ -127,7 +127,7 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* <div className="bg-green-50 rounded-lg p-3 border border-green-200 text-sm text-green-800">
+          {/* <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-sm text-blue-800">
             <strong>What is Course Plus?</strong>
             <ul className="mt-1 ml-4 list-disc space-y-1">
               <li>Adds extra classes to your existing session</li>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getTeacherCourses } from "@/lib/axio";
+import { getTeacherCourses } from "@/lib/api";
 import { Course } from "@/app/types/course.type";
 import { CourseCard } from "@/components/entities/courses/cards/course-card";
 import { Pagination } from "@/components/ui/pagination";
@@ -59,7 +59,7 @@ export default function TeacherCoursesListContent({
 
   useEffect(() => {
     fetchCourses();
-  }, [teacherId, searchQuery, currentPage]);
+  }, [teacherId, searchQuery, currentPage, fetchCourses]);
 
   if (loading) {
     return (

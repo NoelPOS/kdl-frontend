@@ -1,18 +1,22 @@
 import StudentSchedule from "@/components/entities/students/details/student-schedule";
-import { getSchedulesByStudentAndSession } from "@/lib/axio";
+import { getSchedulesByStudentAndSession } from "@/lib/api";
 import Link from "next/link";
 import React from "react";
 import { CompleteSessionDialog } from "@/components/entities/students/dialogs/complete-session-dialog";
+import { cookies } from "next/headers";
 
 export default async function StudentSession({
   params,
 }: {
   params: Promise<{ id: number; sessionId: number }>;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
   const { sessionId, id } = await params;
   const schedules = await getSchedulesByStudentAndSession(
     sessionId,
-    Number(id)
+    Number(id),
+    accessToken
   );
 
   return (

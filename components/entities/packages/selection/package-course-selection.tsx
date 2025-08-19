@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
-import { searchCourses } from "@/lib/axio";
+import { searchCourses } from "@/lib/api";
 import { useDebouncedCallback } from "use-debounce";
 import { Course } from "@/app/types/course.type";
 
@@ -103,14 +103,14 @@ export function PackageCourseSelection({
 
         {/* Selected Course Display */}
         {selectedCourse && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start justify-between">
               <div>
-                <h4 className="font-medium text-green-900">
+                <h4 className="font-medium text-blue-900">
                   {selectedCourse.title}
                 </h4>
               </div>
-              <div className="text-green-600 text-sm font-medium">Selected</div>
+              <div className="text-blue-600 text-sm font-medium">Selected</div>
             </div>
           </div>
         )}
