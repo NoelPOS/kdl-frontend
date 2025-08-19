@@ -3,6 +3,7 @@ import { getSchedulesByStudentAndSession } from "@/lib/api";
 import Link from "next/link";
 import React from "react";
 import { CompleteSessionDialog } from "@/components/entities/students/dialogs/complete-session-dialog";
+import { CancelSessionDialog } from "@/components/entities/students/dialogs/cancel-session-dialog";
 import { cookies } from "next/headers";
 
 export default async function StudentSession({
@@ -42,10 +43,16 @@ export default async function StudentSession({
           </span>
         </nav>
 
-        <CompleteSessionDialog
-          sessionId={sessionId}
-          sessionTitle={schedules[0].course_title}
-        />
+        <div className="flex items-center gap-2">
+          <CancelSessionDialog
+            sessionId={sessionId}
+            sessionTitle={schedules[0].course_title}
+          />
+          <CompleteSessionDialog
+            sessionId={sessionId}
+            sessionTitle={schedules[0].course_title}
+          />
+        </div>
       </div>
 
       <StudentSchedule initialSchedules={schedules} />

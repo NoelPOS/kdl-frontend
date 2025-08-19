@@ -11,42 +11,42 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
-import { completeSession } from "@/lib/api";
+import { XCircle } from "lucide-react";
+import { cancelSession } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 
-interface CompleteSessionDialogProps {
+interface CancelSessionDialogProps {
   sessionId: number;
   sessionTitle: string;
 }
 
-export function CompleteSessionDialog({
+export function CancelSessionDialog({
   sessionId,
   sessionTitle,
-}: CompleteSessionDialogProps) {
+}: CancelSessionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleComplete = async () => {
+  const handleCancel = async () => {
     setIsLoading(true);
-    const toastId = showToast.loading("Completing session...");
+    const toastId = showToast.loading("Cancelling session...");
     try {
-      const success = await completeSession(sessionId);
+      const success = await cancelSession(sessionId);
       showToast.dismiss(toastId);
       if (success) {
-        showToast.success("Session completed successfully!");
-        router.refresh(); // Refresh the page to show updated data
+        showToast.success("Session cancelled successfully!");
+        router.refresh();
         setIsOpen(false);
       } else {
-        showToast.error("Failed to complete session. Please try again.");
-        console.error("Failed to complete session");
+        showToast.error("Failed to cancel session. Please try again.");
+        console.error("Failed to cancel session");
       }
     } catch (error) {
       showToast.dismiss(toastId);
-      showToast.error("Error completing session. Please try again.");
-      console.error("Error completing session:", error);
+      showToast.error("Error cancelling session. Please try again.");
+      console.error("Error cancelling session:", error);
     } finally {
       setIsLoading(false);
     }
@@ -55,18 +55,20 @@ export function CompleteSessionDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-2">
-          <CheckCircle className="h-4 w-4" />
-          Complete Session
+        <Button
+          variant="outline"
+          className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white flex items-center gap-2"
+        >
+          <XCircle className="h-4 w-4" />
+          Cancel Session
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Complete Session</DialogTitle>
+          <DialogTitle>Cancel Session</DialogTitle>
           <DialogDescription>
-            Are you sure you want to mark the session{" "}
-            <strong>&quot;{sessionTitle}&quot;</strong> as completed? This
-            action cannot be undone.
+            Are you sure you want to cancel the session{" "}
+            <strong>&quot;{sessionTitle}&quot;</strong>?
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -78,11 +80,11 @@ export function CompleteSessionDialog({
             Cancel
           </Button>
           <Button
-            onClick={handleComplete}
+            onClick={handleCancel}
             disabled={isLoading}
-            className="bg-yellow-600 hover:bg-yellow-700"
+            className="bg-red-600 hover:bg-red-700 text-white"
           >
-            {isLoading ? "Completing..." : "Complete Session"}
+            {isLoading ? "Cancelling..." : "Cancel Session"}
           </Button>
         </DialogFooter>
       </DialogContent>

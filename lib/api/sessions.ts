@@ -166,10 +166,24 @@ export async function changeSessionStatus(
 
 export async function completeSession(sessionId: number): Promise<boolean> {
   try {
-    await clientApi.patch(`/sessions/${sessionId}`, { status: "completed" });
+    await clientApi.patch(`/sessions/${sessionId}/status`, {
+      status: "completed",
+    });
     return true;
   } catch (error) {
     console.error("Error completing session:", error);
+    return false;
+  }
+}
+
+export async function cancelSession(sessionId: number): Promise<boolean> {
+  try {
+    await clientApi.patch(`/sessions/${sessionId}/cancel`, {
+      status: "cancelled",
+    });
+    return true;
+  } catch (error) {
+    console.error("Error cancelling session:", error);
     return false;
   }
 }
