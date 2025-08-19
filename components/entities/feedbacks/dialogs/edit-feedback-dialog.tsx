@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FeedbackItem } from "@/app/types/feedback.type";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -75,10 +76,9 @@ export default function EditFeedbackDialog({
         onOpenChange(false);
 
         // Show success message
-        console.log(response.message);
-
-        // Optional: You could show a toast notification here
-        // toast.success(response.message);
+        showToast.success(
+          response.message || "Feedback verified successfully!"
+        );
       } else {
         throw new Error(response.message || "Failed to verify feedback");
       }
@@ -91,7 +91,7 @@ export default function EditFeedbackDialog({
           ? error.message
           : "Failed to update feedback. Please try again.";
 
-      alert(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

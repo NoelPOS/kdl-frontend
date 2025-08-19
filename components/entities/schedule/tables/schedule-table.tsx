@@ -37,9 +37,6 @@ function ScheduleTable({
   handleRowDoubleClick,
   showStudentHeader = true, // default to true for backward compatibility
 }: ScheduleTableProps) {
-  // console.log("scheduleTable rendered", schedules);
-
-  // Get student and course info from first schedule (assuming all schedules are for same student/course)
   const firstSchedule = schedules[0];
 
   return (

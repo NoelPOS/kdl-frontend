@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { showToast } from "@/lib/toast";
 import { Plus, Loader2 } from "lucide-react";
 import { SessionOverview } from "@/app/types/session.type";
 import { addCoursePlus } from "@/lib/api";
@@ -29,14 +30,13 @@ interface CoursePlusDialogProps {
 
 export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CoursePlusFormData>({
     defaultValues: {
       additionalClasses: 1,
@@ -49,32 +49,39 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
       course.status?.toLowerCase() === "completed" ||
       course.status?.toLowerCase() === "cancelled"
     ) {
-      alert("Cannot add course plus to completed or cancelled sessions.");
+      showToast.error(
+        "Cannot add course plus to completed or cancelled sessions."
+      );
       return;
     }
 
-    setIsLoading(true);
+    const toastId = showToast.loading("Adding course plus...");
+
     try {
       const success = await addCoursePlus(
         course.sessionId,
         data.additionalClasses
       );
+
+      showToast.dismiss(toastId);
+
       if (success) {
         setIsOpen(false);
         reset();
         router.refresh(); // Refresh to show updated data
-        alert(
+        showToast.success(
           `Successfully added ${data.additionalClasses} additional classes to the session!`
         );
       } else {
         console.error("Failed to add course plus");
-        alert("Failed to add course plus. Please try again."); // Simple feedback for now
+        showToast.error("Failed to add course plus. Please try again.");
       }
     } catch (error) {
+      showToast.dismiss(toastId);
       console.error("Error adding course plus:", error);
-      alert("An error occurred while adding course plus. Please try again."); // Simple feedback for now
-    } finally {
-      setIsLoading(false);
+      showToast.error(
+        "An error occurred while adding course plus. Please try again."
+      );
     }
   };
 
@@ -173,16 +180,16 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
-              className="bg-yellow-600 hover:bg-yellow-700"
+              disabled={isSubmitting}
+              className="bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Adding...

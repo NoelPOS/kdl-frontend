@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,9 @@ import {
 } from "@/lib/api";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
+import { TimeInput } from "@/components/shared/schedule";
+import { isWithinBusinessHours } from "@/lib/validation-utils";
+import { formatDateLocal } from "@/lib/utils";
 
 interface ConflictDetail {
   conflictType: string;
@@ -71,24 +75,67 @@ export function EditSchedule({
   onScheduleUpdate,
 }: EditScheduleProps) {
   const router = useRouter();
-  const { register, handleSubmit, reset } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
     defaultValues: initialData,
   });
-  const { ref: dateRHFRef } = register("date");
-  const { ref: starttimeRHFRef } = register("starttime");
-  const { ref: endtimeRHFRef } = register("endtime");
+
+  // Watch form values for validation
+  const startTime = watch("starttime");
+  const endTime = watch("endtime");
+  const selectedDate = watch("date");
+
+  const { ref: dateRHFRef } = register("date", {
+    required: "Date is required",
+    validate: (value) => {
+      if (!value) return "Date is required";
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        return "Cannot select a past date";
+      }
+      return true;
+    },
+  });
 
   const dateRef = useRef<HTMLInputElement>(null);
-  const starttimeRef = useRef<HTMLInputElement>(null);
-  const endtimeRef = useRef<HTMLInputElement>(null);
-
+  const startTimeRef = useRef<HTMLInputElement>(null);
+  const endTimeRef = useRef<HTMLInputElement>(null);
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Validation functions
+  const validateStartTime = (value: string) => {
+    if (!value) return "Start time is required";
+    if (!isWithinBusinessHours(value)) {
+      return "Start time must be between 9:00 AM and 5:00 PM";
+    }
+    if (endTime && value >= endTime) {
+      return "Start time must be before end time";
+    }
+    return true;
+  };
+
+  const validateEndTime = (value: string) => {
+    if (!value) return "End time is required";
+    if (!isWithinBusinessHours(value)) {
+      return "End time must be between 9:00 AM and 5:00 PM";
+    }
+    if (startTime && value <= startTime) {
+      return "End time must be after start time";
+    }
+    return true;
+  };
 
   const onSubmit = useCallback(
     async (data: FormData) => {
       console.log("Submitting data:", data.scheduleId);
-      setIsSubmitting(true);
       try {
         let warningMessage = "none";
         try {
@@ -155,14 +202,14 @@ export function EditSchedule({
         router.refresh();
 
         if (warningMessage) {
-          alert(`Schedule updated with warning: ${warningMessage}`);
+          showToast.warning(`Schedule updated with warning: ${warningMessage}`);
+        } else {
+          showToast.success("Schedule updated successfully!");
         }
         onOpenChange(false);
       } catch (error) {
         console.error("Failed to update schedule", error);
-        alert("Failed to update schedule. Please try again.");
-      } finally {
-        setIsSubmitting(false);
+        showToast.error("Failed to update schedule. Please try again.");
       }
     },
     [
@@ -240,7 +287,7 @@ export function EditSchedule({
               className="flex flex-col gap-2"
               onClick={() => dateRef.current?.showPicker()}
             >
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Date *</Label>
               <div className="relative">
                 <Input
                   id="date"
@@ -250,66 +297,60 @@ export function EditSchedule({
                     dateRHFRef(e); // connect RHF ref
                     dateRef.current = e; // also assign to your own ref
                   }}
-                  className="border-black"
+                  className={`border-black ${
+                    errors.date ? "border-red-500 focus:border-red-500" : ""
+                  }`}
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
+              {errors.date && (
+                <span className="text-red-500 text-sm">
+                  {errors.date.message}
+                </span>
+              )}
             </div>
             {/* Course */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="course">Course</Label>
+              <Label htmlFor="course">Course (Optional)</Label>
               <div className="relative">
                 <Input
                   id="course"
                   {...register("course")}
-                  placeholder="Search for a course"
-                  className="border-black "
+                  placeholder="Search for a course (optional)"
+                  className="border-black"
                 />
-
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
             </div>
             {/* Start Time */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="starttime">Start Time</Label>
-              <div
-                className="relative"
-                onClick={() => starttimeRef.current?.showPicker()}
-              >
-                <Input
-                  id="starttime"
-                  type="time"
-                  {...register("starttime")}
-                  ref={(e) => {
-                    starttimeRHFRef(e); // connect RHF ref
-                    starttimeRef.current = e; // also assign to your own ref
-                  }}
-                  className="border-black"
-                />
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
-              </div>
-            </div>
+            <TimeInput
+              label="Start Time"
+              register={register}
+              fieldName="starttime"
+              inputRef={startTimeRef}
+              onClick={() => startTimeRef.current?.showPicker()}
+              error={errors.starttime?.message}
+              required={true}
+              validation={{
+                required: "Start time is required",
+                validate: validateStartTime,
+              }}
+            />
 
             {/* End Time */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="time">End Time</Label>
-              <div
-                className="relative"
-                onClick={() => endtimeRef.current?.showPicker()}
-              >
-                <Input
-                  id="endtime"
-                  type="time"
-                  {...register("endtime")}
-                  ref={(e) => {
-                    endtimeRHFRef(e); // connect RHF ref
-                    endtimeRef.current = e; // also assign to your own ref
-                  }}
-                  className="border-black"
-                />
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
-              </div>
-            </div>
+            <TimeInput
+              label="End Time"
+              register={register}
+              fieldName="endtime"
+              inputRef={endTimeRef}
+              onClick={() => endTimeRef.current?.showPicker()}
+              error={errors.endtime?.message}
+              required={true}
+              validation={{
+                required: "End time is required",
+                validate: validateEndTime,
+              }}
+            />
 
             {/* Teacher */}
             <div className="flex flex-col gap-2">
@@ -328,13 +369,13 @@ export function EditSchedule({
             </div>
             {/* Student */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="student">Student</Label>
+              <Label htmlFor="student">Student (Optional)</Label>
               <div className="relative">
                 <Input
                   id="student"
                   {...register("student")}
-                  className=" border-black"
-                  placeholder="Search for a student"
+                  className="border-black"
+                  placeholder="Search for a student (optional)"
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
@@ -364,12 +405,12 @@ export function EditSchedule({
             </div>
             {/* Nickname */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nickname">Nickname</Label>
+              <Label htmlFor="nickname">Nickname (Optional)</Label>
               <Input
                 id="nickname"
                 {...register("nickname")}
                 className="border-black"
-                placeholder="Enter nickname "
+                placeholder="Enter nickname (optional)"
               />
             </div>
 

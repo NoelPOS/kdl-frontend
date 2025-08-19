@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Filter, X, Loader2 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +22,13 @@ export default function StudentSessionFilter() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<FilterFormData>({
     defaultValues: {
       courseName: searchParams.get("courseName") || "",
       status: searchParams.get("status") || "all",
@@ -36,8 +42,7 @@ export default function StudentSessionFilter() {
     ([key, value]) => value && value.toString().trim() !== "" && value !== "all"
   ).length;
 
-  const onSubmit = (data: FilterFormData) => {
-    setLoading(true);
+  const onSubmit = async (data: FilterFormData) => {
     const params = new URLSearchParams(searchParams);
 
     if (data.courseName && data.courseName.trim() !== "") {
@@ -60,8 +65,9 @@ export default function StudentSessionFilter() {
 
     params.delete("page");
 
+    // Simulate async operation for better UX
+    await new Promise((resolve) => setTimeout(resolve, 300));
     router.replace(`${pathname}?${params.toString()}`);
-    setLoading(false);
   };
 
   const handleClearFilters = useCallback(() => {
@@ -171,9 +177,17 @@ export default function StudentSessionFilter() {
           <div className="flex justify-end gap-2 mt-4">
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="bg-yellow-500 hover:bg-yellow-600 text-white px-6"
             >
-              {loading ? "Loading..." : "Apply Filters"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Applying...
+                </>
+              ) : (
+                "Apply Filters"
+              )}
             </Button>
           </div>
         </form>

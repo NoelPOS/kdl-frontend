@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogTrigger,
@@ -27,6 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Discount } from "@/app/types/discount.type";
 import { Trash2 } from "lucide-react";
 
@@ -35,12 +38,14 @@ import {
   DiscountRow,
   Enrollment,
   InvoiceSubmission,
-  SessionGroup,
 } from "@/app/types/enrollment.type";
 import { addNewInvoice } from "@/lib/api";
+import { formatDateLocal } from "@/lib/utils";
 
 interface FormData {
   discountId: string;
+  customDescription: string;
+  customAmount: string;
 }
 
 const EnrollmentDetailRightMultiple = ({
@@ -52,10 +57,10 @@ const EnrollmentDetailRightMultiple = ({
   discounts: Discount[];
   sessions: Enrollment[];
 }) => {
-  console.log("Sessions from EnrollmentDetailRightMultiple:", sessions);
   const [discountRows, setDiscountRows] = useState<DiscountRow[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
+  const [isDynamicDiscount, setIsDynamicDiscount] = useState(false);
   const router = useRouter();
 
   // Function to check transaction type based on sessionId
@@ -65,26 +70,23 @@ const EnrollmentDetailRightMultiple = ({
     if (sessionId.toString().startsWith("cp-")) {
       return "courseplus";
     }
-    if (sessionId.toString().startsWith("pkg-")) {
-      return "package";
-    }
     return "course";
   };
 
   // Generate document ID in format YYYYMMDD + random number
-  const generateDocumentId = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const randomNum = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, "0");
-    return `${year}${month}${day}${randomNum}`;
-  };
+  // const generateDocumentId = () => {
+  //   const now = new Date();
+  //   const year = now.getFullYear();
+  //   const month = String(now.getMonth() + 1).padStart(2, "0");
+  //   const day = String(now.getDate()).padStart(2, "0");
+  //   const randomNum = Math.floor(Math.random() * 10000)
+  //     .toString()
+  //     .padStart(4, "0");
+  //   return `${year}${month}${day}${randomNum}`;
+  // };
 
   // Generate document ID once when component mounts
-  const [documentId] = useState(() => generateDocumentId());
+  // const [documentId] = useState(() => generateDocumentId());
 
   // Calculate total amount from all sessions
   const totalAmount: number = useMemo(() => {
@@ -107,29 +109,50 @@ const EnrollmentDetailRightMultiple = ({
   } = useForm<FormData>({
     defaultValues: {
       discountId: "",
+      customDescription: "",
+      customAmount: "",
     },
   });
 
   const onSubmit = (data: FormData) => {
     console.log("Form submitted:", data);
 
-    // Find the selected discount
-    const selectedDiscount = discounts.find((d) => d.title === data.discountId);
-    console.log("Selected discount:", selectedDiscount);
-    if (selectedDiscount) {
-      // Add discount to table
+    if (isDynamicDiscount) {
+      // Handle dynamic discount
+      const customAmount = parseFloat(data.customAmount);
+      if (isNaN(customAmount)) {
+        showToast.error("Please enter a valid amount");
+        return;
+      }
+
       const newDiscountRow: DiscountRow = {
-        id: selectedDiscount.id,
-        description: `${selectedDiscount.title}`,
-        amount: selectedDiscount.amount,
+        id: `dynamic-${Date.now()}`, // Generate unique ID for dynamic discounts
+        description: data.customDescription.trim() || "Custom Discount",
+        amount: customAmount,
       };
 
       setDiscountRows((prev) => [...prev, newDiscountRow]);
+    } else {
+      // Handle database discount
+      const selectedDiscount = discounts.find(
+        (d) => d.title === data.discountId
+      );
+      console.log("Selected discount:", selectedDiscount);
+      if (selectedDiscount) {
+        const newDiscountRow: DiscountRow = {
+          id: selectedDiscount.id,
+          description: `${selectedDiscount.title}`,
+          amount: selectedDiscount.amount,
+        };
+
+        setDiscountRows((prev) => [...prev, newDiscountRow]);
+      }
     }
 
     // Reset form and close dialog
     reset();
     setIsDialogOpen(false);
+    setIsDynamicDiscount(false);
   };
 
   const removeDiscount = (discountId: string) => {
@@ -138,15 +161,17 @@ const EnrollmentDetailRightMultiple = ({
 
   const handleCreateInvoice = async () => {
     if (sessions.length === 0) {
-      alert("No sessions available to create invoice.");
+      showToast.error("No sessions available to create invoice.");
       return;
     }
+
+    const toastId = showToast.loading("Creating invoice...");
 
     const firstSession = sessions[0];
 
     // Create invoice items for all sessions
     const sessionItems = sessions.map((session, index) => ({
-      description: `${session.course_title} - ${session.student_name} (Session ${sessionIds[index]})`,
+      description: `${session.course_title} - ${session.student_name}`,
       amount: Number(session.classoption_tuitionfee),
     }));
 
@@ -162,11 +187,6 @@ const EnrollmentDetailRightMultiple = ({
       if (transactionType === "courseplus" && sessionId.startsWith("cp-")) {
         actualId = sessionId.replace("cp-", "");
       }
-      // If it's package (pkg-123), extract the number part
-      else if (transactionType === "package" && sessionId.startsWith("pkg-")) {
-        actualId = sessionId.replace("pkg-", "");
-      }
-      // For regular courses, sessionId is already the correct ID
 
       return {
         sessionId: sessionId,
@@ -177,8 +197,7 @@ const EnrollmentDetailRightMultiple = ({
 
     const invoiceData: InvoiceSubmission = {
       studentId: firstSession.student_id,
-      documentId,
-      date: new Date().toISOString().split("T")[0],
+      date: formatDateLocal(new Date()),
       paymentMethod,
       totalAmount,
       studentName: firstSession.student_name,
@@ -193,20 +212,17 @@ const EnrollmentDetailRightMultiple = ({
       ],
     };
 
-    console.log(
-      "=== MULTIPLE SESSIONS INVOICE SUBMISSION DATA ===",
-      invoiceData
-    );
-
     try {
-      console.log("Submitting invoice for multiple sessions...");
       const result = await addNewInvoice(invoiceData);
-      console.log("Invoice created successfully:", result);
+      showToast.dismiss(toastId);
+      showToast.success("Invoice created successfully!");
       router.replace(
         `/invoice/${result.id}/student/${firstSession.student_id}`
       );
     } catch (error) {
+      showToast.dismiss(toastId);
       console.error("Error creating invoice:", error);
+      showToast.error("Failed to create invoice. Please try again.");
     }
   };
 
@@ -214,9 +230,7 @@ const EnrollmentDetailRightMultiple = ({
     <div className="flex flex-col py-5 px-10 w-full h-screen ">
       {/* Component Title */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Invoice Generation - Multiple Sessions
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Invoice Generation</h1>
         <p className="text-gray-600 mt-1">
           Create invoice for {sessions.length} selected sessions
         </p>
@@ -224,8 +238,9 @@ const EnrollmentDetailRightMultiple = ({
 
       <div className="flex items-center justify-between flex-1/5">
         <div className="flex flex-col">
-          <p className="text-lg ">Document Id: {documentId}</p>
-          <p className="text-lg">Date: {new Date().toLocaleDateString()}</p>
+          <p className="text-lg">
+            Date: {new Date().toLocaleDateString("en-GB")}
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -242,36 +257,130 @@ const EnrollmentDetailRightMultiple = ({
                 Add Discount
               </DialogTitle>
             </DialogHeader>
+
+            {/* Select discount type */}
+            <div className="mt-4 flex flex-col gap-1">
+              <Label className="text-sm text-gray-500">Discount Type</Label>
+              <Select
+                value={isDynamicDiscount ? "custom" : "existing"}
+                onValueChange={(value) =>
+                  setIsDynamicDiscount(value === "custom")
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="existing">
+                    Select from Existing Discounts
+                  </SelectItem>
+                  <SelectItem value="custom">Create Custom Discount</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="discount" className="text-sm text-gray-500">
-                  Select Discount
-                </label>
-                <Controller
-                  name="discountId"
-                  control={control}
-                  rules={{ required: "Please select a discount" }}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a discount" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {discounts.map((discount) => (
-                          <SelectItem key={discount.id} value={discount.title}>
-                            {discount.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {!isDynamicDiscount ? (
+                // Database discount selection
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="discount" className="text-sm text-gray-500">
+                    Select Discount
+                  </label>
+                  <Controller
+                    name="discountId"
+                    control={control}
+                    rules={{ required: "Please select a discount" }}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a discount" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {discounts.map((discount) => (
+                            <SelectItem
+                              key={discount.id}
+                              value={discount.title}
+                            >
+                              {discount.title} ({discount.amount > 0 ? "+" : ""}
+                              {discount.amount.toFixed(2)})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.discountId && (
+                    <span className="text-red-500 text-xs">
+                      {errors.discountId.message}
+                    </span>
                   )}
-                />
-                {errors.discountId && (
-                  <span className="text-red-500 text-xs">
-                    {errors.discountId.message}
-                  </span>
-                )}
-              </div>
+                </div>
+              ) : (
+                // Dynamic discount inputs
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-1">
+                    <Label
+                      htmlFor="customDescription"
+                      className="text-sm text-gray-500"
+                    >
+                      Description
+                    </Label>
+                    <Controller
+                      name="customDescription"
+                      control={control}
+                      rules={{ required: "Please enter a description" }}
+                      render={({ field }) => (
+                        <Input
+                          id="customDescription"
+                          placeholder="Enter discount description"
+                          {...field}
+                        />
+                      )}
+                    />
+                    {errors.customDescription && (
+                      <span className="text-red-500 text-xs">
+                        {errors.customDescription.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label
+                      htmlFor="customAmount"
+                      className="text-sm text-gray-500"
+                    >
+                      Amount
+                    </Label>
+                    <Controller
+                      name="customAmount"
+                      control={control}
+                      rules={{
+                        required: "Please enter an amount",
+                        pattern: {
+                          value: /^-?\d+(\.\d{1,2})?$/,
+                          message:
+                            "Please enter a valid amount (e.g., -10.50 or 25.00)",
+                        },
+                      }}
+                      render={({ field }) => (
+                        <Input
+                          id="customAmount"
+                          placeholder="Enter amount (e.g., -10.50)"
+                          {...field}
+                        />
+                      )}
+                    />
+                    {errors.customAmount && (
+                      <span className="text-red-500 text-xs">
+                        {errors.customAmount.message}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <DialogFooter className="gap-2 mt-6">
                 <DialogClose asChild>
@@ -279,7 +388,9 @@ const EnrollmentDetailRightMultiple = ({
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button type="submit">Add Discount</Button>
+                <Button type="submit" className="bg-yellow-500">
+                  {isDynamicDiscount ? "Add Custom Discount" : "Add Discount"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -287,7 +398,7 @@ const EnrollmentDetailRightMultiple = ({
       </div>
 
       {/* Invoice Table with No, Description and Amount columns */}
-      <div className="flex-3/5">
+      <div className="flex-3/5 py-2">
         <Table className=" bg-white rounded-2xl ">
           <TableHeader>
             <TableRow>
@@ -313,11 +424,10 @@ const EnrollmentDetailRightMultiple = ({
                   {index + 1}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                  {session.course_title} - {session.student_name} (Session{" "}
-                  {sessionIds[index]})
+                  {session.course_title} - {session.student_name}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                  ${Number(session.classoption_tuitionfee).toFixed(2)}
+                  {Number(session.classoption_tuitionfee).toFixed(2)}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   -
@@ -334,8 +444,9 @@ const EnrollmentDetailRightMultiple = ({
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   {discount.description}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal text-red-600">
-                  ${discount.amount.toFixed(2)}
+                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                  {discount.amount < 0 ? "-" : "+"}
+                  {Math.abs(discount.amount).toFixed(2)}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   <Button
@@ -365,7 +476,7 @@ const EnrollmentDetailRightMultiple = ({
         </Table>
       </div>
 
-      <div className="flex-1/5">
+      <div className="flex-1/5 pt-5">
         <div className="flex items-center gap-3 mb-4">
           <p className="text-lg">Payment Method:</p>
           <Select
@@ -407,7 +518,7 @@ const EnrollmentDetailRightMultiple = ({
             onClick={handleCreateInvoice}
             className="bg-yellow-500 hover:bg-yellow-600 text-white "
           >
-            Create Invoice for {sessions.length} Sessions
+            Create Invoice
           </Button>
         </div>
       </div>

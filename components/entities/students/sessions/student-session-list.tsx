@@ -1,11 +1,13 @@
 "use client";
 
 import { SessionOverview } from "@/app/types/session.type";
+import { Student } from "@/app/types/course.type";
 import { StudentCourse } from "../details/student-course";
 import { Pagination } from "@/components/ui/pagination";
 
 interface StudentSessionListProps {
   sessions: SessionOverview[];
+  student?: Student; // Add optional student data prop
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -17,6 +19,7 @@ interface StudentSessionListProps {
 
 export default function StudentSessionList({
   sessions,
+  student,
   pagination,
 }: StudentSessionListProps) {
   if (sessions.length === 0) {
@@ -37,7 +40,11 @@ export default function StudentSessionList({
       {/* Session Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sessions.map((session) => (
-          <StudentCourse key={session.sessionId} course={session} />
+          <StudentCourse
+            key={session.sessionId}
+            course={session}
+            student={student}
+          />
         ))}
       </div>
 

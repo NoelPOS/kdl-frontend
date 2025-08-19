@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +44,7 @@ export function AddStudent({
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
     defaultValues: {
       students: [
@@ -110,9 +111,11 @@ export function AddStudent({
     );
 
     if (!isValid) {
-      alert("Please fill in all required fields for all students.");
+      showToast.error("Please fill in all required fields for all students.");
       return;
     }
+
+    showToast.success("Students added successfully!");
 
     // reset({
     //   students: [
@@ -143,9 +146,7 @@ export function AddStudent({
         <div className="bg-white p-6">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {typeof window !== "undefined"
-                ? new URLSearchParams(window.location.search).get("course")
-                : null}
+              Add Students to Course
             </DialogTitle>
           </DialogHeader>
 
@@ -270,9 +271,17 @@ export function AddStudent({
               </Button>
               <Button
                 type="submit"
-                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
+                disabled={isSubmitting}
+                className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1 disabled:opacity-50"
               >
-                Next
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  "Next"
+                )}
               </Button>
             </DialogFooter>
           </form>

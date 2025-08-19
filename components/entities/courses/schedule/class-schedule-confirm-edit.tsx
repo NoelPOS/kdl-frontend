@@ -17,6 +17,10 @@ import { useEffect, useRef, useState } from "react";
 import { getTeacherByCourseId } from "@/lib/api";
 import { EditScheduleFormData } from "@/app/types/course.type";
 import { Teacher } from "@/app/types/teacher.type";
+import { formatDateLocal } from "@/lib/utils";
+import { TimeInput } from "@/components/shared/schedule/time-input";
+import { isWithinBusinessHours } from "@/lib/validation-utils";
+import { toast } from "sonner";
 
 interface EditScheduleDialogProps {
   open: boolean;
@@ -38,31 +42,77 @@ export function EditScheduleDialog({
   courseName,
 }: EditScheduleDialogProps) {
   console.log("Class Name:", courseName);
-  const { register, handleSubmit, reset, setValue, watch } =
-    useForm<EditScheduleFormData>({
-      defaultValues: {
-        date: "",
-        starttime: "",
-        endtime: "",
-        course: courseName,
-        teacher: "",
-        teacherId: undefined,
-        student: "",
-        room: "",
-        nickname: "",
-        studentId: "",
-        remark: "",
-        status: "",
-      },
-    });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EditScheduleFormData>({
+    defaultValues: {
+      date: "",
+      starttime: "",
+      endtime: "",
+      course: courseName,
+      teacher: "",
+      teacherId: undefined,
+      student: "",
+      room: "",
+      nickname: "",
+      studentId: "",
+      remark: "",
+      status: "",
+    },
+  });
+
+  // Watch form values for validation
+  const startTime = watch("starttime");
+  const endTime = watch("endtime");
+  const selectedDate = watch("date");
 
   // console.log("EditScheduleDialog initialData:", initialData);
 
-  const { ref: dateRHFRef } = register("date");
+  const { ref: dateRHFRef } = register("date", {
+    required: "Date is required",
+    validate: (value) => {
+      if (!value) return "Date is required";
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        return "Cannot select a past date";
+      }
+      return true;
+    },
+  });
   const { ref: starttimeRHFRef } = register("starttime");
   const { ref: endtimeRHFRef } = register("endtime");
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
+
+  // Validation functions
+  const validateStartTime = (value: string) => {
+    if (!value) return "Start time is required";
+    if (!isWithinBusinessHours(value)) {
+      return "Start time must be between 9:00 AM and 5:00 PM";
+    }
+    if (endTime && value >= endTime) {
+      return "Start time must be before end time";
+    }
+    return true;
+  };
+
+  const validateEndTime = (value: string) => {
+    if (!value) return "End time is required";
+    if (!isWithinBusinessHours(value)) {
+      return "End time must be between 9:00 AM and 5:00 PM";
+    }
+    if (startTime && value <= startTime) {
+      return "End time must be after start time";
+    }
+    return true;
+  };
 
   // Handle teacher selection change
   const handleTeacherChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -82,10 +132,10 @@ export function EditScheduleDialog({
       let formattedDate = initialData.date || "";
       if (formattedDate && !formattedDate.includes("-")) {
         const parsed = new Date(formattedDate);
+        console.log("Parsed Date:", parsed.toLocaleDateString("en-GB"));
         if (!isNaN(parsed.getTime())) {
-          // Add one day to compensate for timezone conversion
-          parsed.setDate(parsed.getDate() + 1);
-          formattedDate = parsed.toISOString().split("T")[0];
+          // Use local date format instead of UTC conversion
+          formattedDate = formatDateLocal(parsed);
         }
       }
       reset({
@@ -95,6 +145,8 @@ export function EditScheduleDialog({
         endtime: initialData.endtime,
         course: initialData.course || courseName || "", // Ensure course name is preserved
         teacherId: initialData.teacherId, // Preserve teacherId
+        student: initialData.student || "",
+        nickname: initialData.nickname || "",
       });
     }
   }, [initialData, reset, open, courseName]);
@@ -118,11 +170,17 @@ export function EditScheduleDialog({
   const starttimeRef = useRef<HTMLInputElement>(null);
   const endtimeRef = useRef<HTMLInputElement>(null);
 
-  const onSubmit = (data: EditScheduleFormData) => {
-    console.log("Schedule Updated:", data);
-    console.log("Teacher ID:", data.teacherId); // Log the teacherId to verify it's being captured
-    onSave(data, originalIndex);
-    onOpenChange(false);
+  const onSubmit = async (data: EditScheduleFormData) => {
+    try {
+      console.log("Schedule Updated:", data);
+      console.log("Teacher ID:", data.teacherId); // Log the teacherId to verify it's being captured
+      onSave(data, originalIndex);
+      onOpenChange(false);
+      toast.success("Schedule updated successfully!");
+    } catch (error) {
+      console.error("Error updating schedule:", error);
+      toast.error("Failed to update schedule. Please try again.");
+    }
   };
 
   console.log("teachers:", teachers);
@@ -143,7 +201,7 @@ export function EditScheduleDialog({
               className="flex flex-col gap-2"
               onClick={() => dateRef.current?.showPicker()}
             >
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Date *</Label>
               <div className="relative">
                 <Input
                   id="date"
@@ -153,67 +211,62 @@ export function EditScheduleDialog({
                     dateRHFRef(e);
                     dateRef.current = e;
                   }}
-                  className="border-black"
+                  className={`border-black ${
+                    errors.date ? "border-red-500 focus:border-red-500" : ""
+                  }`}
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
+              {errors.date && (
+                <span className="text-red-500 text-sm">
+                  {errors.date.message}
+                </span>
+              )}
             </div>
 
-            {/* Course */}
+            {/* Course (Read-only) */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="course">Course</Label>
               <div className="relative">
                 <Input
                   id="course"
                   {...register("course")}
-                  placeholder="Search for a course"
-                  className="border-black"
+                  className="border-black bg-gray-100 cursor-not-allowed"
+                  disabled
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
             </div>
 
-            {/*Start Time */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="time">Hello world</Label>
-              <div
-                className="relative"
-                onClick={() => starttimeRef.current?.showPicker()}
-              >
-                <Input
-                  id="starttime"
-                  type="time"
-                  {...register("starttime")}
-                  ref={(e) => {
-                    starttimeRHFRef(e);
-                    starttimeRef.current = e;
-                  }}
-                  className="border-black"
-                />
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
-              </div>
-            </div>
+            {/* Start Time */}
+            <TimeInput
+              label="Start Time"
+              register={register}
+              fieldName="starttime"
+              inputRef={starttimeRef}
+              onClick={() => starttimeRef.current?.showPicker()}
+              error={errors.starttime?.message}
+              required={true}
+              validation={{
+                required: "Start time is required",
+                validate: validateStartTime,
+              }}
+            />
 
             {/* End Time */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="endtime">End Time</Label>
-              <div
-                className="relative"
-                onClick={() => endtimeRef.current?.showPicker()}
-              >
-                <Input
-                  id="endtime"
-                  type="time"
-                  {...register("endtime")}
-                  ref={(e) => {
-                    endtimeRHFRef(e);
-                    endtimeRef.current = e;
-                  }}
-                  className="border-black"
-                />
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
-              </div>
-            </div>
+            <TimeInput
+              label="End Time"
+              register={register}
+              fieldName="endtime"
+              inputRef={endtimeRef}
+              onClick={() => endtimeRef.current?.showPicker()}
+              error={errors.endtime?.message}
+              required={true}
+              validation={{
+                required: "End time is required",
+                validate: validateEndTime,
+              }}
+            />
 
             {/* Teacher */}
             <div className="flex flex-col gap-2">
@@ -246,8 +299,8 @@ export function EditScheduleDialog({
                 <Input
                   id="student"
                   {...register("student")}
-                  className="border-black"
-                  placeholder="Search for a student"
+                  className="border-black bg-gray-100 cursor-not-allowed"
+                  disabled
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
@@ -282,8 +335,8 @@ export function EditScheduleDialog({
               <Input
                 id="nickname"
                 {...register("nickname")}
-                className="border-black"
-                placeholder="Enter nickname"
+                className="border-black bg-gray-100 cursor-not-allowed"
+                disabled
               />
             </div>
 
@@ -293,8 +346,8 @@ export function EditScheduleDialog({
               <Input
                 id="studentId"
                 {...register("studentId")}
-                className="border-black"
-                placeholder="Enter student ID"
+                className="border-black bg-gray-100 cursor-not-allowed"
+                disabled
               />
             </div>
 
@@ -335,6 +388,7 @@ export function EditScheduleDialog({
                 type="button"
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-500 hover:text-white rounded-2xl w-[5rem]"
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
@@ -342,8 +396,9 @@ export function EditScheduleDialog({
             <Button
               type="submit"
               className="bg-yellow-500 text-white hover:bg-yellow-400 rounded-2xl w-[5rem]"
+              disabled={isSubmitting}
             >
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </form>

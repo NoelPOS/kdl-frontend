@@ -21,6 +21,7 @@ interface AssignCourseFlowProps {
   session: SessionOverview;
   studentId: number;
   trigger: React.ReactNode;
+  studentData?: Student; // Add optional student data prop
 }
 
 export type AssignCourseFlowData = {
@@ -34,6 +35,7 @@ export default function AssignCourseFlow({
   session,
   studentId,
   trigger,
+  studentData,
 }: AssignCourseFlowProps) {
   const router = useRouter();
 
@@ -43,10 +45,10 @@ export default function AssignCourseFlow({
   >("closed");
   const [flowData, setFlowData] = useState<AssignCourseFlowData>({});
 
-  // Student data for schedule confirmation
-  const studentData: Student = {
+  // Use provided student data or fallback to default
+  const finalStudentData: Student = studentData || {
     id: studentId.toString(),
-    name: "Student", // You might want to pass actual student name
+    name: "Student",
     nickname: "Student",
   };
 
@@ -130,7 +132,6 @@ export default function AssignCourseFlow({
         courseId={flowData.course?.id}
         onClassTypeSelected={handleClassTypeSelected}
         onBack={handleBack}
-        onCancel={handleCancel}
       />
 
       {/* Step 3: Teacher & Room Selection */}
@@ -151,7 +152,7 @@ export default function AssignCourseFlow({
               course={flowData.course}
               classSchedule={flowData.classSchedule}
               teacherData={flowData.teacherData}
-              students={[studentData]}
+              students={[finalStudentData]}
               onConfirm={handleConfirmSchedule}
               onBack={handleBack}
               onCancel={handleCancel}

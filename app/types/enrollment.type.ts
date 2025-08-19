@@ -27,7 +27,6 @@ export interface SessionGroup {
 
 export interface InvoiceSubmission {
   studentId: number;
-  documentId: string;
   date: string;
   paymentMethod: string;
   totalAmount: number;

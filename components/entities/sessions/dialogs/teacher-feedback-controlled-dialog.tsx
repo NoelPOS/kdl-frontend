@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MessageSquare, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -44,15 +45,15 @@ export default function TeacherFeedbackControlledDialog({
     try {
       await onSubmit(feedback);
       setFeedback("");
+      showToast.success("Feedback submitted successfully!");
       onClose();
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      alert("An error occurred while submitting feedback.");
+      showToast.error("An error occurred while submitting feedback.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">

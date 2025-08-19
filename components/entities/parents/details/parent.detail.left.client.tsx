@@ -148,7 +148,7 @@ export default function ParentDetailClient({
           onClick={handleImageClick}
         >
           <Image
-            src={imagePreview || parent.profilePicture || "./default.png"}
+            src={imagePreview || parent.profilePicture || "/student.png"}
             alt="parent profile"
             width={90}
             height={90}

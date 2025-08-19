@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { showToast } from "@/lib/toast";
 
 // shadcn imports
 import { Button } from "@/components/ui/button";
@@ -270,7 +271,7 @@ export default function ClassScheduleConfirm({
       router.refresh();
     } catch (err) {
       console.error("Error confirming schedule:", err);
-      alert("Failed to confirm schedule. Check console.");
+      showToast.error("Failed to confirm schedule. Check console.");
     }
   };
 
@@ -305,7 +306,7 @@ export default function ClassScheduleConfirm({
           </Button>
           <Button
             onClick={handleConfirmSubmit}
-            className="bg-blue-500 text-white hover:bg-blue-600 rounded-full px-6"
+            className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-6"
           >
             Confirm
           </Button>

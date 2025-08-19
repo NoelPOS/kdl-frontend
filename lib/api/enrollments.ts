@@ -1,5 +1,6 @@
 import { Enrollment } from "@/app/types/enrollment.type";
 import { clientApi, createServerApi } from "./config";
+import { access } from "fs";
 
 export interface EnrollmentFilter {
   date?: string;
@@ -19,9 +20,11 @@ export async function searchEnrollments(query: string): Promise<Enrollment[]> {
 }
 
 export async function fetchSpedificPendingInvoices(
-  sessionId: number | string
+  sessionId: number | string,
+  accessToken?: string
 ): Promise<Enrollment> {
-  const response = await clientApi.get<Enrollment>(
+  const api = await createServerApi(accessToken);
+  const response = await api.get<Enrollment>(
     `/sessions/pending-invoice/${sessionId}`
   );
   return response.data;

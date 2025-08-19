@@ -2,9 +2,10 @@
 import React, { useState } from "react";
 
 import StudentDetailAddCourse from "./student-detail-add-course";
-import AddTeacher from "@/components/entities/courses/dialogs/add-teacher-dialog";
-import ClassScheduleDialog from "@/components/entities/courses/schedule/class-schedule-dialog";
-import ClassScheduleConfirm from "@/components/entities/courses/schedule/class-schedule-confirm";
+import TeacherRoomSelectionDialog from "@/components/entities/students/dialogs/teacher-room-selection-dialog";
+import ClassTypeSelectionDialog from "@/components/entities/students/dialogs/class-type-selection-dialog";
+import ScheduleConfirmationDialog from "@/components/entities/students/dialogs/schedule-confirmation-dialog";
+import { showToast } from "@/lib/toast";
 import {
   ComfirmClassScheduleData,
   Student,
@@ -98,7 +99,7 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
     // console.log("Selected Course: ", course);
     // Validate that course is selected
     if (course.id === -1 || !course.title || course.title.trim() === "") {
-      alert("Please select a course first!");
+      showToast.error("Please select a course first!");
       return;
     }
     setCourseData(course);
@@ -164,37 +165,34 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
         onCancel={handleDialogClose}
         courseData={courseData}
       />
-      <ClassScheduleDialog
+      <ClassTypeSelectionDialog
         open={courseTypeOpen}
-        afterClassSchedule={handleClassScheduleSubmit}
+        courseId={courseData.id}
+        onClassTypeSelected={handleClassScheduleSubmit}
         onBack={goBackToCourse}
+        mode="create"
       />
-      <AddTeacher
+      <TeacherRoomSelectionDialog
         courseId={courseData.id}
         open={teacherOpen}
-        onOpenChange={(open) => {
-          // Only allow closing, prevent manual opening
-          if (!open) {
-            setTeacherOpen(false);
-          }
-        }}
-        afterTeacher={handleTeacherSubmit}
+        onTeacherRoomSelected={handleTeacherSubmit}
         onBack={goBackToSchedule}
         onCancel={handleDialogClose}
+        mode="create"
       />
 
       {confirmOpen && (
         <div className="hide-scrollbar-y fixed inset-0 z-10 overflow-y-scroll bg-white ">
           <div className="bg-white rounded-lg h-full ">
-            <ClassScheduleConfirm
+            <ScheduleConfirmationDialog
               course={courseData}
-              courseName={courseData.title}
-              students={studentData}
               classSchedule={classScheduleData}
               teacherData={teacherData}
+              students={studentData}
               onCancel={handleConfirmCancel}
               onConfirm={handleConfirmSubmit}
               onBack={goBackToTeacher}
+              mode="create"
             />
           </div>
         </div>

@@ -17,8 +17,12 @@ export async function addNewInvoice(
   return response.data;
 }
 
-export async function getInvoiceById(id: number): Promise<Invoice> {
-  const response = await clientApi.get<Invoice>(`/invoices/${id}`);
+export async function getInvoiceById(
+  id: number,
+  accessToken?: string
+): Promise<Invoice> {
+  const api = await createServerApi(accessToken);
+  const response = await api.get<Invoice>(`/invoices/${id}`);
   return response.data;
 }
 

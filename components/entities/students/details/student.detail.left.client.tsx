@@ -28,7 +28,6 @@ export default function StudentDetailClient({
 }: {
   student: Partial<Student>;
 }) {
-  console.log("student", student.profilePicture);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -43,7 +42,7 @@ export default function StudentDetailClient({
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = useForm<StudentFormData>({
     defaultValues: {
       name: student.name || "",
@@ -276,13 +275,13 @@ export default function StudentDetailClient({
           />
         </div>
 
-        {/* <div>
+        <div>
           <Label className="text-xs text-black block">Parent</Label>
           <Input
-            {...register('parent')}
+            {...register("parent")}
             className="bg-white border border-black"
           />
-        </div> */}
+        </div>
 
         <div className="flex items-start space-x-2 pt-2">
           <Checkbox
@@ -323,3 +322,5 @@ export default function StudentDetailClient({
     </div>
   );
 }
+
+// if we update here directly, we can always click udpate or wrongly click and make unnecessary api request right? how about I keep this inputs readonly and then when clicked update student, I will open a dialog and I will do the edit there. in that way, it's better right? for the dialog copy exactly the same.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -73,13 +74,15 @@ export function AddTeacher({
   const onSubmit = (data: FormData) => {
     // Validate required fields
     if (!data.teacher || !data.room) {
-      alert("Please select both teacher and room.");
+      showToast.error("Please select both teacher and room.");
       return;
     }
 
     const selectedTeacher = teachers.find((t) => t.name === data.teacher);
     if (!selectedTeacher) {
-      alert("Selected teacher not found. Please select a valid teacher.");
+      showToast.error(
+        "Selected teacher not found. Please select a valid teacher."
+      );
       return;
     }
 

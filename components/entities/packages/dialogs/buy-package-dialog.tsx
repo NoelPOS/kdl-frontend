@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,6 @@ interface BuyPackageFormData {
 
 export function BuyPackageDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [classOptions, setClassOptions] = useState<any[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,7 +40,7 @@ export function BuyPackageDialog() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<BuyPackageFormData>({
     defaultValues: {
       selectedStudentId: 0,
@@ -95,7 +95,7 @@ export function BuyPackageDialog() {
 
   const onSubmit = async (data: BuyPackageFormData) => {
     if (!data.selectedStudentId || !data.selectedClassOptionId) {
-      alert("Please select a student and class option.");
+      showToast.error("Please select a student and class option.");
       return;
     }
 
@@ -104,11 +104,11 @@ export function BuyPackageDialog() {
     });
 
     if (!selectedClassOption) {
-      alert("Please select a valid class option.");
+      showToast.error("Please select a valid class option.");
       return;
     }
 
-    setIsLoading(true);
+    const toastId = showToast.loading("Purchasing package...");
     try {
       const request = {
         studentId: data.selectedStudentId,
@@ -121,20 +121,22 @@ export function BuyPackageDialog() {
       } as PackagePurchaseRequest;
 
       const success = await purchasePackage(request);
+
+      showToast.dismiss(toastId);
+
       if (success) {
         setIsOpen(false);
         reset();
         setSearchQuery("");
         router.refresh(); // Refresh to show updated data
-        alert("Package purchased successfully!");
+        showToast.success("Package purchased successfully!");
       } else {
-        alert("Failed to purchase package. Please try again.");
+        showToast.error("Failed to purchase package. Please try again.");
       }
     } catch (error) {
+      showToast.dismiss(toastId);
       console.error("Error purchasing package:", error);
-      alert("An error occurred while purchasing the package.");
-    } finally {
-      setIsLoading(false);
+      showToast.error("An error occurred while purchasing the package.");
     }
   };
 
@@ -237,16 +239,16 @@ export function BuyPackageDialog() {
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
-              className="bg-yellow-500 hover:bg-yellow-600"
+              disabled={isSubmitting}
+              className="bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Purchasing...

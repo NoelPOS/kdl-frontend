@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +40,6 @@ export function ConnectParentStudentDialog({
   onSuccess,
 }: ConnectParentStudentDialogProps) {
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     control,
@@ -47,7 +47,7 @@ export function ConnectParentStudentDialog({
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
     defaultValues: {
       students: [
@@ -114,11 +114,12 @@ export function ConnectParentStudentDialog({
     );
 
     if (!isValid) {
-      alert("Please fill in all required fields for all students.");
+      showToast.error("Please fill in all required fields for all students.");
       return;
     }
 
-    setIsLoading(true);
+    const toastId = showToast.loading("Connecting students to parent...");
+
     try {
       // Connect each student to the parent
       for (const student of data.students) {
@@ -140,13 +141,14 @@ export function ConnectParentStudentDialog({
         ],
       });
 
+      showToast.dismiss(toastId);
+      showToast.success("Students connected successfully!");
       setOpen(false);
       onSuccess?.();
     } catch (error) {
+      showToast.dismiss(toastId);
       console.error("Failed to connect students:", error);
-      alert("Failed to connect students. Please try again.");
-    } finally {
-      setIsLoading(false);
+      showToast.error("Failed to connect students. Please try again.");
     }
   };
 
@@ -301,10 +303,17 @@ export function ConnectParentStudentDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
+                disabled={isSubmitting}
+                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1 disabled:opacity-50"
               >
-                {isLoading ? "Connecting..." : "Connect"}
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Connecting...
+                  </>
+                ) : (
+                  "Connect"
+                )}
               </Button>
             </DialogFooter>
           </form>

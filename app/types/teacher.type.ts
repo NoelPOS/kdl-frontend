@@ -7,4 +7,5 @@ export type Teacher = {
   address: string;
   profilePicture: string;
   profileKey: string;
+  password: string;
 };

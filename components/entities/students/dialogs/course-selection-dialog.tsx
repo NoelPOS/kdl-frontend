@@ -140,7 +140,7 @@ export default function CourseSelectionDialog({
               </DialogClose>
               <Button
                 type="submit"
-                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
+                className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1"
                 disabled={!selectedCourse}
               >
                 Select

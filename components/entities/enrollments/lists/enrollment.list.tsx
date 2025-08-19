@@ -1,7 +1,6 @@
 import React from "react";
 import { EnrollmentTableWithSelection } from "../tables/enrollment-table";
 import { fetchEnrollments, EnrollmentFilter } from "@/lib/api";
-import { Enrollment } from "@/app/types/enrollment.type";
 import { Pagination } from "@/components/ui/pagination";
 import { cookies } from "next/headers";
 
@@ -40,11 +39,6 @@ export default async function EnrollmentList({
     10,
     accessToken
   );
-
-  // console.log("Enrollment List Data:", {
-  //   enrollments,
-  //   pagination,
-  // });
 
   return (
     <div className="space-y-6">

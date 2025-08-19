@@ -23,13 +23,17 @@ export interface ConnectParentStudentData {
 // Client-side functions
 export async function searchParents(query: string): Promise<Parent[]> {
   const response = await clientApi.get<Parent[]>(
-    `/parents/search?name=${encodeURIComponent(query)}`
+    `/parents?name=${encodeURIComponent(query)}`
   );
   return response.data;
 }
 
-export async function getParentById(id: number): Promise<Partial<Parent>> {
-  return clientApi.get(`/parents/${id}`).then((res) => res.data);
+export async function getParentById(
+  id: number,
+  accessToken?: string
+): Promise<Partial<Parent>> {
+  const api = accessToken ? await createServerApi(accessToken) : clientApi;
+  return api.get(`/parents/${id}`).then((res) => res.data);
 }
 
 export async function updateParentById(id: number, data: Partial<Parent>) {

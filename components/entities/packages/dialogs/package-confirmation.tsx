@@ -28,7 +28,7 @@ import {
   ConflictDetail,
 } from "@/app/types/course.type";
 import { checkScheduleConflicts } from "@/lib/api";
-import { DAYS_OF_WEEK } from "@/lib/utils";
+import { DAYS_OF_WEEK, formatDateLocal } from "@/lib/utils";
 
 interface PackageScheduleData {
   classMode: string;
@@ -141,7 +141,7 @@ export function PackageConfirmation({
             );
             if (dayOfWeek && schedule.days.includes(dayOfWeek.key)) {
               rows.push({
-                date: date.toISOString().split("T")[0],
+                date: formatDateLocal(date),
                 time: `${formatTime(schedule.startTime)} - ${formatTime(
                   schedule.endTime
                 )}`,
@@ -218,7 +218,7 @@ export function PackageConfirmation({
             );
             if (dayOfWeek && schedule.days.includes(dayOfWeek.key)) {
               rows.push({
-                date: date.toISOString().split("T")[0],
+                date: formatDateLocal(date),
                 time: `${formatTime(schedule.startTime)} - ${formatTime(
                   schedule.endTime
                 )}`,

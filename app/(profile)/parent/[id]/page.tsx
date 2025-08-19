@@ -1,6 +1,7 @@
 import ParentDetail from "@/components/entities/parents/details/parent.detail.left";
 import ParentDetailRight from "@/components/entities/parents/details/parent-detail-right";
 import { getParentById } from "@/lib/api";
+import { cookies } from "next/headers";
 
 export default async function ParentDetailPage({
   params,
@@ -12,9 +13,11 @@ export default async function ParentDetailPage({
     page?: string;
   }>;
 }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value || "";
   const { id } = await params;
   const resolvedSearchParams = (await searchParams) || {};
-  const parent = await getParentById(Number(id));
+  const parent = await getParentById(Number(id), accessToken);
 
   console.log("ParentDetailPage", parent);
 

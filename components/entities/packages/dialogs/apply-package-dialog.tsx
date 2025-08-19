@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
 import { Gift } from "lucide-react";
 import { Package } from "@/app/types/package.type";
 import { applyPackage } from "@/lib/api";
-import ClassScheduleConfirm from "@/components/entities/courses/schedule/class-schedule-confirm";
+import ScheduleConfirmationDialog from "@/components/entities/students/dialogs/schedule-confirmation-dialog";
 
 // Create simplified components for package application
 import { PackageCourseSelection } from "../selection/package-course-selection";
@@ -166,10 +167,13 @@ export function ApplyPackageDialog({ package: pkg }: ApplyPackageDialogProps) {
 
   // Handle final confirmation
   const handleConfirmSubmit = async () => {
+    const toastId = showToast.loading("Applying package...");
+
     try {
       if (!selectedCourse) {
         console.warn("No course selected for package application");
-        alert("Error: No course selected. Please try again.");
+        showToast.dismiss(toastId);
+        showToast.error("Error: No course selected. Please try again.");
         return;
       }
 
@@ -184,12 +188,18 @@ export function ApplyPackageDialog({ package: pkg }: ApplyPackageDialogProps) {
 
       if (!packageUpdated) {
         console.warn("Failed to apply package");
-        alert("Warning: Package may not have been applied properly.");
+        showToast.dismiss(toastId);
+        showToast.warning(
+          "Warning: Package may not have been applied properly."
+        );
+        return;
       }
 
+      showToast.dismiss(toastId);
       setOpen(false);
       resetAllData();
-      alert(
+
+      showToast.success(
         "Package applied successfully! Session created and package marked as used."
       );
 
@@ -198,8 +208,11 @@ export function ApplyPackageDialog({ package: pkg }: ApplyPackageDialogProps) {
         window.location.reload();
       }
     } catch (error) {
+      showToast.dismiss(toastId);
       console.error("Error applying package:", error);
-      alert("There was an error applying the package. Please try again.");
+      showToast.error(
+        "There was an error applying the package. Please try again."
+      );
     }
   };
 
@@ -290,8 +303,7 @@ export function ApplyPackageDialog({ package: pkg }: ApplyPackageDialogProps) {
         teacherData && (
           <div className="hide-scrollbar-y fixed inset-0 z-50 overflow-y-scroll bg-white">
             <div className="bg-white rounded-lg h-full">
-              <ClassScheduleConfirm
-                courseName={selectedCourse.title}
+              <ScheduleConfirmationDialog
                 course={{
                   id: selectedCourse.id,
                   title: selectedCourse.title,
@@ -302,6 +314,7 @@ export function ApplyPackageDialog({ package: pkg }: ApplyPackageDialogProps) {
                   pkg.classMode
                 )}
                 teacherData={teacherData}
+                mode="create"
                 isFromPackage={true}
                 packageId={pkg.id}
                 onCancel={() => {

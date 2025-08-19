@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { showToast } from "@/lib/toast";
 import {
   Select,
   SelectContent,
@@ -67,7 +68,7 @@ export function PackageTeacherSelection({
 
   const handleNext = () => {
     if (!selectedTeacher || !room.trim()) {
-      alert("Please select a teacher and enter a room.");
+      showToast.error("Please select a teacher and enter a room.");
       return;
     }
 

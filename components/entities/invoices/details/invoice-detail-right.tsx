@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { showToast } from "@/lib/toast";
 import {
   Table,
   TableHeader,
@@ -18,14 +19,11 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Receipt } from "lucide-react";
-
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/app/types/invoice.type";
 import { changeSessionStatus, createReceipt } from "@/lib/api";
 
 const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
-  console.log("Invoice Detail Right Component Rendered", invoice);
   const router = useRouter();
 
   const handleConfirmPayment = async (invoiceId: number) => {
@@ -34,18 +32,10 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
 
       // Handle multiple sessions if sessionGroups exists (new structure)
       if (invoice.sessionGroups && invoice.sessionGroups.length > 0) {
-        console.log(
-          "Processing multiple sessions from sessionGroups:",
-          invoice.sessionGroups
-        );
-
         for (const sessionGroup of invoice.sessionGroups) {
           const { sessionId } = sessionGroup;
-          console.log("Processing session id:", sessionId);
-
           // Use the unified changeSessionStatus function that handles both course and courseplus
           const success = await changeSessionStatus(sessionId, "paid");
-          console.log(`Updated session ${sessionId}:`, success);
           updateResults.push(success);
         }
       }
@@ -57,19 +47,20 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
 
       if (!allUpdatesSuccessful) {
         console.error("Some session status updates failed:", updateResults);
-        alert("Some session status updates failed. Please try again.");
+        showToast.error(
+          "Some session status updates failed. Please try again."
+        );
         return;
       }
 
-      console.log("All session statuses updated successfully");
-
       // Create receipt after all statuses are updated
       const result = await createReceipt(invoiceId);
-      console.log("Receipt created successfully:", result);
+      showToast.success("Payment confirmed successfully!");
       router.push("/invoices");
     } catch (error) {
-      console.error("Error creating receipt:", error);
-      alert("Error processing payment confirmation. Please try again.");
+      showToast.error(
+        "Error processing payment confirmation. Please try again."
+      );
     }
   };
   return (
@@ -77,22 +68,18 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
       {/* Component Title */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Invoice Details</h1>
-        <p className="text-gray-600 mt-1">
-          View and manage invoice for {invoice.studentName || "N/A"} -{" "}
-          {invoice.courseName || "N/A"}
-        </p>
       </div>
 
       <div className="flex items-center justify-between flex-1/5">
         <div className="flex flex-col">
           <p className="text-lg ">Document Id: {invoice.documentId}</p>
           <p className="text-lg">
-            Date: {new Date(invoice.date).toLocaleDateString()}
+            Date: {new Date(invoice.date).toLocaleDateString("en-GB")}
           </p>
         </div>
       </div>
 
-      <div className="flex-3/5">
+      <div className="flex-3/5 py-4">
         <Table className=" bg-white rounded-2xl ">
           <TableHeader>
             <TableRow>
@@ -116,7 +103,7 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   {item.description}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal text-red-600">
+                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal ">
                   {item.amount}
                 </TableCell>
               </TableRow>

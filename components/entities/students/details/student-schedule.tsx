@@ -108,7 +108,7 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
       <ScheduleTable
         schedules={schedules}
         handleRowDoubleClick={handleRowDoubleClick}
-        showStudentHeader={true}
+        showStudentHeader={false}
       />
     </div>
   );

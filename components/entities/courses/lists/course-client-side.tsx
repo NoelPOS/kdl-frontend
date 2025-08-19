@@ -4,10 +4,10 @@
 import { useState } from "react";
 
 // components import
-import AddTeacher from "../dialogs/add-teacher-dialog";
+import TeacherRoomSelectionDialog from "@/components/entities/students/dialogs/teacher-room-selection-dialog";
 import AddStudent from "../dialogs/add-student-dialog";
-import ClassScheduleForm from "../schedule/class-schedule-dialog";
-import ClassScheduleConfirm from "../schedule/class-schedule-confirm";
+import ClassTypeSelectionDialog from "@/components/entities/students/dialogs/class-type-selection-dialog";
+import ScheduleConfirmationDialog from "@/components/entities/students/dialogs/schedule-confirmation-dialog";
 import { CourseCard } from "../cards/course-card";
 import { Pagination } from "@/components/ui/pagination";
 
@@ -176,20 +176,20 @@ function CourseClientSide({
           onSubmit={handleStudentSubmit}
           onCancel={handleDialogClose}
         />
-        <ClassScheduleForm
+        <ClassTypeSelectionDialog
           open={courseTypeOpen}
-          // onOpenChange={setCourseTypeOpen}
-          afterClassSchedule={handleClassScheduleSubmit}
+          courseId={courseId}
+          onClassTypeSelected={handleClassScheduleSubmit}
           onBack={goBackToStudents}
-          // onCancel={handleDialogClose}
+          mode="create"
         />
-        <AddTeacher
+        <TeacherRoomSelectionDialog
           courseId={courseId}
           open={teacherOpen}
-          onOpenChange={setTeacherOpen}
-          afterTeacher={handleTeacherSubmit}
+          onTeacherRoomSelected={handleTeacherSubmit}
           onBack={goBackToSchedule}
           onCancel={handleDialogClose}
+          mode="create"
         />
         {courses.length > 0 &&
           courses.map((course: Course, index: number) => (
@@ -220,8 +220,7 @@ function CourseClientSide({
       {confirmOpen && (
         <div className="hide-scrollbar-y fixed inset-0 z-10 overflow-y-scroll bg-white ">
           <div className="bg-white rounded-lg h-full ">
-            <ClassScheduleConfirm
-              courseName={courseName}
+            <ScheduleConfirmationDialog
               course={{
                 id: courseId,
                 title: courseName,
@@ -232,6 +231,7 @@ function CourseClientSide({
               onCancel={handleConfirmCancel}
               onConfirm={handleConfirmSubmit}
               onBack={goBackToTeacher}
+              mode="create"
             />
           </div>
         </div>

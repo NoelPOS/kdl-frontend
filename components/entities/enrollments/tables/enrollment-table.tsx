@@ -1,6 +1,7 @@
 "use client";
 
 import { Enrollment } from "@/app/types/enrollment.type";
+import { showToast } from "@/lib/toast";
 import {
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 export function EnrollmentTableWithSelection({
@@ -22,7 +23,17 @@ export function EnrollmentTableWithSelection({
   const [selectedEnrollments, setSelectedEnrollments] = useState<Set<number>>(
     new Set()
   );
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
+    null
+  );
   const router = useRouter();
+
+  // Build a map for O(1) lookup session_id -> enrollment
+  const enrollmentMap = useMemo(() => {
+    const map = new Map<number, Enrollment>();
+    enrollments.forEach((e) => map.set(e.session_id, e));
+    return map;
+  }, [enrollments]);
 
   const handleSelection = (
     sessionId: number,
@@ -33,29 +44,24 @@ export function EnrollmentTableWithSelection({
       const newSet = new Set(prev);
 
       if (isChecked) {
-        // If selecting, check if we can select this student
-        const currentStudentIds = Array.from(prev).map((id) => {
-          const enrollment = enrollments.find((e) => e.session_id === id);
-          return enrollment?.student_id;
-        });
-
-        // Remove undefined values and check if there are other students
-        const validStudentIds = currentStudentIds.filter(
-          (id) => id !== undefined
-        );
-        const hasOtherStudents =
-          validStudentIds.length > 0 &&
-          validStudentIds.some((id) => id !== studentId);
-
-        if (hasOtherStudents) {
-          // Can't select different students
-          alert("You can only select enrollments from the same student.");
-          return prev;
+        // If no student selected yet, lock selection to this student
+        if (selectedStudentId === null) {
+          setSelectedStudentId(studentId);
+          newSet.add(sessionId);
+        } else if (selectedStudentId === studentId) {
+          newSet.add(sessionId);
+        } else {
+          showToast.error(
+            "You can only select enrollments from the same student."
+          );
+          return prev; // unchanged
         }
-
-        newSet.add(sessionId);
       } else {
         newSet.delete(sessionId);
+        // If none left, reset studentId lock
+        if (newSet.size === 0) {
+          setSelectedStudentId(null);
+        }
       }
 
       return newSet;
@@ -63,23 +69,14 @@ export function EnrollmentTableWithSelection({
   };
 
   const handleCreateInvoiceForSelected = () => {
-    if (selectedEnrollments.size === 0) {
-      alert("Please select at least one enrollment.");
-      return;
-    }
+    if (selectedEnrollments.size === 0) return;
 
     const selectedArray = Array.from(selectedEnrollments);
-    const firstEnrollment = enrollments.find(
-      (e) => e.session_id === selectedArray[0]
-    );
-
+    const firstEnrollment = enrollmentMap.get(selectedArray[0]);
     if (!firstEnrollment) return;
 
-    // Create URL with query parameters instead of dynamic route
     const sessionIds = selectedArray.join(",");
-    const queryParams = new URLSearchParams({
-      sessionIds: sessionIds,
-    });
+    const queryParams = new URLSearchParams({ sessionIds });
 
     router.push(
       `/enrollment/${
@@ -88,34 +85,15 @@ export function EnrollmentTableWithSelection({
     );
   };
 
-  // Get current selected student info
-  const getSelectedStudentInfo = () => {
-    if (selectedEnrollments.size === 0) return null;
-
-    const firstSelected = Array.from(selectedEnrollments)[0];
-    const enrollment = enrollments.find((e) => e.session_id === firstSelected);
-    return enrollment;
-  };
-
-  const selectedStudentInfo = getSelectedStudentInfo();
-
   return (
     <div className="space-y-4">
       {/* Action Bar */}
       {selectedEnrollments.size > 0 && (
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-blue-900">
-                {selectedEnrollments.size} enrollment(s) selected
-              </span>
-              {selectedStudentInfo && (
-                <span className="text-sm text-blue-700">
-                  Student: {selectedStudentInfo.student_name} (ID:{" "}
-                  {selectedStudentInfo.student_id})
-                </span>
-              )}
-            </div>
+            <span className="text-sm font-medium text-blue-900">
+              {selectedEnrollments.size} enrollment(s) selected
+            </span>
             <Button
               onClick={handleCreateInvoiceForSelected}
               className="bg-yellow-500 hover:bg-yellow-600 text-white"
@@ -129,22 +107,22 @@ export function EnrollmentTableWithSelection({
       <Table className="bg-white table-fixed rounded-2xl">
         <TableHeader>
           <TableRow>
-            <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-16">
+            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-16">
               No.
             </TableHead>
-            <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-32">
+            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-32">
               Date
             </TableHead>
-            <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
+            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold">
               Student Name
             </TableHead>
-            <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
+            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold">
               Description
             </TableHead>
-            <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-32">
+            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-32">
               Amount
             </TableHead>
-            <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-20">
+            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-20">
               Select
             </TableHead>
           </TableRow>
@@ -152,28 +130,29 @@ export function EnrollmentTableWithSelection({
         <TableBody>
           {enrollments.map((enrollment, index) => {
             const isSelected = selectedEnrollments.has(enrollment.session_id);
-
             return (
               <TableRow
                 key={enrollment.session_id}
                 className={isSelected ? "bg-blue-50" : ""}
               >
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                <TableCell className="border-2 h-20 border-gray-300 text-center">
                   {index + 1}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                  {new Date(enrollment.session_createdat).toLocaleDateString()}
+                <TableCell className="border-2 h-20 border-gray-300 text-center">
+                  {new Date(enrollment.session_createdat).toLocaleDateString(
+                    "en-GB"
+                  )}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                <TableCell className="border-2 h-20 border-gray-300 text-center">
                   {enrollment.student_name}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                <TableCell className="border-2 h-20 border-gray-300 text-center">
                   {enrollment.course_title}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                <TableCell className="border-2 h-20 border-gray-300 text-center">
                   {enrollment.classoption_tuitionfee}
                 </TableCell>
-                <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
+                <TableCell className="border-2 h-20 border-gray-300 text-center">
                   <div className="flex justify-center">
                     <Checkbox
                       checked={isSelected}
@@ -181,7 +160,7 @@ export function EnrollmentTableWithSelection({
                         handleSelection(
                           enrollment.session_id,
                           enrollment.student_id,
-                          checked as boolean
+                          Boolean(checked)
                         )
                       }
                     />

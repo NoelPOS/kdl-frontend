@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -74,13 +75,15 @@ export default function TeacherRoomSelectionDialog({
   const onSubmit = (data: FormData) => {
     // Validate required fields
     if (!data.teacher || !data.room) {
-      alert("Please select both teacher and room.");
+      showToast.error("Please select both teacher and room.");
       return;
     }
 
     const selectedTeacher = teachers.find((t) => t.name === data.teacher);
     if (!selectedTeacher) {
-      alert("Selected teacher not found. Please select a valid teacher.");
+      showToast.error(
+        "Selected teacher not found. Please select a valid teacher."
+      );
       return;
     }
 
@@ -96,7 +99,7 @@ export default function TeacherRoomSelectionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onCancel()}>
+    <Dialog open={open}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Select Teacher & Room</DialogTitle>
@@ -170,9 +173,6 @@ export default function TeacherRoomSelectionDialog({
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onBack}>
               Back
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
             </Button>
             <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600">
               Next

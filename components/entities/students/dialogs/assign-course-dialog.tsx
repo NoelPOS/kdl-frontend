@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -129,7 +130,7 @@ export default function AssignCourseDialog({
 
       console.log("Course assigned successfully!");
       const selectedCourse = courses.find((c) => c.id === data.courseId);
-      alert(
+      showToast.success(
         `Successfully assigned ${selectedCourse?.title} to the student session!`
       );
 
@@ -139,7 +140,7 @@ export default function AssignCourseDialog({
       router.refresh();
     } catch (error) {
       console.error("Error assigning course:", error);
-      alert("Error assigning course. Please try again.");
+      showToast.error("Error assigning course. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -38,7 +38,11 @@ export default async function StudentSessionsContent({
 
   return (
     <>
-      <StudentSessionList sessions={sessions} pagination={pagination} />
+      <StudentSessionList
+        sessions={sessions}
+        student={student}
+        pagination={pagination}
+      />
     </>
   );
 }

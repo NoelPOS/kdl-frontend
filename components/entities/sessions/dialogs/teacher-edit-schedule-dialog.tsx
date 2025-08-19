@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FormData } from "@/app/types/schedule.type";
 import { updateSchedule } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -138,15 +139,14 @@ export default function TeacherEditScheduleDialog({
 
       // Optional: Show success message
       console.log("Schedule updated successfully");
+      showToast.success("Schedule updated successfully!");
     } catch (error) {
       console.error("Error updating schedule:", error);
-      // Optional: Show error message
-      alert("Failed to update schedule. Please try again.");
+      showToast.error("Failed to update schedule. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">

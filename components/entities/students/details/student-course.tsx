@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SessionOverview } from "@/app/types/session.type";
+import { Student } from "@/app/types/course.type";
 import { CoursePlusDialog } from "../dialogs/course-plus.dialog";
 import AssignCourseFlow from "../dialogs/assign-course-flow";
 
 interface StudentCourseProps {
   course: SessionOverview;
+  student?: Student; // Add optional student data prop
 }
 
-export function StudentCourse({ course }: StudentCourseProps) {
+export function StudentCourse({ course, student }: StudentCourseProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const router = useRouter();
@@ -22,44 +24,8 @@ export function StudentCourse({ course }: StudentCourseProps) {
     router.push(`/student/${params.id}/session/${sessionId}`);
   };
 
-  // Helper function to get status display name
-  const getStatusDisplay = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return "Completed";
-      case "wip":
-      case "in-progress":
-        return "In Progress";
-      case "pending":
-        return "Pending";
-      case "cancelled":
-        return "Cancelled";
-      default:
-        return status || "Unknown";
-    }
-  };
-
-  // Helper function to get status color classes
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return "bg-blue-400 text-blue-900";
-      case "wip":
-      case "in-progress":
-        return "bg-orange-400 text-orange-900";
-      case "pending":
-        return "bg-yellow-400 text-yellow-900";
-      case "cancelled":
-        return "bg-red-400 text-red-900";
-      default:
-        return "bg-gray-400 text-gray-900";
-    }
-  };
-
   // Check if this is a TBC (To Be Confirmed) course
-  const isTBCCourse =
-    course.courseTitle?.toLowerCase() === "tbc" ||
-    course.courseTitle?.toLowerCase() === "to be confirmed";
+  const isTBCCourse = course.courseTitle?.toLowerCase() === "tbc";
 
   return (
     <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[350px] max-h-[400px] w-[250px]">
@@ -120,6 +86,7 @@ export function StudentCourse({ course }: StudentCourseProps) {
               <AssignCourseFlow
                 session={course}
                 studentId={Number(params.id)}
+                studentData={student}
                 trigger={
                   <Button className="bg-green-500 hover:bg-green-600 text-white w-full">
                     <BookOpen className="h-4 w-4 mr-2" />

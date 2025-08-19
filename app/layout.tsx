@@ -5,6 +5,7 @@ import "./globals.css";
 import AuthProvider from "@/context/auth.context";
 import AuthGuard from "@/components/auth/auth-guard";
 import NProgressProvider from "@/components/layout/nprogress-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ const RootLayout = ({
         <AuthProvider>
           <AuthGuard>{children}</AuthGuard>
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

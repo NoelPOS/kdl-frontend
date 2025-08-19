@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,6 @@ interface AddBlankCoursesFormData {
 export default function AddBlankCoursesDialog() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
@@ -39,7 +39,7 @@ export default function AddBlankCoursesDialog() {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<AddBlankCoursesFormData>({
     defaultValues: {
       selectedStudentId: 0,
@@ -81,7 +81,7 @@ export default function AddBlankCoursesDialog() {
 
   const onSubmit = async (data: AddBlankCoursesFormData) => {
     if (!data.selectedStudentId) {
-      alert("Please select a student.");
+      showToast.error("Please select a student.");
       return;
     }
 
@@ -90,11 +90,9 @@ export default function AddBlankCoursesDialog() {
       data.numberOfCourses < 1 ||
       data.numberOfCourses > 50
     ) {
-      alert("Please enter a valid number of courses (1-50).");
+      showToast.error("Please enter a valid number of courses (1-50).");
       return;
     }
-
-    setIsLoading(true);
 
     try {
       // Get the selected student info
@@ -136,7 +134,7 @@ export default function AddBlankCoursesDialog() {
 
       // Success feedback
       console.log("All blank course sessions created successfully!");
-      alert(
+      showToast.success(
         `Successfully created ${data.numberOfCourses} blank course sessions for ${selectedStudent?.name}`
       );
 
@@ -151,9 +149,9 @@ export default function AddBlankCoursesDialog() {
       router.refresh();
     } catch (error) {
       console.error("Error creating blank course sessions:", error);
-      alert("Error creating blank course sessions. Please try again.");
-    } finally {
-      setIsLoading(false);
+      showToast.error(
+        "Error creating blank course sessions. Please try again."
+      );
     }
   };
 
@@ -262,16 +260,16 @@ export default function AddBlankCoursesDialog() {
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-yellow-500 hover:bg-yellow-600"
-              disabled={isLoading}
+              className="bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50"
+              disabled={isSubmitting}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Creating Sessions...

@@ -53,13 +53,10 @@ export default async function StudentSessionsPage({
 
   // Fetch all sessions for the selected session IDs
   const sessions = await Promise.all(
-    sessionIdArray.map((sessionId) => fetchSpedificPendingInvoices(sessionId))
+    sessionIdArray.map((sessionId) =>
+      fetchSpedificPendingInvoices(sessionId, accessToken)
+    )
   );
-
-  console.log("Multiple Sessions Data: ", {
-    sessionIdArray,
-    sessions,
-  });
 
   return (
     <div className="relative">

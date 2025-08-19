@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/toast";
 import {
   Table,
   TableBody,
@@ -40,7 +41,7 @@ import { generateScheduleRows } from "@/lib/utils";
 import EditScheduleDialog from "../../courses/schedule/class-schedule-confirm-edit";
 
 interface ScheduleConfirmationDialogProps {
-  course?: Course;
+  course?: Pick<Course, "id" | "title">;
   classSchedule?: ComfirmClassScheduleData;
   teacherData?: TeacherData;
   students: Student[];
@@ -49,6 +50,9 @@ interface ScheduleConfirmationDialogProps {
   onCancel: () => void;
   mode?: "create" | "assign";
   session?: SessionOverview; // Optional for assign mode
+  // Package-related props
+  isFromPackage?: boolean;
+  packageId?: number;
 }
 
 // Helper function to generate conflict warning message
@@ -85,6 +89,8 @@ export default function ScheduleConfirmationDialog({
   onCancel,
   mode = "create",
   session,
+  isFromPackage = false,
+  packageId,
 }: ScheduleConfirmationDialogProps) {
   const router = useRouter();
   const [scheduleRows, setScheduleRows] = useState<ComfirmScheduleRow[]>([]);
@@ -224,6 +230,12 @@ export default function ScheduleConfirmationDialog({
 
     setIsSubmitting(true);
 
+    const loadingMessage =
+      mode === "assign"
+        ? "Assigning course and creating schedules..."
+        : "Creating sessions and schedules...";
+    const toastId = showToast.loading(loadingMessage);
+
     try {
       const sessionsMap: Record<string, number> = {};
 
@@ -261,9 +273,10 @@ export default function ScheduleConfirmationDialog({
               teacherData.teacherId === -1 ? undefined : teacherData.teacherId,
             classOptionId: Number(classSchedule.classType.id),
             classCancel: 0,
-            payment: "Unpaid",
+            payment: isFromPackage ? "Paid" : "Unpaid",
             status: "Pending",
-            isFromPackage: false,
+            isFromPackage: isFromPackage,
+            packageId: packageId,
           });
           sessionsMap[student.id] = newSession.id;
         }
@@ -304,12 +317,14 @@ export default function ScheduleConfirmationDialog({
 
       console.log("Schedules created successfully");
 
+      showToast.dismiss(toastId);
+
       const successMessage =
         mode === "assign"
           ? `Successfully assigned ${course.title} to the session and created schedules!`
           : `Successfully created sessions and schedules for ${course.title}!`;
 
-      alert(successMessage);
+      showToast.success(successMessage);
 
       onConfirm();
       router.refresh();
@@ -320,7 +335,7 @@ export default function ScheduleConfirmationDialog({
           ? "Failed to update session and create schedules. Check console for details."
           : "Failed to create sessions and schedules. Check console for details.";
 
-      alert(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -353,17 +368,17 @@ export default function ScheduleConfirmationDialog({
           >
             Back
           </Button>
-          <Button
+          {/* <Button
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
             className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600 rounded-full px-6"
           >
             Cancel
-          </Button>
+          </Button> */}
           <Button
             onClick={handleConfirmSubmit}
-            className="bg-blue-500 text-white hover:bg-blue-600 rounded-full px-6"
+            className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-6"
             disabled={isSubmitting || scheduleRows.length === 0}
           >
             {isSubmitting
