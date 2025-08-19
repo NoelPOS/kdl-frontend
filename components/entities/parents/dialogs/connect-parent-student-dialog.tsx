@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
 
 import { searchStudents, connectParentToStudent } from "@/lib/api";
-import { searchStudents, connectParentToStudent } from "@/lib/api";
 import { Student } from "@/app/types/student.type";
 
 interface StudentFormData {

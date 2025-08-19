@@ -21,7 +21,6 @@ import {
   checkScheduleConflict,
   checkScheduleConflicts,
 } from "@/lib/api";
-} from "@/lib/api";
 
 // component import
 import EditScheduleDialog from "./class-schedule-confirm-edit";

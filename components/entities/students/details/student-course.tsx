@@ -1,14 +1,12 @@
 "use client";
 
 import { Info, Tablet, Plus, BookOpen } from "lucide-react";
-import { Info, Tablet, Plus, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SessionOverview } from "@/app/types/session.type";
 import { Student } from "@/app/types/course.type";
 import { CoursePlusDialog } from "../dialogs/course-plus.dialog";
-import AssignCourseFlow from "../dialogs/assign-course-flow";
 import AssignCourseFlow from "../dialogs/assign-course-flow";
 
 interface StudentCourseProps {
@@ -49,7 +47,6 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
                 className={`px-2 py-1 rounded-md text-xs font-medium ${
                   course.payment === "Unpaid"
                     ? "bg-yellow-400 text-yellow-900"
-                    : "bg-blue-400 text-blue-900"
                     : "bg-blue-400 text-blue-900"
                 }`}
               >

@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { completeSession } from "@/lib/api";
-import { completeSession } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/lib/toast";
 

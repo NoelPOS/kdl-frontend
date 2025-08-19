@@ -12,10 +12,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 
 import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
-import { getCourseTypes } from "@/lib/api";
 import { getCourseTypes } from "@/lib/api";
 import { ClassOption, ComfirmClassScheduleData } from "@/app/types/course.type";
 import {

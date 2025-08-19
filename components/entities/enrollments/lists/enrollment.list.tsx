@@ -3,7 +3,6 @@ import { EnrollmentTableWithSelection } from "../tables/enrollment-table";
 import { fetchEnrollments, EnrollmentFilter } from "@/lib/api";
 import { Pagination } from "@/components/ui/pagination";
 import { cookies } from "next/headers";
-import { cookies } from "next/headers";
 
 export default async function EnrollmentList({
   date,
@@ -22,9 +21,6 @@ export default async function EnrollmentList({
   transactionType: string;
   page?: number;
 }) {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
