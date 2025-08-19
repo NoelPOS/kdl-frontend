@@ -153,7 +153,7 @@ export async function changeSessionStatus(
       endpoint = `/courseplus/${actualId}`;
     } else {
       actualId = sessionIdStr;
-      endpoint = `/sessions/${actualId}`;
+      endpoint = `/sessions/${actualId}/status`;
     }
 
     const response = await clientApi.patch(endpoint, { status });

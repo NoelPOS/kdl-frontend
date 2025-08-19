@@ -2,8 +2,12 @@ import { Discount } from "@/app/types/discount.type";
 import { clientApi, createServerApi } from "./config";
 
 // Client-side functions
-export async function searchDiscounts(query: string): Promise<Discount[]> {
-  const response = await clientApi.get<Discount[]>(
+export async function searchDiscounts(
+  query: string,
+  accessToken?: string
+): Promise<Discount[]> {
+  const api = accessToken ? await createServerApi(accessToken) : clientApi;
+  const response = await api.get<Discount[]>(
     `/discounts/search/${encodeURIComponent(query)}`
   );
   console.log("Discounts searched:", response.data);

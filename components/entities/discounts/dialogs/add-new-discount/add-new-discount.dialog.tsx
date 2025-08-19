@@ -17,6 +17,7 @@ import { Plus } from "lucide-react";
 import { useRef } from "react";
 import { addNewDiscount } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/lib/toast";
 
 export type FormData = {
   title: string;
@@ -28,7 +29,11 @@ export function AddNewDiscount() {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  const { register, handleSubmit } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<FormData>({
     defaultValues: {
       title: "",
       amount: 0,
@@ -39,10 +44,12 @@ export function AddNewDiscount() {
   const onSubmit = async (data: FormData) => {
     try {
       await addNewDiscount(data);
+      showToast.success("Discount added successfully!");
       closeRef.current?.click();
       router.refresh();
     } catch (error) {
       console.error("Error adding discount:", error);
+      showToast.error("Failed to add discount. Please try again.");
     }
   };
 
@@ -101,15 +108,21 @@ export function AddNewDiscount() {
 
           <DialogFooter className="gap-2 mt-6">
             <DialogClose asChild>
-              <Button ref={closeRef} type="button" variant="outline">
+              <Button
+                ref={closeRef}
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
             </DialogClose>
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="bg-yellow-500 hover:bg-yellow-600 text-white"
             >
-              Add Discount
+              {isSubmitting ? "Adding..." : "Add Discount"}
             </Button>
           </DialogFooter>
         </form>

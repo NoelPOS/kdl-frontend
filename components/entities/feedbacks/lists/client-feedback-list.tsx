@@ -13,8 +13,6 @@ export default function ClientFeedbackList({
   initialFeedbacks,
 }: ClientFeedbackListProps) {
   const [feedbacks, setFeedbacks] = useState(initialFeedbacks);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Update feedbacks when initialFeedbacks prop changes (i.e., when filters change)
   useEffect(() => {
@@ -28,17 +26,6 @@ export default function ClientFeedbackList({
         const newFeedbacks = prev.filter(
           (feedback) => feedback.id !== updatedFeedback.id
         );
-
-        // Show success message
-        setSuccessMessage(
-          `Feedback for ${updatedFeedback.studentName} has been verified!`
-        );
-        setShowSuccessMessage(true);
-
-        // Hide success message after 3 seconds
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
 
         return newFeedbacks;
       });
@@ -69,14 +56,6 @@ export default function ClientFeedbackList({
 
   return (
     <div className="relative">
-      {/* Success Message Toast */}
-      {showSuccessMessage && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg shadow-lg animate-in slide-in-from-right duration-300">
-          <Check className="h-5 w-5" />
-          <span className="font-medium">{successMessage}</span>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {feedbacks.map((feedback) => (
           <FeedbackCard

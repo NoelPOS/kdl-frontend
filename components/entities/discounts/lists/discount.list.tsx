@@ -11,7 +11,7 @@ export default async function DiscountList({ query }: { query: string }) {
   let discounts: Discount[];
 
   if (query) {
-    discounts = await searchDiscounts(query);
+    discounts = await searchDiscounts(query, accessToken);
   } else {
     discounts = await fetchDiscounts(accessToken);
   }

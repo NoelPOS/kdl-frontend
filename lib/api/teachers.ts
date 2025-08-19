@@ -10,8 +10,12 @@ export async function searchTeachers(query: string): Promise<Teacher[]> {
   return response.data;
 }
 
-export async function getTeacherById(id: number): Promise<Partial<Teacher>> {
-  return clientApi.get(`/teachers/${id}`).then((res) => res.data);
+export async function getTeacherById(
+  id: number,
+  accessToken?: string
+): Promise<Partial<Teacher>> {
+  const api = accessToken ? await createServerApi(accessToken) : clientApi;
+  return api.get(`/teachers/${id}`).then((res) => res.data);
 }
 
 export async function updateTeacherById(id: number, data: Partial<Teacher>) {

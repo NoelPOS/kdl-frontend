@@ -313,7 +313,7 @@ export default function StudentDetailClient({
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
           >
             {isLoading ? "Updating..." : "Update Student"}
           </Button>

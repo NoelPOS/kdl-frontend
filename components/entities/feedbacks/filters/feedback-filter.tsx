@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
-import { useState, useCallback } from "react";
+import { ChevronDown, ChevronUp, Filter, X, Calendar } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 type FilterFormData = {
@@ -23,6 +23,10 @@ export default function FeedbackFilter() {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
 
+  // Date input refs
+  const startDateRef = useRef<HTMLInputElement>(null);
+  const endDateRef = useRef<HTMLInputElement>(null);
+
   const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
     defaultValues: {
       studentName: searchParams.get("studentName") || "",
@@ -32,6 +36,10 @@ export default function FeedbackFilter() {
       endDate: searchParams.get("endDate") || "",
     },
   });
+
+  // Get refs for date inputs
+  const { ref: startDateRHFRef } = register("startDate");
+  const { ref: endDateRHFRef } = register("endDate");
 
   // Watch form values to show active filter count
   const formValues = watch();
@@ -170,24 +178,44 @@ export default function FeedbackFilter() {
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div
+              className="flex flex-col gap-2"
+              onClick={() => startDateRef.current?.showPicker()}
+            >
               <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                {...register("startDate")}
-                className="border-gray-300"
-              />
+              <div className="relative">
+                <Input
+                  id="startDate"
+                  type="date"
+                  {...register("startDate")}
+                  ref={(e) => {
+                    startDateRHFRef(e); // connect RHF ref
+                    startDateRef.current = e; // also assign to your own ref
+                  }}
+                  className="border-gray-300"
+                />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div
+              className="flex flex-col gap-2"
+              onClick={() => endDateRef.current?.showPicker()}
+            >
               <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                {...register("endDate")}
-                className="border-gray-300"
-              />
+              <div className="relative">
+                <Input
+                  id="endDate"
+                  type="date"
+                  {...register("endDate")}
+                  ref={(e) => {
+                    endDateRHFRef(e); // connect RHF ref
+                    endDateRef.current = e; // also assign to your own ref
+                  }}
+                  className="border-gray-300"
+                />
+                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              </div>
             </div>
           </div>
 
