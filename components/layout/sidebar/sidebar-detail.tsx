@@ -55,12 +55,12 @@ const menuItems: MenuItem[] = [
     url: "/courses",
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
-  {
-    title: "packages",
-    icon: Package,
-    url: "/packages",
-    roles: [UserRole.ADMIN, UserRole.REGISTRAR],
-  },
+  // {
+  //   title: "packages",
+  //   icon: Package,
+  //   url: "/packages",
+  //   roles: [UserRole.ADMIN, UserRole.REGISTRAR],
+  // },
   {
     title: "students",
     icon: Users,
