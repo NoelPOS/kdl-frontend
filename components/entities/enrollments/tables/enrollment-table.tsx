@@ -130,10 +130,19 @@ export function EnrollmentTableWithSelection({
         <TableBody>
           {enrollments.map((enrollment, index) => {
             const isSelected = selectedEnrollments.has(enrollment.session_id);
+            const isSameStudent =
+              selectedStudentId === null ||
+              selectedStudentId === enrollment.student_id;
+            const isDimmed =
+              selectedStudentId !== null &&
+              selectedStudentId !== enrollment.student_id;
+
             return (
               <TableRow
                 key={enrollment.session_id}
-                className={isSelected ? "bg-blue-50" : ""}
+                className={`${isSelected ? "bg-blue-50" : ""} ${
+                  isDimmed ? "opacity-30" : ""
+                } transition-opacity duration-200`}
               >
                 <TableCell className="border-2 h-20 border-gray-300 text-center">
                   {index + 1}
@@ -156,6 +165,7 @@ export function EnrollmentTableWithSelection({
                   <div className="flex justify-center">
                     <Checkbox
                       checked={isSelected}
+                      disabled={!isSameStudent}
                       onCheckedChange={(checked) =>
                         handleSelection(
                           enrollment.session_id,

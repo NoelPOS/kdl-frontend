@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 import { showToast } from "@/lib/toast";
 
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,34 @@ export function AddStudent({
   });
 
   const [activeSearchIndex, setActiveSearchIndex] = useState<number>(-1);
+  const [activeSearchField, setActiveSearchField] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Student[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Debounce the search query
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
+
+  // Effect to handle debounced search
+  useEffect(() => {
+    const performSearch = async () => {
+      if (debouncedSearchQuery.trim() && activeSearchIndex >= 0) {
+        try {
+          const results = await searchStudents(
+            debouncedSearchQuery,
+            activeSearchField
+          );
+          setSearchResults(results);
+        } catch (error) {
+          console.error("Search failed", error);
+          setSearchResults([]);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearchQuery, activeSearchIndex, activeSearchField]);
 
   const handleSelectStudent = (index: number, student: Student) => {
     setValue(`students.${index}.name`, student.name);
@@ -71,22 +99,14 @@ export function AddStudent({
     setValue(`students.${index}.id`, student.id);
     setSearchResults([]);
     setActiveSearchIndex(-1);
+    setActiveSearchField("");
+    setSearchQuery("");
   };
 
-  const handleSearch = async (query: string, index: number) => {
+  const handleSearch = (query: string, index: number, field: string) => {
     setActiveSearchIndex(index);
-
-    if (query.length >= 3) {
-      try {
-        const results = await searchStudents(query);
-        setSearchResults(results);
-      } catch (error) {
-        console.error("Search failed", error);
-        setSearchResults([]);
-      }
-    } else {
-      setSearchResults([]);
-    }
+    setActiveSearchField(field);
+    setSearchQuery(query);
   };
 
   const addStudent = () => {
@@ -104,10 +124,22 @@ export function AddStudent({
   };
 
   const onSubmit = (data: FormData) => {
+    // Check if no student is filled at all (all fields empty for all students)
+    const hasAnyStudentData = data.students.some(
+      (student) => student.name.trim() !== "" || student.nickname.trim() !== ""
+    );
+
+    if (!hasAnyStudentData) {
+      showToast.error("Please add at least one student before proceeding.");
+      return;
+    }
+
     // Validate that all students have required fields
     const isValid = data.students.every(
       (student) =>
-        student.name !== "" && student.nickname !== "" && student.id !== ""
+        student.name.trim() !== "" &&
+        student.nickname.trim() !== "" &&
+        student.id
     );
 
     if (!isValid) {
@@ -115,17 +147,20 @@ export function AddStudent({
       return;
     }
 
-    showToast.success("Students added successfully!");
+    // Check for duplicate student IDs
+    const studentIds = data.students.map((student) => student.id);
+    const duplicateIds = studentIds.filter(
+      (id, index) => studentIds.indexOf(id) !== index
+    );
 
-    // reset({
-    //   students: [
-    //     {
-    //       name: "",
-    //       nickname: "",
-    //       id: "",
-    //     },
-    //   ],
-    // });
+    if (duplicateIds.length > 0) {
+      showToast.error(
+        "Duplicate students found. Please remove duplicate entries."
+      );
+      return;
+    }
+
+    showToast.success("Students added successfully!");
     if (afterStudent) {
       afterStudent(data.students);
     }
@@ -173,12 +208,15 @@ export function AddStudent({
                           })}
                           placeholder="Jane Doe"
                           className="border-gray-300 rounded-lg pr-10"
-                          onChange={(e) => handleSearch(e.target.value, index)}
+                          onChange={(e) =>
+                            handleSearch(e.target.value, index, "name")
+                          }
                           autoComplete="off"
                         />
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                       </div>
                       {activeSearchIndex === index &&
+                        activeSearchField === "name" &&
                         searchResults.length > 0 && (
                           <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
                             {searchResults.map((student) => (
@@ -204,13 +242,36 @@ export function AddStudent({
                       >
                         Nickname
                       </Label>
-                      <Input
-                        {...register(`students.${index}.nickname` as const, {
-                          required: "Nickname is required",
-                        })}
-                        placeholder="Jane"
-                        className="border-gray-300 rounded-lg"
-                      />
+                      <div className="relative">
+                        <Input
+                          {...register(`students.${index}.nickname` as const, {
+                            required: "Nickname is required",
+                          })}
+                          onChange={(e) =>
+                            handleSearch(e.target.value, index, "nickname")
+                          }
+                          placeholder="Jane"
+                          className="border-gray-300 rounded-lg"
+                        />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        {activeSearchIndex === index &&
+                          activeSearchField === "nickname" &&
+                          searchResults.length > 0 && (
+                            <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                              {searchResults.map((student) => (
+                                <li
+                                  key={student.id}
+                                  onClick={() =>
+                                    handleSelectStudent(index, student)
+                                  }
+                                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                                >
+                                  {student.name} ({student.nickname})
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                      </div>
                     </div>
 
                     {/* ID */}
@@ -221,13 +282,36 @@ export function AddStudent({
                       >
                         ID
                       </Label>
-                      <Input
-                        {...register(`students.${index}.id` as const, {
-                          required: "Student ID is required",
-                        })}
-                        placeholder="202501001"
-                        className="border-gray-300 rounded-lg"
-                      />
+                      <div className="relative">
+                        <Input
+                          {...register(`students.${index}.id` as const, {
+                            required: "Student ID is required",
+                          })}
+                          onChange={(e) =>
+                            handleSearch(e.target.value, index, "id")
+                          }
+                          placeholder="202501001"
+                          className="border-gray-300 rounded-lg"
+                        />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        {activeSearchIndex === index &&
+                          activeSearchField === "id" &&
+                          searchResults.length > 0 && (
+                            <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                              {searchResults.map((student) => (
+                                <li
+                                  key={student.id}
+                                  onClick={() =>
+                                    handleSelectStudent(index, student)
+                                  }
+                                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                                >
+                                  {student.name} ({student.nickname})
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                      </div>
                     </div>
 
                     {index > 0 && (

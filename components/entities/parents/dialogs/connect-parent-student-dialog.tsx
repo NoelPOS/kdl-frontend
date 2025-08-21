@@ -81,7 +81,7 @@ export function ConnectParentStudentDialog({
 
     if (query.length >= 3) {
       try {
-        const results = await searchStudents(query);
+        const results = await searchStudents(query, "name");
         setSearchResults(results);
       } catch (error) {
         console.error("Search failed", error);

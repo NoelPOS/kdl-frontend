@@ -157,7 +157,7 @@ export function ConnectTeacherCourseDialog({
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
-          Connect Course
+          Add Course
         </Button>
       </DialogTrigger>
 

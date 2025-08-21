@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
@@ -89,11 +87,13 @@ export function StudentDetailAddCourse({
       }
     }
     reset();
+    setSelectedCourse(undefined);
+    setSearchResults([]);
     onOpenChange(false);
   };
 
   return (
-    <Dialog onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -156,7 +156,7 @@ export function StudentDetailAddCourse({
               </DialogClose>
               <Button
                 type="submit"
-                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1"
+                className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1"
                 disabled={!selectedCourse}
               >
                 Next

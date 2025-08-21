@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { Student } from "@/app/types/student.type";
-import { updateStudentById } from "@/lib/api";
+import { Parent } from "@/app/types/parent.type";
+import { updateStudentById, searchParents } from "@/lib/api";
 import { useRef } from "react";
 
 interface StudentFormData {
@@ -37,6 +40,13 @@ export default function StudentDetailClient({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Parent search states
+  const [parentSearchResults, setParentSearchResults] = useState<Parent[]>([]);
+  const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
+  const [parentQuery, setParentQuery] = useState(student.parent || "");
+  const [showParentResults, setShowParentResults] = useState(false);
+  const [debouncedParentQuery] = useDebounce(parentQuery, 300);
+
   const {
     register,
     handleSubmit,
@@ -55,11 +65,59 @@ export default function StudentDetailClient({
       doNotEat: Array.isArray(student.doNotEat)
         ? student.doNotEat.join(", ")
         : "",
+      parent: student.parent || "",
       adConcent: student.adConcent || false,
     },
   });
 
   const adConcentValue = watch("adConcent");
+
+  // Effect to handle debounced parent search
+  useEffect(() => {
+    const performParentSearch = async () => {
+      if (debouncedParentQuery.length >= 2) {
+        try {
+          const results = await searchParents(debouncedParentQuery);
+          setParentSearchResults(results || []);
+          setShowParentResults(true);
+        } catch (error) {
+          console.error("Parent search failed:", error);
+          setParentSearchResults([]);
+          setShowParentResults(false);
+        }
+      } else {
+        setParentSearchResults([]);
+        setShowParentResults(false);
+        if (debouncedParentQuery.length === 0) {
+          setSelectedParent(null);
+        }
+      }
+    };
+
+    performParentSearch();
+  }, [debouncedParentQuery]);
+
+  // Parent search handlers
+  const handleParentSearch = (query: string) => {
+    setParentQuery(query);
+    setValue("parent", query);
+  };
+
+  const handleSelectParent = (parent: Parent) => {
+    console.log("Selecting parent:", parent.name); // Debug log
+    setSelectedParent(parent);
+    setParentQuery(parent.name); // Update the controlled input state
+    setValue("parent", parent.name); // Update the form state
+    setShowParentResults(false);
+    setParentSearchResults([]);
+  };
+
+  const handleParentInputBlur = () => {
+    // Delay hiding results to allow click events on dropdown items to fire
+    setTimeout(() => {
+      setShowParentResults(false);
+    }, 300); // Increased delay to ensure click events work
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -122,8 +180,9 @@ export default function StudentDetailClient({
     }
 
     try {
+      const { parent, ...rest } = data;
       const updateData: Partial<Student> = {
-        ...data,
+        ...rest,
         allergic: data.allergic
           .split(",")
           .map((item) => item.trim())
@@ -134,7 +193,9 @@ export default function StudentDetailClient({
           .filter(Boolean),
         profilePicture: newImageUrl,
         profileKey: newProfileKey,
+        parentId: selectedParent ? selectedParent.id : undefined,
       };
+      console.log("Update Data is here", updateData);
 
       await updateStudentById(Number(student.id), updateData);
       setMessage({ type: "success", text: "Student updated successfully!" });
@@ -172,7 +233,7 @@ export default function StudentDetailClient({
           onClick={handleImageClick}
         >
           <Image
-            src={imagePreview || student.profilePicture || "./default.png"}
+            src={imagePreview || student.profilePicture || "/student.png"}
             alt="student profile"
             width={90}
             height={90}
@@ -277,10 +338,42 @@ export default function StudentDetailClient({
 
         <div>
           <Label className="text-xs text-black block">Parent</Label>
-          <Input
-            {...register("parent")}
-            className="bg-white border border-black"
-          />
+          <div className="relative">
+            <Input
+              placeholder="Search for parent..."
+              value={parentQuery}
+              onChange={(e) => handleParentSearch(e.target.value)}
+              onBlur={handleParentInputBlur}
+              className="bg-white border border-black pr-10"
+            />
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+
+            {/* Search Results Dropdown */}
+            {showParentResults && parentSearchResults.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                {parentSearchResults.map((parent) => (
+                  <div
+                    key={parent.id}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                    onClick={() => handleSelectParent(parent)}
+                  >
+                    <div className="font-medium">{parent.name}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No Results Message */}
+            {showParentResults &&
+              debouncedParentQuery.length >= 2 &&
+              parentSearchResults.length === 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                  <div className="px-4 py-2 text-sm text-gray-500">
+                    No parents found for &quot;{debouncedParentQuery}&quot;
+                  </div>
+                </div>
+              )}
+          </div>
         </div>
 
         <div className="flex items-start space-x-2 pt-2">

@@ -2,9 +2,12 @@ import { Student } from "@/app/types/student.type";
 import { clientApi, createServerApi } from "./config";
 
 // Client-side functions
-export async function searchStudents(query: string): Promise<Student[]> {
+export async function searchStudents(
+  query: string,
+  field: string
+): Promise<Student[]> {
   const response = await clientApi.get<Student[]>(
-    `/students/search?name=${encodeURIComponent(query)}`
+    `/students/search?${field}=${encodeURIComponent(query)}`
   );
   return response.data;
 }
@@ -36,7 +39,7 @@ export async function updateStudentById(
   }
 }
 
-type NewStudentData = Omit<Student, "id">;
+type NewStudentData = Omit<Student, "id" | "parentId">;
 
 export async function addNewStudent(student: NewStudentData): Promise<Student> {
   const response = await clientApi.post<Student>("/students", student);

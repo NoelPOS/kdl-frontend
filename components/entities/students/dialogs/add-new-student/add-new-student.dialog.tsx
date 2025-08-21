@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Parent } from "@/app/types/parent.type";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 export type FormData = {
   name: string;
@@ -46,6 +47,7 @@ export type FormData = {
 export function AddNewStudent() {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [parentSearchResults, setParentSearchResults] = useState<Parent[]>([]);
@@ -61,6 +63,7 @@ export function AddNewStudent() {
     reset,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     defaultValues: {
@@ -210,8 +213,12 @@ export function AddNewStudent() {
       }
 
       showToast.success("Student created successfully!");
-      reset();
-      closeRef.current?.click();
+      setOpen(false); // Close dialog using state
+      reset(); // Reset form
+      setImagePreview(""); // Reset image preview
+      setImageFile(null); // Reset image file
+      setSelectedParent(null); // Reset selected parent
+      setParentQuery(""); // Reset parent query
       router.refresh();
     } catch (error) {
       showToast.dismiss();
@@ -234,7 +241,7 @@ export function AddNewStudent() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
@@ -355,25 +362,37 @@ export function AddNewStudent() {
             </div>
 
             {/* Date */}
-            <div
-              className="flex flex-col gap-2"
-              onClick={() => dateRef.current?.showPicker()}
-            >
+            <div className="flex flex-col gap-2">
               <Label htmlFor="dob">DOB *</Label>
               <div className="relative">
-                <Input
-                  id="dob"
+                {/* Hidden native date input */}
+                <input
                   type="date"
-                  {...register("dob")}
                   ref={(e) => {
-                    dateRHFRef(e); // connect RHF ref
-                    dateRef.current = e; // also assign to your own ref
+                    dateRHFRef(e);
+                    if (dateRef.current !== e) {
+                      dateRef.current = e;
+                    }
                   }}
-                  className={`border ${
+                  onChange={(e) => setValue("dob", e.target.value)}
+                  className="absolute opacity-0 pointer-events-none"
+                  style={{ zIndex: -1 }}
+                />
+
+                {/* Custom trigger button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => dateRef.current?.showPicker()}
+                  className={`w-full justify-between font-normal border ${
                     errors.dob ? "border-red-500" : "border-black"
                   }`}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
+                >
+                  {watch("dob")
+                    ? new Date(watch("dob")).toLocaleDateString()
+                    : "Select date of birth"}
+                  <Calendar className="h-4 w-4" />
+                </Button>
               </div>
               {errors.dob && (
                 <p className="text-red-500 text-xs mt-1">
@@ -505,6 +524,7 @@ export function AddNewStudent() {
                 type="button"
                 variant="outline"
                 disabled={isSubmitting}
+                onClick={() => setOpen(false)}
                 className={`text-red-600 border-red-600 rounded-2xl w-[5rem] ${
                   isSubmitting
                     ? "opacity-50 cursor-not-allowed"

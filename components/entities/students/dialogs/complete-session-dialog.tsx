@@ -55,7 +55,10 @@ export function CompleteSessionDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="border-yellow-600 text-yellow-600 hover:bg-yellow-500 flex items-center gap-2"
+        >
           <CheckCircle className="h-4 w-4" />
           Complete Session
         </Button>

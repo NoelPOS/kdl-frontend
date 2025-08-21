@@ -2,12 +2,15 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
-import { useState, useCallback } from "react";
+import { ChevronDown, ChevronUp, Filter, X, Search } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { searchStudents } from "@/lib/api";
+import { Student } from "@/app/types/student.type";
 
 type FilterFormData = {
   query: string;
@@ -21,19 +24,78 @@ export default function ParentFilter() {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
-    defaultValues: {
-      query: searchParams.get("query") || "",
-      child: searchParams.get("child") || "all",
-      address: searchParams.get("address") || "all",
-    },
-  });
+  // Student/Child search state
+  const [studentSearchResults, setStudentSearchResults] = useState<Student[]>(
+    []
+  );
+  const [showStudentResults, setShowStudentResults] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentQuery, setStudentQuery] = useState(
+    searchParams.get("child") || ""
+  );
+
+  // Debounce the student search query
+  const [debouncedStudentQuery] = useDebounce(studentQuery, 300);
+
+  const { register, handleSubmit, watch, reset, setValue } =
+    useForm<FilterFormData>({
+      defaultValues: {
+        query: searchParams.get("query") || "",
+        child: searchParams.get("child") || "all",
+        address: searchParams.get("address") || "all",
+      },
+    });
 
   // Watch form values to show active filter count
   const formValues = watch();
   const activeFiltersCount = Object.entries(formValues).filter(
     ([key, value]) => value && value.toString().trim() !== "" && value !== "all"
   ).length;
+
+  // Effect to handle debounced student search
+  useEffect(() => {
+    const performStudentSearch = async () => {
+      if (debouncedStudentQuery.length >= 2) {
+        try {
+          const results = await searchStudents(debouncedStudentQuery, "name");
+          setStudentSearchResults(results || []);
+          setShowStudentResults(true);
+        } catch (error) {
+          console.error("Student search failed:", error);
+          setStudentSearchResults([]);
+          setShowStudentResults(false);
+        }
+      } else {
+        setStudentSearchResults([]);
+        setShowStudentResults(false);
+        if (debouncedStudentQuery.length === 0) {
+          setSelectedStudent(null);
+        }
+      }
+    };
+
+    performStudentSearch();
+  }, [debouncedStudentQuery]);
+
+  // Student search handlers
+  const handleStudentSearch = (query: string) => {
+    setStudentQuery(query);
+    setValue("child", query);
+  };
+
+  const handleSelectStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setValue("child", student.name);
+    setStudentQuery(student.name);
+    setShowStudentResults(false);
+    setStudentSearchResults([]);
+  };
+
+  const handleStudentInputBlur = () => {
+    setTimeout(() => {
+      setShowStudentResults(false);
+    }, 200);
+  };
 
   const onSubmit = (data: FilterFormData) => {
     const params = new URLSearchParams(searchParams);
@@ -129,12 +191,52 @@ export default function ParentFilter() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="child">Child</Label>
-              <Input
-                id="child"
-                {...register("child")}
-                placeholder="Enter child name"
-                className="border-gray-300"
-              />
+              <div className="relative">
+                <Input
+                  id="child"
+                  placeholder="Search for child..."
+                  value={studentQuery}
+                  onChange={(e) => handleStudentSearch(e.target.value)}
+                  onBlur={handleStudentInputBlur}
+                  className="border-gray-300 pr-10"
+                />
+                <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+
+                {/* Search Results Dropdown */}
+                {showStudentResults && studentSearchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {studentSearchResults.map((student) => (
+                      <div
+                        key={student.id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                        onClick={() => handleSelectStudent(student)}
+                      >
+                        <div className="font-medium">{student.name}</div>
+                        {student.nickname && (
+                          <div className="text-gray-500">
+                            Nickname: {student.nickname}
+                          </div>
+                        )}
+                        <div className="text-gray-500">
+                          Student ID: {student.id}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* No Results Message */}
+                {showStudentResults &&
+                  debouncedStudentQuery.length >= 2 &&
+                  studentSearchResults.length === 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                      <div className="px-4 py-2 text-sm text-gray-500">
+                        No students found for &quot;{debouncedStudentQuery}
+                        &quot;
+                      </div>
+                    </div>
+                  )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">

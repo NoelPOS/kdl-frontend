@@ -7,6 +7,7 @@ export interface Student {
   gender?: string;
   school?: string;
   parent?: string;
+  parentId?: number;
   adConcent?: boolean;
   allergic: string[];
   doNotEat: string[];

@@ -5,6 +5,8 @@ import React from "react";
 import { CompleteSessionDialog } from "@/components/entities/students/dialogs/complete-session-dialog";
 import { CancelSessionDialog } from "@/components/entities/students/dialogs/cancel-session-dialog";
 import { cookies } from "next/headers";
+import RoleAwareScheduleTable from "@/components/entities/schedule/tables/role-aware-schedule-table";
+import { UserRole } from "@/app/types/auth.type";
 
 export default async function StudentSession({
   params,
@@ -55,7 +57,7 @@ export default async function StudentSession({
         </div>
       </div>
 
-      <StudentSchedule initialSchedules={schedules} />
+      <RoleAwareScheduleTable schedules={schedules} userRole={UserRole.ADMIN} />
     </div>
   );
 }

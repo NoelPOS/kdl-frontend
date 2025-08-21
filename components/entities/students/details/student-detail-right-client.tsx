@@ -103,6 +103,7 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
       return;
     }
     setCourseData(course);
+    setCourseOpen(false); // Explicitly close the course dialog
     goToScheduleStep();
   };
 
@@ -160,7 +161,7 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
     <>
       <StudentDetailAddCourse
         open={courseOpen}
-        onOpenChange={gotoCourseStep}
+        onOpenChange={setCourseOpen}
         onSubmit={handleCourseSubmit}
         onCancel={handleDialogClose}
         courseData={courseData}

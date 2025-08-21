@@ -65,7 +65,7 @@ export function AddNewDiscount() {
       <DialogContent className="sm:max-w-[500px] p-8">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            Add New Discount
+            Add New Field
           </DialogTitle>
         </DialogHeader>
 

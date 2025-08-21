@@ -154,10 +154,23 @@ export default function ClassTypeSelectionDialog({
         return;
       }
 
-      // Validate day/date selection (not covered by form validation)
+      // Validate day/date selection with detailed toast messages
       if (selectedCourseType.classMode === CLASS_TYPES.TWELVE_TIMES_FIXED) {
         if (selectedDays.length === 0) {
-          showToast.error("Please select at least one day for fixed schedule.");
+          showToast.error(
+            "Please select at least one day for the fixed schedule."
+          );
+          return;
+        }
+
+        // Validate time selection for fixed schedule
+        if (!data.fixedStartTime) {
+          showToast.error("Please select a start time for the fixed schedule.");
+          return;
+        }
+
+        if (!data.fixedEndTime) {
+          showToast.error("Please select an end time for the fixed schedule.");
           return;
         }
       } else if (
@@ -167,12 +180,38 @@ export default function ClassTypeSelectionDialog({
         const requiredCount = getRequiredCampDateCount(
           selectedCourseType.classMode
         );
-        if (selectedDates.length !== requiredCount) {
-          const message = getCampDateValidationMessage(
-            selectedCourseType.classMode,
-            selectedDates.length
+
+        if (selectedDates.length === 0) {
+          showToast.error(
+            `Please select dates for the ${selectedCourseType.classMode.toLowerCase()}.`
           );
-          showToast.error(message);
+          return;
+        }
+
+        if (selectedDates.length < requiredCount) {
+          showToast.error(
+            `Please select ${requiredCount} dates for ${selectedCourseType.classMode.toLowerCase()}. You have selected ${
+              selectedDates.length
+            }.`
+          );
+          return;
+        }
+
+        if (selectedDates.length > requiredCount) {
+          showToast.error(
+            `Too many dates selected! Please select exactly ${requiredCount} dates for ${selectedCourseType.classMode.toLowerCase()}.`
+          );
+          return;
+        }
+
+        // Validate time selection for camp
+        if (!data.campStartTime) {
+          showToast.error("Please select a start time for the camp schedule.");
+          return;
+        }
+
+        if (!data.campEndTime) {
+          showToast.error("Please select an end time for the camp schedule.");
           return;
         }
       }
@@ -237,11 +276,7 @@ export default function ClassTypeSelectionDialog({
                 selectedDays={selectedDays}
                 onToggleDay={toggleDay}
                 label="Select Days"
-                error={
-                  selectedDays.length === 0
-                    ? "Please select at least one day"
-                    : undefined
-                }
+                // Remove error prop - only show on submit
               />
 
               {/* Time Selection */}
@@ -308,14 +343,7 @@ export default function ClassTypeSelectionDialog({
                     : undefined
                 }
                 classMode={selectedCourseOption?.classMode}
-                error={
-                  selectedCourseOption
-                    ? getCampDateValidationMessage(
-                        selectedCourseOption.classMode,
-                        selectedDates.length
-                      )
-                    : undefined
-                }
+                // Remove error prop - only show on submit
               />
 
               {/* Time Selection */}

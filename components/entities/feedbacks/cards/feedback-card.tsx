@@ -91,13 +91,13 @@ export default function FeedbackCard({
           <div className="text-sm font-medium text-gray-800 mt-1">
             {currentFeedback.courseTitle}
           </div>
-
-          {/* Feedback content */}
-          <div className="bg-white border border-gray-200 rounded-md p-3">
-            <div className="text-xs text-gray-500 mb-1">Feedback</div>
-            <p className="text-sm text-gray-800 leading-relaxed">
+          <div className="bg-white rounded-md p-4 shadow-sm">
+            <div className="text-sm font-semibold text-gray-700 mb-2">
+              Feedback
+            </div>
+            <div className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">
               {currentFeedback.feedback}
-            </p>
+            </div>
           </div>
 
           <div className="flex justify-end">
@@ -107,7 +107,7 @@ export default function FeedbackCard({
               className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 flex items-center gap-2"
             >
               <Edit className="h-4 w-4" />
-              Verify Feedback
+              Edit
             </Button>
           </div>
         </CardContent>

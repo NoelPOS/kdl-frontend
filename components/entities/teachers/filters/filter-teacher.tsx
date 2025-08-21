@@ -2,12 +2,15 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
-import { useState, useCallback } from "react";
+import { ChevronDown, ChevronUp, Filter, X, Search } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { searchCourses } from "@/lib/api";
+import { Course } from "@/app/types/course.type";
 
 const statusOptions = [
   { label: "Active", value: "active" },
@@ -27,19 +30,76 @@ export default function TeacherFilter() {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
-    defaultValues: {
-      query: searchParams.get("query") || "",
-      status: searchParams.get("status") || "all",
-      course: searchParams.get("course") || "",
-    },
-  });
+  // Course search state
+  const [courseSearchResults, setCourseSearchResults] = useState<Course[]>([]);
+  const [showCourseResults, setShowCourseResults] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [courseQuery, setCourseQuery] = useState(
+    searchParams.get("course") || ""
+  );
+
+  // Debounce the course search query
+  const [debouncedCourseQuery] = useDebounce(courseQuery, 300);
+
+  const { register, handleSubmit, watch, reset, setValue } =
+    useForm<FilterFormData>({
+      defaultValues: {
+        query: searchParams.get("query") || "",
+        status: searchParams.get("status") || "all",
+        course: searchParams.get("course") || "",
+      },
+    });
 
   // Watch form values to show active filter count
   const formValues = watch();
   const activeFiltersCount = Object.entries(formValues).filter(
     ([key, value]) => value && value.toString().trim() !== "" && value !== "all"
   ).length;
+
+  // Effect to handle debounced course search
+  useEffect(() => {
+    const performCourseSearch = async () => {
+      if (debouncedCourseQuery.length >= 2) {
+        try {
+          const results = await searchCourses(debouncedCourseQuery);
+          setCourseSearchResults(results || []);
+          setShowCourseResults(true);
+        } catch (error) {
+          console.error("Course search failed:", error);
+          setCourseSearchResults([]);
+          setShowCourseResults(false);
+        }
+      } else {
+        setCourseSearchResults([]);
+        setShowCourseResults(false);
+        if (debouncedCourseQuery.length === 0) {
+          setSelectedCourse(null);
+        }
+      }
+    };
+
+    performCourseSearch();
+  }, [debouncedCourseQuery]);
+
+  // Course search handlers
+  const handleCourseSearch = (query: string) => {
+    setCourseQuery(query);
+    setValue("course", query);
+  };
+
+  const handleSelectCourse = (course: Course) => {
+    setSelectedCourse(course);
+    setValue("course", course.title);
+    setCourseQuery(course.title);
+    setShowCourseResults(false);
+    setCourseSearchResults([]);
+  };
+
+  const handleCourseInputBlur = () => {
+    setTimeout(() => {
+      setShowCourseResults(false);
+    }, 200);
+  };
 
   const onSubmit = (data: FilterFormData) => {
     const params = new URLSearchParams(searchParams);
@@ -66,8 +126,13 @@ export default function TeacherFilter() {
     reset({
       query: "",
       status: "all",
-      course: "all",
+      course: "",
     });
+    // Clear course search states
+    setCourseQuery("");
+    setSelectedCourse(null);
+    setCourseSearchResults([]);
+    setShowCourseResults(false);
     router.replace(pathname);
   }, [reset, router, pathname]);
 
@@ -133,14 +198,37 @@ export default function TeacherFilter() {
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 relative">
               <Label htmlFor="course">Course</Label>
-              <Input
-                id="course"
-                {...register("course")}
-                placeholder="Enter course name"
-                className="border-gray-300"
-              />
+              <div className="relative">
+                <Input
+                  id="course"
+                  value={courseQuery}
+                  onChange={(e) => handleCourseSearch(e.target.value)}
+                  onBlur={handleCourseInputBlur}
+                  placeholder="Search for a course"
+                  className="border-gray-300 pr-10"
+                  autoComplete="off"
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+                {showCourseResults && courseSearchResults.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                    {courseSearchResults.map((course) => (
+                      <li
+                        key={course.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectCourse(course);
+                        }}
+                        className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                      >
+                        {course.title}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">

@@ -73,11 +73,7 @@ function StudentSchedule({ initialSchedules }: StudentScheduleProps) {
   const handleRowDoubleClick = useCallback((session: ClassSchedule) => {
     console.log("Row double clicked:", session);
     const formData: FormData = {
-      date: new Date(
-        new Date(session.schedule_date).getTime() + 24 * 60 * 60 * 1000
-      )
-        .toISOString()
-        .split("T")[0],
+      date: session.schedule_date,
       starttime: session.schedule_startTime,
       endtime: session.schedule_endTime,
       course: session.course_title,

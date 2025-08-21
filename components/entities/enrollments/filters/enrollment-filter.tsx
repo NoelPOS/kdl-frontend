@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { useRef, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 // const statusOptions = [
 //   { label: "Pending", value: "pending" },
@@ -37,19 +38,17 @@ function EnrollmentFilter() {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const { register, handleSubmit, watch, reset } = useForm<FilterFormData>({
-    defaultValues: {
-      date: searchParams.get("date") || "",
-      status: searchParams.get("status") || "",
-      course: searchParams.get("course") || "",
-      teacher: searchParams.get("teacher") || "",
-      student: searchParams.get("student") || "",
-      transactionType: searchParams.get("transactionType") || "",
-    },
-  });
-
-  const dateRef = useRef<HTMLInputElement>(null);
-  const { ref: dateRHFRef } = register("date");
+  const { register, handleSubmit, watch, reset, setValue } =
+    useForm<FilterFormData>({
+      defaultValues: {
+        date: searchParams.get("date") || "",
+        status: searchParams.get("status") || "",
+        course: searchParams.get("course") || "",
+        teacher: searchParams.get("teacher") || "",
+        student: searchParams.get("student") || "",
+        transactionType: searchParams.get("transactionType") || "",
+      },
+    });
 
   // Watch form values to show active filter count
   const formValues = watch();
@@ -178,22 +177,12 @@ function EnrollmentFilter() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="date">Date</Label>
-              <div
-                className="relative cursor-pointer"
-                onClick={() => dateRef.current?.showPicker()}
-              >
-                <Input
-                  id="date"
-                  type="date"
-                  {...register("date")}
-                  ref={(e) => {
-                    dateRHFRef(e);
-                    dateRef.current = e;
-                  }}
-                  className="border-gray-300 pr-10"
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
+              <Calendar22
+                date={watch("date") ? new Date(watch("date")) : undefined}
+                onChange={(date) =>
+                  setValue("date", date ? date.toLocaleDateString("en-CA") : "")
+                }
+              />
             </div>
 
             <div className="flex flex-col gap-2">

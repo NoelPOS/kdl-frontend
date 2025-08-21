@@ -32,11 +32,14 @@ export default function EditFeedbackDialog({
   onFeedbackUpdate,
 }: EditFeedbackDialogProps) {
   const [feedbackText, setFeedbackText] = useState("");
+  const [originalFeedbackText, setOriginalFeedbackText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (feedback && open) {
-      setFeedbackText(feedback.feedback || "");
+      const originalText = feedback.feedback || "";
+      setFeedbackText(originalText);
+      setOriginalFeedbackText(originalText);
     }
   }, [feedback, open]);
 
@@ -44,28 +47,62 @@ export default function EditFeedbackDialog({
   useEffect(() => {
     if (!open) {
       setFeedbackText("");
+      setOriginalFeedbackText("");
       setIsSubmitting(false);
     }
   }, [open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     if (!feedback || !feedbackText.trim()) return;
 
     setIsSubmitting(true);
     try {
-      // Import the updateFeedback API function
+      // Import the updateSchedule API function to update only the feedback field
+      const { updateSchedule } = await import("@/lib/api/schedules");
+
+      // Call the API to update only the feedback field
+      await updateSchedule(parseInt(feedback.scheduleId), {
+        feedback: feedbackText.trim(),
+      });
+
+      // Update the feedback locally without verifying
+      const updatedFeedback: FeedbackItem = {
+        ...feedback,
+        feedback: feedbackText.trim(),
+        verifyFb: false, // Keep it unverified
+      };
+
+      onFeedbackUpdate(updatedFeedback);
+      showToast.success("Feedback saved successfully!");
+      // Don't close dialog for save - let user continue editing if needed
+    } catch (error) {
+      console.error("Error saving feedback:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to save feedback. Please try again.";
+      showToast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveAndVerify = async () => {
+    if (!feedback || !feedbackText.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      // Import the updateFeedback API function for verification
       const { updateFeedback } = await import("@/lib/api/feedbacks");
 
-      // Call the API to update feedback - this will verify and remove it
+      // Call the API to update feedback and verify it
       const response = await updateFeedback(
         feedback.scheduleId,
         feedbackText.trim()
       );
 
       if (response.success) {
-        // Since the feedback is now verified, create a "fake" feedback item
-        // with verifyFb = true to trigger removal from the list
+        // Since the feedback is now verified, create a verified feedback item
         const verifiedFeedback: FeedbackItem = {
           ...feedback,
           feedback: feedbackText.trim(),
@@ -74,27 +111,32 @@ export default function EditFeedbackDialog({
 
         onFeedbackUpdate(verifiedFeedback);
         onOpenChange(false);
-
-        // Show success message
         showToast.success(
-          response.message || "Feedback verified successfully!"
+          response.message || "Feedback saved and verified successfully!"
         );
       } else {
         throw new Error(response.message || "Failed to verify feedback");
       }
     } catch (error) {
-      console.error("Error updating feedback:", error);
-
-      // Extract error message from axios error or use default
+      console.error("Error saving and verifying feedback:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to update feedback. Please try again.";
-
+          : "Failed to save and verify feedback. Please try again.";
       showToast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleReset = () => {
+    setFeedbackText(originalFeedbackText);
+    showToast.info("Feedback reset to original text");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Default form submit behavior can be handled by Save button
   };
 
   const formatDate = (dateString: string) => {
@@ -123,7 +165,7 @@ export default function EditFeedbackDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Edit Feedback
+            Edit & Verify Feedback
           </DialogTitle>
         </DialogHeader>
 
@@ -175,7 +217,7 @@ export default function EditFeedbackDialog({
             <div className="space-y-2">
               <Textarea
                 id="feedback"
-                placeholder="Enter detailed feedback about the student's performance, participation, or any notes for this session..."
+                placeholder="Edit feedback about the student"
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 rows={6}
@@ -187,15 +229,39 @@ export default function EditFeedbackDialog({
           </div>
         </form>
 
-        <DialogFooter className="justify-end">
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !feedbackText.trim()}
-            className="bg-yellow-600 hover:bg-yellow-700"
-          >
-            {isSubmitting ? "Updating..." : "Update & Verify Feedback"}
-          </Button>
+        <DialogFooter>
+          <div className="flex justify-between w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReset}
+              disabled={isSubmitting || feedbackText === originalFeedbackText}
+              className="border-gray-300"
+            >
+              Reset
+            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSave}
+                disabled={isSubmitting || !feedbackText.trim()}
+                className="border-yellow-300 text-yellow-600 hover:bg-yellow-50"
+              >
+                {isSubmitting ? "Saving..." : "Save"}
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSaveAndVerify}
+                disabled={isSubmitting || !feedbackText.trim()}
+                className="bg-yellow-600 hover:bg-yellow-700"
+              >
+                {isSubmitting ? "Processing..." : "Save & Verify"}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,9 +1,17 @@
 "use client";
-import { useRef, useCallback, useState } from "react";
-import { Calendar, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import { useRef, useCallback, useState, useEffect } from "react";
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  X,
+  Search,
+} from "lucide-react";
 
 import { useForm } from "react-hook-form";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useDebounce } from "use-debounce";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
+import { searchStudents, searchCourses } from "@/lib/api";
+import { Student } from "@/app/types/student.type";
+import { Course } from "@/app/types/course.type";
+import { showToast } from "@/lib/toast";
 
 // Define the form data type
 type ScheduleFilterFormData = {
@@ -66,19 +79,45 @@ const ROOM_OPTIONS = [
   { value: "Room 5", label: "Room 5" },
 ];
 
-export function ScheduleFilterForm() {
+interface ScheduleFilterFormProps {
+  hideTeacherField?: boolean;
+  defaultTeacherName?: string;
+}
+
+export function ScheduleFilterForm({
+  hideTeacherField = false,
+  defaultTeacherName = "",
+}: ScheduleFilterFormProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
+  // Student search state
+  const [studentSearchResults, setStudentSearchResults] = useState<Student[]>(
+    []
+  );
+  const [showStudentResults, setShowStudentResults] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentQuery, setStudentQuery] = useState("");
+
+  // Course search state
+  const [courseSearchResults, setCourseSearchResults] = useState<Course[]>([]);
+  const [showCourseResults, setShowCourseResults] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [courseQuery, setCourseQuery] = useState("");
+
+  // Debounce the search queries
+  const [debouncedStudentQuery] = useDebounce(studentQuery, 300);
+  const [debouncedCourseQuery] = useDebounce(courseQuery, 300);
+
   const { register, handleSubmit, setValue, watch, reset } = useForm({
     defaultValues: {
       startDate: searchParams.get("startDate") || "",
       endDate: searchParams.get("endDate") || "",
       studentName: searchParams.get("studentName") || "",
-      teacherName: searchParams.get("teacherName") || "",
+      teacherName: searchParams.get("teacherName") || defaultTeacherName,
       courseName: searchParams.get("courseName") || "",
       attendanceStatus: searchParams.get("attendanceStatus") || "",
       classStatus: searchParams.get("classStatus") || "",
@@ -87,11 +126,6 @@ export function ScheduleFilterForm() {
       classOption: searchParams.get("classOption") || "",
     },
   });
-
-  const startDateRef = useRef<HTMLInputElement>(null);
-  const endDateRef = useRef<HTMLInputElement>(null);
-  const { ref: startDateRHFRef } = register("startDate");
-  const { ref: endDateRHFRef } = register("endDate");
 
   // Watch values for controlled Selects
   const attendanceStatus = watch("attendanceStatus");
@@ -107,9 +141,112 @@ export function ScheduleFilterForm() {
     ([key, value]) => key !== "sort" && value && value.toString().trim() !== ""
   ).length;
 
+  // Effect to handle debounced student search
+  useEffect(() => {
+    const performStudentSearch = async () => {
+      if (debouncedStudentQuery.length >= 2) {
+        try {
+          const results = await searchStudents(debouncedStudentQuery, "name");
+          setStudentSearchResults(results || []);
+          setShowStudentResults(true);
+        } catch (error) {
+          console.error("Student search failed:", error);
+          setStudentSearchResults([]);
+          setShowStudentResults(false);
+        }
+      } else {
+        setStudentSearchResults([]);
+        setShowStudentResults(false);
+        if (debouncedStudentQuery.length === 0) {
+          setSelectedStudent(null);
+        }
+      }
+    };
+
+    performStudentSearch();
+  }, [debouncedStudentQuery]);
+
+  // Effect to handle debounced course search
+  useEffect(() => {
+    const performCourseSearch = async () => {
+      if (debouncedCourseQuery.length >= 2) {
+        try {
+          const results = await searchCourses(debouncedCourseQuery);
+          setCourseSearchResults(results || []);
+          setShowCourseResults(true);
+        } catch (error) {
+          console.error("Course search failed:", error);
+          setCourseSearchResults([]);
+          setShowCourseResults(false);
+        }
+      } else {
+        setCourseSearchResults([]);
+        setShowCourseResults(false);
+        if (debouncedCourseQuery.length === 0) {
+          setSelectedCourse(null);
+        }
+      }
+    };
+
+    performCourseSearch();
+  }, [debouncedCourseQuery]);
+
+  // Student search handlers
+  const handleStudentSearch = (query: string) => {
+    setStudentQuery(query);
+    setValue("studentName", query);
+  };
+
+  const handleSelectStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setValue("studentName", student.name);
+    setStudentQuery(student.name);
+    setShowStudentResults(false);
+    setStudentSearchResults([]);
+  };
+
+  const handleStudentInputBlur = () => {
+    setTimeout(() => {
+      setShowStudentResults(false);
+    }, 200);
+  };
+
+  // Course search handlers
+  const handleCourseSearch = (query: string) => {
+    setCourseQuery(query);
+    setValue("courseName", query);
+  };
+
+  const handleSelectCourse = (course: Course) => {
+    setSelectedCourse(course);
+    setValue("courseName", course.title);
+    setCourseQuery(course.title);
+    setShowCourseResults(false);
+    setCourseSearchResults([]);
+  };
+
+  const handleCourseInputBlur = () => {
+    setTimeout(() => {
+      setShowCourseResults(false);
+    }, 200);
+  };
+
   const onSubmit = useCallback(
     async (data: ScheduleFilterFormData) => {
       setLoading(true);
+
+      // Validate that start date is not greater than end date
+      if (data.startDate && data.endDate) {
+        const startDate = new Date(data.startDate);
+        const endDate = new Date(data.endDate);
+
+        if (startDate > endDate) {
+          showToast.error("Start date cannot be greater than end date");
+          setLoading(false);
+          return;
+        }
+      }
+
       const params = new URLSearchParams();
 
       // Always reset to page 1 when filtering
@@ -118,7 +255,8 @@ export function ScheduleFilterForm() {
       if (data.startDate) params.set("startDate", data.startDate);
       if (data.endDate) params.set("endDate", data.endDate);
       if (data.studentName) params.set("studentName", data.studentName);
-      if (data.teacherName) params.set("teacherName", data.teacherName);
+      if (data.teacherName || defaultTeacherName)
+        params.set("teacherName", data.teacherName || defaultTeacherName);
       if (data.courseName) params.set("courseName", data.courseName);
       if (data.attendanceStatus)
         params.set("attendanceStatus", data.attendanceStatus);
@@ -133,7 +271,7 @@ export function ScheduleFilterForm() {
 
       setLoading(false);
     },
-    [router, pathname]
+    [router, pathname, defaultTeacherName]
   );
 
   const handleClearFilters = useCallback(() => {
@@ -141,15 +279,24 @@ export function ScheduleFilterForm() {
       startDate: "",
       endDate: "",
       studentName: "",
-      teacherName: "",
+      teacherName: defaultTeacherName,
       courseName: "",
       attendanceStatus: "",
       classStatus: "",
       room: "",
       sort: "date_asc",
     });
+    // Clear search states
+    setStudentQuery("");
+    setCourseQuery("");
+    setSelectedStudent(null);
+    setSelectedCourse(null);
+    setStudentSearchResults([]);
+    setCourseSearchResults([]);
+    setShowStudentResults(false);
+    setShowCourseResults(false);
     router.replace(pathname);
-  }, [reset, router, pathname]);
+  }, [reset, router, pathname, defaultTeacherName]);
 
   return (
     <div className="mb-5 border border-gray-200 rounded-lg bg-white shadow-sm">
@@ -206,78 +353,115 @@ export function ScheduleFilterForm() {
           className="p-4 pt-0 border-t border-gray-100"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            {/* Date Range */}
+            {/* Start Date */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="startDate">Start Date</Label>
-              <div
-                className="relative cursor-pointer"
-                onClick={() => startDateRef.current?.showPicker()}
-              >
-                <Input
-                  id="startDate"
-                  type="date"
-                  {...register("startDate")}
-                  ref={(e) => {
-                    startDateRHFRef(e);
-                    startDateRef.current = e;
-                  }}
-                  className="border-gray-300 pr-10"
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
+              <Calendar22
+                date={
+                  watch("startDate") ? new Date(watch("startDate")) : undefined
+                }
+                onChange={(date) =>
+                  setValue(
+                    "startDate",
+                    date ? date.toLocaleDateString("en-CA") : ""
+                  )
+                }
+              />
             </div>
 
+            {/* End Date */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="endDate">End Date</Label>
-              <div
-                className="relative cursor-pointer"
-                onClick={() => endDateRef.current?.showPicker()}
-              >
-                <Input
-                  id="endDate"
-                  type="date"
-                  {...register("endDate")}
-                  ref={(e) => {
-                    endDateRHFRef(e);
-                    endDateRef.current = e;
-                  }}
-                  className="border-gray-300 pr-10"
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-              </div>
+              <Calendar22
+                date={watch("endDate") ? new Date(watch("endDate")) : undefined}
+                onChange={(date) =>
+                  setValue(
+                    "endDate",
+                    date ? date.toLocaleDateString("en-CA") : ""
+                  )
+                }
+              />
             </div>
 
             {/* Student Name */}
             <div className="flex flex-col gap-2 relative">
               <Label htmlFor="studentName">Student</Label>
-              <Input
-                id="studentName"
-                {...register("studentName")}
-                placeholder="Enter student's name"
-                className="border-gray-300"
-              />
+              <div className="relative">
+                <Input
+                  id="studentName"
+                  value={studentQuery}
+                  onChange={(e) => handleStudentSearch(e.target.value)}
+                  onBlur={handleStudentInputBlur}
+                  placeholder="Search for a student"
+                  className="border-gray-300 pr-10"
+                  autoComplete="off"
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+                {showStudentResults && studentSearchResults.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                    {studentSearchResults.map((student) => (
+                      <li
+                        key={student.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectStudent(student);
+                        }}
+                        className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                      >
+                        {student.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
-            {/* Teacher Name */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="teacherName">Teacher</Label>
-              <Input
-                id="teacherName"
-                {...register("teacherName")}
-                placeholder="Enter teacher's name"
-                className="border-gray-300"
-              />
-            </div>
+            {/* Teacher Name - conditionally rendered */}
+            {!hideTeacherField && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="teacherName">Teacher</Label>
+                <Input
+                  id="teacherName"
+                  {...register("teacherName")}
+                  placeholder="Enter teacher's name"
+                  className="border-gray-300"
+                />
+              </div>
+            )}
 
             {/* Course Name */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 relative">
               <Label htmlFor="courseName">Course</Label>
-              <Input
-                id="courseName"
-                {...register("courseName")}
-                placeholder="Enter course name"
-                className="border-gray-300"
-              />
+              <div className="relative">
+                <Input
+                  id="courseName"
+                  value={courseQuery}
+                  onChange={(e) => handleCourseSearch(e.target.value)}
+                  onBlur={handleCourseInputBlur}
+                  placeholder="Search for a course"
+                  className="border-gray-300 pr-10"
+                  autoComplete="off"
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+                {showCourseResults && courseSearchResults.length > 0 && (
+                  <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                    {courseSearchResults.map((course) => (
+                      <li
+                        key={course.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectCourse(course);
+                        }}
+                        className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                      >
+                        {course.title}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             {/* Attendance Status */}

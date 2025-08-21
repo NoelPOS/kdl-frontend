@@ -28,6 +28,7 @@ async function ScheduleData({
   };
 
   const data = await getFilteredSchedules(filter, currentPage, 10, accessToken);
+  console.log("Fetched schedule data:", data);
 
   return (
     <ScheduleClientSide

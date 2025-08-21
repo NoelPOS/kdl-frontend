@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Course } from "@/app/types/today.type";
-import StudentSchedule from "@/components/entities/students/details/student-schedule";
 import RoleAwareScheduleTable from "@/components/entities/schedule/tables/role-aware-schedule-table";
 import { useAuth } from "@/context/auth.context";
 import { UserRole } from "@/app/types/auth.type";
@@ -15,9 +14,6 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
   const { user } = useAuth();
 
   if (!selectedCourse) return null;
-
-  // Use role-aware table for teachers, regular StudentSchedule for others
-  const isTeacher = user?.role === UserRole.TEACHER;
 
   return (
     <div className="space-y-6">
@@ -39,16 +35,12 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
           </div>
         </div>
       </div>
-
-      {isTeacher ? (
-        <RoleAwareScheduleTable
-          schedules={selectedCourse.students}
-          userRole={user.role}
-          showStudentHeader={false}
-        />
-      ) : (
-        <StudentSchedule initialSchedules={selectedCourse.students} />
-      )}
+      <RoleAwareScheduleTable
+        schedules={selectedCourse.students}
+        userRole={user?.role ?? UserRole.ADMIN}
+        showStudentHeader={false}
+        hideCourseInfo={true}
+      />
     </div>
   );
 };

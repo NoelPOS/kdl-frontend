@@ -122,6 +122,7 @@ export default function AddNewTeacher() {
         profilePicture: imageUrl,
         profileKey: key,
       };
+      console.log("Creating teacher with data:", teacherData);
       const newTeacher = await addNewTeacher(teacherData);
       showToast.dismiss(toastId);
       showToast.success("Teacher created successfully");

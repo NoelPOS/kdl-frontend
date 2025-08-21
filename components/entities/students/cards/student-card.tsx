@@ -31,22 +31,36 @@ export function StudentCard({ student }: StudentCardProps) {
 
   const router = useRouter();
 
+  // Check if student has any allergies or dietary restrictions
+  const hasAllergiesOrDietaryRestrictions =
+    (student.allergic &&
+      student.allergic.length > 0 &&
+      student.allergic.some((item) => item.trim() !== "")) ||
+    (student.doNotEat &&
+      student.doNotEat.length > 0 &&
+      student.doNotEat.some((item) => item.trim() !== ""));
+
   return (
     <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative max-w-[250px]">
       <>
-        <Pizza
-          className="absolute top-2 right-2 h-5 w-5 text-red-500"
-          onMouseEnter={() => setPizzaHovered(true)}
-        />
+        {/* Only show Pizza icon if student has allergies or dietary restrictions */}
+        {hasAllergiesOrDietaryRestrictions && (
+          <Pizza
+            className="absolute top-2 right-2 h-5 w-5 text-red-500"
+            onMouseEnter={() => setPizzaHovered(true)}
+          />
+        )}
         {!student.adConcent && (
           <Ban
-            className="absolute top-10 right-2 h-5 w-5 text-red-500"
+            className={`absolute ${
+              hasAllergiesOrDietaryRestrictions ? "top-10" : "top-2"
+            } right-2 h-5 w-5 text-red-500`}
             onMouseEnter={() => setBanHovered(true)}
           />
         )}
       </>
 
-      {pizzaHovered && (
+      {pizzaHovered && hasAllergiesOrDietaryRestrictions && (
         <div
           className="absolute inset-0 bg-blue-100 rounded-lg border border-blue-100 p-4 flex flex-col z-50"
           onMouseLeave={() => setPizzaHovered(false)}

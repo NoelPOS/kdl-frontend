@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 import { showToast } from "@/lib/toast";
 import {
   Dialog,
@@ -23,15 +24,44 @@ import { useRouter } from "next/navigation";
 interface AddBlankCoursesFormData {
   selectedStudentId: number;
   studentName: string;
+  studentNickname: string;
+  studentId: string;
   numberOfCourses: number;
 }
 
 export default function AddBlankCoursesDialog() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
+
+  // Search states
+  const [searchResults, setSearchResults] = useState<Student[]>([]);
+  const [activeSearchField, setActiveSearchField] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+
+  // Debounce the search query
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
+
+  // Effect to handle debounced search
+  useEffect(() => {
+    const performSearch = async () => {
+      if (debouncedSearchQuery.trim() && activeSearchField) {
+        try {
+          const results = await searchStudents(
+            debouncedSearchQuery,
+            activeSearchField
+          );
+          setSearchResults(results);
+        } catch (error) {
+          console.error("Search failed", error);
+          setSearchResults([]);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearchQuery, activeSearchField]);
 
   const {
     register,
@@ -44,6 +74,8 @@ export default function AddBlankCoursesDialog() {
     defaultValues: {
       selectedStudentId: 0,
       studentName: "",
+      studentNickname: "",
+      studentId: "",
       numberOfCourses: 1,
     },
   });
@@ -51,32 +83,21 @@ export default function AddBlankCoursesDialog() {
   // Watch the number of courses to ensure it's valid
   const numberOfCourses = watch("numberOfCourses");
 
-  // Search students
-  const handleStudentSearch = async (query: string) => {
+  // Handle search for different fields
+  const handleSearch = (query: string, field: string) => {
+    setActiveSearchField(field);
     setSearchQuery(query);
-    setValue("studentName", query);
-
-    if (query.length >= 2) {
-      try {
-        const results = await searchStudents(query);
-        setStudents(results);
-        setShowStudentDropdown(true);
-      } catch (error) {
-        console.error("Student search failed:", error);
-        setStudents([]);
-      }
-    } else {
-      setStudents([]);
-      setShowStudentDropdown(false);
-    }
   };
 
+  // Handle student selection from dropdown
   const handleSelectStudent = (student: Student) => {
     setValue("selectedStudentId", parseInt(student.id));
     setValue("studentName", student.name);
-    setSearchQuery(student.name);
-    setShowStudentDropdown(false);
-    setStudents([]);
+    setValue("studentNickname", student.nickname || "");
+    setValue("studentId", student.id);
+    setSearchResults([]);
+    setActiveSearchField("");
+    setSearchQuery("");
   };
 
   const onSubmit = async (data: AddBlankCoursesFormData) => {
@@ -95,17 +116,6 @@ export default function AddBlankCoursesDialog() {
     }
 
     try {
-      // Get the selected student info
-      const selectedStudent = students.find(
-        (s) => s.id === data.selectedStudentId.toString()
-      );
-
-      console.log("=== Creating Blank Course Sessions ===");
-      console.log("Student ID:", data.selectedStudentId);
-      console.log("Student Name:", selectedStudent?.name);
-      console.log("Number of Blank Courses:", data.numberOfCourses);
-      console.log("===================================");
-
       // Replace with your actual blank course ID (this course should have title "TBC" in your database)
       const BLANK_COURSE_ID = 10;
 
@@ -135,15 +145,14 @@ export default function AddBlankCoursesDialog() {
       // Success feedback
       console.log("All blank course sessions created successfully!");
       showToast.success(
-        `Successfully created ${data.numberOfCourses} blank course sessions for ${selectedStudent?.name}`
+        `Successfully created ${data.numberOfCourses} blank course sessions for ${data.studentName}`
       );
 
       // Close dialog and reset form
       setIsOpen(false);
       reset();
       setSearchQuery("");
-      setStudents([]);
-      setShowStudentDropdown(false);
+      setSearchResults([]);
 
       // Refresh the page to show new sessions
       router.refresh();
@@ -159,8 +168,8 @@ export default function AddBlankCoursesDialog() {
     setIsOpen(false);
     reset();
     setSearchQuery("");
-    setStudents([]);
-    setShowStudentDropdown(false);
+    setSearchResults([]);
+    setActiveSearchField("");
   };
 
   return (
@@ -168,7 +177,7 @@ export default function AddBlankCoursesDialog() {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+          className="border-yellow-500  hover:bg-yellow-500"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Blank Courses
@@ -185,47 +194,99 @@ export default function AddBlankCoursesDialog() {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Student Selection */}
+          {/* Student Name */}
           <div className="space-y-2 relative">
             <Label htmlFor="studentName">
-              Select Student <span className="text-red-500">*</span>
+              Student Name <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                id="studentName"
-                placeholder="Search and select a student..."
-                value={searchQuery}
-                onChange={(e) => handleStudentSearch(e.target.value)}
-                className="pl-10"
+                {...register("studentName", {
+                  required: "Student name is required",
+                })}
+                placeholder="Jane Doe"
+                className="pr-10"
+                onChange={(e) => handleSearch(e.target.value, "name")}
+                autoComplete="off"
               />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
-
-            {/* Student Dropdown */}
-            {showStudentDropdown && students.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                {students.map((student) => (
-                  <button
+            {activeSearchField === "name" && searchResults.length > 0 && (
+              <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                {searchResults.map((student) => (
+                  <li
                     key={student.id}
-                    type="button"
                     onClick={() => handleSelectStudent(student)}
-                    className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100"
+                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
                   >
-                    <div className="font-medium">{student.name}</div>
-                    {student.nickname && (
-                      <div className="text-sm text-gray-500">
-                        ({student.nickname})
-                      </div>
-                    )}
-                  </button>
+                    {student.name} ({student.nickname})
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
+          </div>
 
-            {searchQuery && showStudentDropdown && students.length === 0 && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg p-3">
-                <div className="text-sm text-gray-500">No students found</div>
-              </div>
+          {/* Student Nickname */}
+          <div className="space-y-2 relative">
+            <Label htmlFor="studentNickname">
+              Student Nickname <span className="text-red-500">*</span>
+            </Label>
+            <div className="relative">
+              <Input
+                {...register("studentNickname", {
+                  required: "Student nickname is required",
+                })}
+                placeholder="Jane"
+                className="pr-10"
+                onChange={(e) => handleSearch(e.target.value, "nickname")}
+                autoComplete="off"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            </div>
+            {activeSearchField === "nickname" && searchResults.length > 0 && (
+              <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                {searchResults.map((student) => (
+                  <li
+                    key={student.id}
+                    onClick={() => handleSelectStudent(student)}
+                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  >
+                    {student.name} ({student.nickname})
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Student ID */}
+          <div className="space-y-2 relative">
+            <Label htmlFor="studentId">
+              Student ID <span className="text-red-500">*</span>
+            </Label>
+            <div className="relative">
+              <Input
+                {...register("studentId", {
+                  required: "Student ID is required",
+                })}
+                placeholder="202501001"
+                className="pr-10"
+                onChange={(e) => handleSearch(e.target.value, "id")}
+                autoComplete="off"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            </div>
+            {activeSearchField === "id" && searchResults.length > 0 && (
+              <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                {searchResults.map((student) => (
+                  <li
+                    key={student.id}
+                    onClick={() => handleSelectStudent(student)}
+                    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  >
+                    {student.name} ({student.nickname})
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 

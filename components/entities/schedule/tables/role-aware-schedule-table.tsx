@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -15,6 +15,13 @@ import { UserRole } from "@/app/types/auth.type";
 import Image from "next/image";
 import EditSchedule from "../dialogs/edit-schedule-dialog";
 import TeacherEditScheduleDialog from "@/components/entities/sessions/dialogs/teacher-edit-schedule-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MessageSquare, User, BookOpen, Calendar } from "lucide-react";
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
   if (!attendance) return null;
@@ -40,6 +47,7 @@ interface RoleAwareScheduleTableProps {
   userRole: UserRole;
   showStudentHeader?: boolean; // true for student detail page, false for general schedule page
   onScheduleUpdate?: (schedule: FormData) => void;
+  hideCourseInfo?: boolean; // true for today page, false for other pages
 }
 
 export default function RoleAwareScheduleTable({
@@ -47,40 +55,80 @@ export default function RoleAwareScheduleTable({
   userRole,
   showStudentHeader = true,
   onScheduleUpdate,
+  hideCourseInfo = false,
 }: RoleAwareScheduleTableProps) {
   const [selectedSchedule, setSelectedSchedule] =
     useState<ClassSchedule | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [feedbackSchedule, setFeedbackSchedule] =
+    useState<ClassSchedule | null>(null);
+  const [localSchedules, setLocalSchedules] =
+    useState<ClassSchedule[]>(schedules);
+
+  // Update local schedules when props change
+  useEffect(() => {
+    setLocalSchedules(schedules);
+  }, [schedules]);
 
   // Get student and course info from first schedule (assuming all schedules are for same student/course)
-  const firstSchedule = schedules[0];
+  const firstSchedule = localSchedules[0];
 
   const handleRowDoubleClick = (schedule: ClassSchedule) => {
     // Convert ClassSchedule to FormData format
-    const formData: FormData = {
-      scheduleId: parseInt(schedule.schedule_id),
-      date: schedule.schedule_date,
-      starttime: schedule.schedule_startTime,
-      endtime: schedule.schedule_endTime,
-      course: schedule.course_title,
-      teacher: schedule.teacher_name,
-      student: schedule.student_name,
-      room: schedule.schedule_room,
-      nickname: schedule.student_nickname,
-      remark: schedule.schedule_remark,
-      feedback: schedule.schedule_feedback || "",
-      feedbackDate: schedule.schedule_feedbackDate || "",
-      status: schedule.schedule_attendance,
-      courseId: parseInt(schedule.schedule_courseId),
-      studentId: parseInt(schedule.student_id),
-      warning: schedule.schedule_warning,
-    };
+    // const formData: FormData = {
+    //   scheduleId: parseInt(schedule.schedule_id),
+    //   date: schedule.schedule_date,
+    //   starttime: schedule.schedule_startTime,
+    //   endtime: schedule.schedule_endTime,
+    //   course: schedule.course_title,
+    //   teacher: schedule.teacher_name,
+    //   student: schedule.student_name,
+    //   room: schedule.schedule_room,
+    //   nickname: schedule.student_nickname,
+    //   remark: schedule.schedule_remark,
+    //   feedback: schedule.schedule_feedback || "",
+    //   feedbackDate: schedule.schedule_feedbackDate || "",
+    //   status: schedule.schedule_attendance,
+    //   courseId: parseInt(schedule.schedule_courseId),
+    //   studentId: parseInt(schedule.student_id),
+    //   warning: schedule.schedule_warning,
+    // };
 
     setSelectedSchedule(schedule);
     setIsEditDialogOpen(true);
   };
 
+  const handleViewFeedback = (schedule: ClassSchedule) => {
+    setFeedbackSchedule(schedule);
+    setIsFeedbackDialogOpen(true);
+  };
+
   const handleScheduleUpdate = (updatedFormData: FormData) => {
+    // Update local schedules with the new data
+    setLocalSchedules((prevSchedules) =>
+      prevSchedules.map((schedule) => {
+        if (parseInt(schedule.schedule_id) === updatedFormData.scheduleId) {
+          return {
+            ...schedule,
+            schedule_date: new Date(updatedFormData.date).toISOString(),
+            schedule_startTime: updatedFormData.starttime,
+            schedule_endTime: updatedFormData.endtime,
+            schedule_room: updatedFormData.room,
+            schedule_remark: updatedFormData.remark || "",
+            schedule_attendance: updatedFormData.status || "pending",
+            teacher_name: updatedFormData.teacher,
+            course_title: updatedFormData.course,
+            student_name: updatedFormData.student,
+            student_nickname: updatedFormData.nickname || "",
+            schedule_feedback:
+              updatedFormData.feedback || schedule.schedule_feedback || "",
+          } as ClassSchedule;
+        }
+        return schedule;
+      })
+    );
+
     if (onScheduleUpdate) {
       onScheduleUpdate(updatedFormData);
     }
@@ -91,7 +139,9 @@ export default function RoleAwareScheduleTable({
   const selectedFormData: FormData | undefined = selectedSchedule
     ? {
         scheduleId: parseInt(selectedSchedule.schedule_id),
-        date: selectedSchedule.schedule_date,
+        date: new Date(selectedSchedule.schedule_date).toLocaleDateString(
+          "en-CA"
+        ), // en-CA gives yyyy-MM-dd format without timezone issues
         starttime: selectedSchedule.schedule_startTime,
         endtime: selectedSchedule.schedule_endTime,
         course: selectedSchedule.course_title,
@@ -111,7 +161,7 @@ export default function RoleAwareScheduleTable({
 
   return (
     <>
-      {schedules.length > 0 ? (
+      {localSchedules.length > 0 ? (
         <>
           {/* Student Info Header */}
           {showStudentHeader && (
@@ -155,23 +205,31 @@ export default function RoleAwareScheduleTable({
                     Student
                   </TableHead>
                 )}
-                {!showStudentHeader && (
+                {!showStudentHeader && !hideCourseInfo && (
                   <TableHead className="border h-30 text-center whitespace-normal font-semibold">
                     Course
                   </TableHead>
                 )}
-                <TableHead className="border h-30 text-center whitespace-normal">
-                  Date
-                </TableHead>
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                  Time
-                </TableHead>
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
-                  Teacher
-                </TableHead>
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
-                  Room
-                </TableHead>
+                {!hideCourseInfo && (
+                  <TableHead className="border h-30 text-center whitespace-normal">
+                    Date
+                  </TableHead>
+                )}
+                {!hideCourseInfo && (
+                  <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+                    Time
+                  </TableHead>
+                )}
+                {!hideCourseInfo && (
+                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
+                    Teacher
+                  </TableHead>
+                )}
+                {!hideCourseInfo && (
+                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
+                    Room
+                  </TableHead>
+                )}
                 <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden sm:table-cell">
                   Attendance
                 </TableHead>
@@ -184,13 +242,19 @@ export default function RoleAwareScheduleTable({
                     Feedback
                   </TableHead>
                 )}
+                {/* Show Feedback column for student session detail pages */}
+                {showStudentHeader && (
+                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
+                    Feedback
+                  </TableHead>
+                )}
                 <TableHead className="border h-30 text-center font-semibold w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
                   Warning
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {schedules.map((session: ClassSchedule, index) => (
+              {localSchedules.map((session: ClassSchedule, index) => (
                 <TableRow
                   key={session.schedule_id}
                   onDoubleClick={() => handleRowDoubleClick(session)}
@@ -222,27 +286,35 @@ export default function RoleAwareScheduleTable({
                       {session.student_name}
                     </TableCell>
                   )}
-                  {!showStudentHeader && (
+                  {!showStudentHeader && !hideCourseInfo && (
                     <TableCell className="border h-30 text-center whitespace-normal">
                       {session.course_title}
                     </TableCell>
                   )}
-                  <TableCell className="border h-30 text-center whitespace-normal">
-                    {session.schedule_date
-                      ? new Date(session.schedule_date).toLocaleDateString(
-                          "en-GB"
-                        )
-                      : "TBD"}
-                  </TableCell>
-                  <TableCell className="border h-30 text-center whitespace-normal">
-                    {`${session.schedule_startTime} - ${session.schedule_endTime}`}
-                  </TableCell>
-                  <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
-                    {session.teacher_name || "TBD"}
-                  </TableCell>
-                  <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
-                    {session.schedule_room}
-                  </TableCell>
+                  {!hideCourseInfo && (
+                    <TableCell className="border h-30 text-center whitespace-normal">
+                      {session.schedule_date
+                        ? new Date(session.schedule_date).toLocaleDateString(
+                            "en-GB"
+                          )
+                        : "TBD"}
+                    </TableCell>
+                  )}
+                  {!hideCourseInfo && (
+                    <TableCell className="border h-30 text-center whitespace-normal">
+                      {`${session.schedule_startTime} - ${session.schedule_endTime}`}
+                    </TableCell>
+                  )}
+                  {!hideCourseInfo && (
+                    <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                      {session.teacher_name || "TBD"}
+                    </TableCell>
+                  )}
+                  {!hideCourseInfo && (
+                    <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                      {session.schedule_room}
+                    </TableCell>
+                  )}
                   <TableCell className="border h-30 text-center whitespace-normal hidden sm:table-cell">
                     {getAttendanceBadge(session.schedule_attendance)}
                   </TableCell>
@@ -266,6 +338,26 @@ export default function RoleAwareScheduleTable({
                         >
                           Pending
                         </Badge>
+                      )}
+                    </TableCell>
+                  )}
+                  {/* Show Feedback column for student session detail pages */}
+                  {showStudentHeader && (
+                    <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
+                      {session.schedule_feedback ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewFeedback(session);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 underline text-sm font-medium"
+                        >
+                          View Feedback
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-sm">
+                          No feedback
+                        </span>
                       )}
                     </TableCell>
                   )}
@@ -293,6 +385,111 @@ export default function RoleAwareScheduleTable({
               onScheduleUpdate={handleScheduleUpdate}
             />
           )}
+
+          {/* Feedback View Dialog */}
+          <Dialog
+            open={isFeedbackDialogOpen}
+            onOpenChange={setIsFeedbackDialogOpen}
+          >
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Session Feedback
+                </DialogTitle>
+              </DialogHeader>
+
+              {feedbackSchedule && (
+                <div className="space-y-4">
+                  {/* Session Information */}
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    {/* Student Info */}
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src={
+                          feedbackSchedule.student_profilePicture ||
+                          "/student.png"
+                        }
+                        alt={feedbackSchedule.student_name}
+                        width={40}
+                        height={40}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">
+                          {feedbackSchedule.student_name}
+                          {feedbackSchedule.student_nickname && (
+                            <span className="text-gray-500 font-normal ml-1">
+                              ({feedbackSchedule.student_nickname})
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Session Details */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <BookOpen className="h-4 w-4" />
+                        <span className="font-medium">
+                          {feedbackSchedule.course_title}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {feedbackSchedule.schedule_date
+                            ? new Date(
+                                feedbackSchedule.schedule_date
+                              ).toLocaleDateString("en-US", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "TBD"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <User className="h-4 w-4" />
+                        <span>{feedbackSchedule.teacher_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <span className="font-medium">Time:</span>
+                        <span>
+                          {feedbackSchedule.schedule_startTime} -{" "}
+                          {feedbackSchedule.schedule_endTime}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Feedback Content */}
+                  <div className="bg-white rounded-md p-4 shadow-sm">
+                    <div className="text-sm font-semibold text-gray-700 mb-2">
+                      Teacher&apos;s Feedback
+                    </div>
+                    <div className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">
+                      {feedbackSchedule.schedule_feedback ||
+                        "No feedback available"}
+                    </div>
+                  </div>
+
+                  {feedbackSchedule.schedule_feedbackDate && (
+                    <div className="text-xs text-gray-500 text-center">
+                      Feedback provided on{" "}
+                      {new Date(
+                        feedbackSchedule.schedule_feedbackDate
+                      ).toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </>
       ) : (
         <div className="flex flex-col items-center justify-center h-[70vh] text-center">

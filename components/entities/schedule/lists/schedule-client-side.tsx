@@ -37,11 +37,6 @@ function ScheduleClientSide({
     }
   );
 
-  const handleRowDoubleClick = useCallback((session: ClassSchedule) => {
-    // This function is now handled internally by RoleAwareScheduleTable
-    console.log("Row double clicked:", session);
-  }, []);
-
   useEffect(() => {
     // Set initial data when component mounts
     if (initialSchedules.length > 0) {
