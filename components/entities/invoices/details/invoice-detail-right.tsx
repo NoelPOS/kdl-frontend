@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogTrigger,
@@ -9,6 +10,13 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { showToast } from "@/lib/toast";
 import {
   Table,
@@ -22,45 +30,47 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/app/types/invoice.type";
 import { changeSessionStatus, createReceipt } from "@/lib/api";
+import {
+  cancelInvoice,
+  confirmPayment,
+  updateInvoicePaymentMethod,
+} from "@/lib/api/invoices";
 
 const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
   const router = useRouter();
+  const [paymentMethod, setPaymentMethod] = useState(invoice.paymentMethod);
+  const [isPaymentConfirmOpen, setIsPaymentConfirmOpen] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
 
   const handleConfirmPayment = async (invoiceId: number) => {
     try {
-      const updateResults: boolean[] = [];
-
-      // Handle multiple sessions if sessionGroups exists (new structure)
-      if (invoice.sessionGroups && invoice.sessionGroups.length > 0) {
-        for (const sessionGroup of invoice.sessionGroups) {
-          const { sessionId } = sessionGroup;
-          // Use the unified changeSessionStatus function that handles both course and courseplus
-          const success = await changeSessionStatus(sessionId, "paid");
-          updateResults.push(success);
-        }
-      }
-
-      // Check if all updates were successful
-      const allUpdatesSuccessful = updateResults.every(
-        (result) => result === true
-      );
-
-      if (!allUpdatesSuccessful) {
-        console.error("Some session status updates failed:", updateResults);
-        showToast.error(
-          "Some session status updates failed. Please try again."
-        );
-        return;
-      }
-
-      // Create receipt after all statuses are updated
-      const result = await createReceipt(invoiceId);
+      const toastId = showToast.loading("Confirming payment...");
+      await confirmPayment(invoiceId, paymentMethod);
+      showToast.dismiss(toastId);
       showToast.success("Payment confirmed successfully!");
+      setIsPaymentConfirmOpen(false);
       router.push("/invoices");
     } catch (error) {
+      console.error("Error confirming payment:", error);
       showToast.error(
         "Error processing payment confirmation. Please try again."
       );
+    }
+  };
+
+  const handleCancelInvoice = async (invoiceId: number) => {
+    try {
+      const toastId = showToast.loading("Cancelling invoice...");
+      const allUpdatesSuccessful = await cancelInvoice(invoiceId);
+      if (allUpdatesSuccessful) {
+        showToast.dismiss(toastId);
+        showToast.success("Invoice cancelled successfully!");
+        setIsCancelOpen(false);
+        router.push("/enrollments");
+      }
+    } catch (error) {
+      console.error("Error cancelling invoice:", error);
+      showToast.error("Error cancelling invoice. Please try again.");
     }
   };
   return (
@@ -126,52 +136,124 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
       <div className="flex-1/5">
         <div className="flex items-center gap-3 mb-4">
           <p className="text-lg">Payment Method:</p>
-          <p className="text-lg font-semibold">{invoice.paymentMethod}</p>
-        </div>
-        <div className="flex justify-end mt-4">
-          <Button
-            variant="outline"
-            className="mr-2"
-            onClick={() => router.back()}
+          <Select
+            value={paymentMethod.toLowerCase().replace(/\s+/g, "-")}
+            onValueChange={(value) => {
+              const paymentMethods = {
+                "credit-card": "Credit Card",
+                "debit-card": "Debit Card",
+                cash: "Cash",
+                "bank-transfer": "Bank Transfer",
+              };
+              setPaymentMethod(
+                paymentMethods[value as keyof typeof paymentMethods] ||
+                  "Credit Card"
+              );
+            }}
+            disabled={invoice.receiptDone}
           >
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="credit-card">Credit Card</SelectItem>
+              <SelectItem value="debit-card">Debit Card</SelectItem>
+              <SelectItem value="cash">Cash</SelectItem>
+              <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex justify-end mt-4 gap-2">
+          <Button variant="outline" onClick={() => router.back()}>
             Back
           </Button>
           {!invoice.receiptDone && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                >
-                  <span className="text-sm">Confirm Payment</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] p-8">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold text-center">
-                    Confirm Payment
-                  </DialogTitle>
-                </DialogHeader>
-
-                <p className="text-center">
-                  Are you sure you want to confirm payment for this invoice?
-                </p>
-
-                <DialogFooter className="gap-2 mt-6">
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                      Cancel
-                    </Button>
-                  </DialogClose>
+            <>
+              {/* Cancel Invoice Button */}
+              <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
+                <DialogTrigger asChild>
                   <Button
-                    onClick={() => handleConfirmPayment(invoice.id)}
+                    variant="outline"
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    <span className="text-sm">Cancel Invoice</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px] p-8">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-center">
+                      Cancel Invoice
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <p className="text-center">
+                    Are you sure you want to cancel this invoice?
+                  </p>
+
+                  <DialogFooter className="gap-2 mt-6">
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline">
+                        No
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      onClick={() => handleCancelInvoice(invoice.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      Yes
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Confirm Payment Button */}
+              <Dialog
+                open={isPaymentConfirmOpen}
+                onOpenChange={setIsPaymentConfirmOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
                     className="bg-yellow-500 hover:bg-yellow-600 text-white"
                   >
-                    Confirm
+                    <span className="text-sm">Confirm Payment</span>
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px] p-8">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-center">
+                      Confirm Payment
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="text-center">
+                    <p>
+                      Are you sure you want to confirm payment for this invoice?
+                    </p>
+                    {paymentMethod !== invoice.paymentMethod && (
+                      <p className="text-sm text-yellow-600 mt-2">
+                        Payment method will be updated to:{" "}
+                        <strong>{paymentMethod}</strong>
+                      </p>
+                    )}
+                  </div>
+
+                  <DialogFooter className="gap-2 mt-6">
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline">
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      onClick={() => handleConfirmPayment(invoice.id)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                    >
+                      Confirm
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { Invoice, FetchAllInvoices } from "@/app/types/invoice.type";
 import { InvoiceSubmission } from "@/app/types/enrollment.type";
 import { clientApi, createServerApi } from "./config";
+import { showToast } from "../toast";
 
 export interface InvoiceFilter {
   documentId?: string;
@@ -32,6 +33,31 @@ export async function markInvoiceReceiptDone(id: number): Promise<Invoice> {
   );
   return response.data;
 }
+
+export async function updateInvoicePaymentMethod(
+  id: number,
+  paymentMethod: string
+): Promise<Invoice> {
+  const response = await clientApi.patch<Invoice>(
+    `/invoices/${id}/payment-method`,
+    { paymentMethod }
+  );
+  return response.data;
+}
+
+export const cancelInvoice = async (invoiceId: number) => {
+  const response = await clientApi.patch(`/invoices/${invoiceId}/cancel`);
+  return response.data.success;
+};
+
+export const confirmPayment = async (
+  invoiceId: number,
+  paymentMethod: string
+) => {
+  await clientApi.patch(`/invoices/${invoiceId}/confirm-payment`, {
+    paymentMethod,
+  });
+};
 
 export async function getNextDocumentId(): Promise<{ nextDocumentId: string }> {
   const response = await clientApi.get<{ nextDocumentId: string }>(
