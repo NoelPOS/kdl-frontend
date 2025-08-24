@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Clock, Phone, Pizza, Ban } from "lucide-react";
+import { User, Clock, Phone, Pizza, Ban, IdCard } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -141,6 +141,12 @@ export function StudentCard({ student }: StudentCardProps) {
             <Phone className="h-4 w-4" />
             {student.phone}
           </div>
+          {student.nationalId && (
+            <div className="flex items-center gap-2">
+              <IdCard className="h-4 w-4" />
+              {student.nationalId}
+            </div>
+          )}
         </div>
       </div>
 

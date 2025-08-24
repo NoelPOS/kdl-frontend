@@ -23,6 +23,7 @@ interface StudentFormData {
   allergic: string;
   doNotEat: string;
   parent: string;
+  nationalId: string;
   adConcent: boolean;
 }
 
@@ -45,6 +46,7 @@ export default function StudentDetailClient({
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
   const [parentQuery, setParentQuery] = useState(student.parent || "");
   const [showParentResults, setShowParentResults] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false); // Track user interaction
   const [debouncedParentQuery] = useDebounce(parentQuery, 300);
 
   const {
@@ -66,6 +68,7 @@ export default function StudentDetailClient({
         ? student.doNotEat.join(", ")
         : "",
       parent: student.parent || "",
+      nationalId: student.nationalId || "",
       adConcent: student.adConcent || false,
     },
   });
@@ -75,7 +78,8 @@ export default function StudentDetailClient({
   // Effect to handle debounced parent search
   useEffect(() => {
     const performParentSearch = async () => {
-      if (debouncedParentQuery.length >= 2) {
+      // Only search if user has interacted with the field and query is long enough
+      if (hasUserInteracted && debouncedParentQuery.length >= 2) {
         try {
           const results = await searchParents(debouncedParentQuery);
           setParentSearchResults(results || []);
@@ -95,10 +99,11 @@ export default function StudentDetailClient({
     };
 
     performParentSearch();
-  }, [debouncedParentQuery]);
+  }, [debouncedParentQuery, hasUserInteracted]);
 
   // Parent search handlers
   const handleParentSearch = (query: string) => {
+    setHasUserInteracted(true); // Mark that user has interacted
     setParentQuery(query);
     setValue("parent", query);
   };
@@ -315,6 +320,15 @@ export default function StudentDetailClient({
         </div>
 
         <div>
+          <Label className="text-xs text-black block">National ID</Label>
+          <Input
+            {...register("nationalId")}
+            className="bg-white border border-black"
+            placeholder="Enter national ID"
+          />
+        </div>
+
+        <div>
           <Label className="text-xs text-black block">
             Allergic (comma-separated)
           </Label>
@@ -343,6 +357,7 @@ export default function StudentDetailClient({
               placeholder="Search for parent..."
               value={parentQuery}
               onChange={(e) => handleParentSearch(e.target.value)}
+              onFocus={() => setHasUserInteracted(true)}
               onBlur={handleParentInputBlur}
               className="bg-white border border-black pr-10"
             />

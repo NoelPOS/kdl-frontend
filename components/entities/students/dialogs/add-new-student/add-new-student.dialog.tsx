@@ -39,6 +39,7 @@ export type FormData = {
   parent: string;
   parentId: number | null;
   phone: string;
+  nationalId: string;
   adConcent: boolean;
   profilePicture: string;
   profilePictureId?: string; // Add this for Cloudinary public_id
@@ -77,6 +78,7 @@ export function AddNewStudent() {
       parent: "",
       parentId: null,
       phone: "",
+      nationalId: "",
       adConcent: false,
       profilePicture: "",
     },
@@ -138,9 +140,14 @@ export function AddNewStudent() {
   };
 
   const onSubmit = async (data: FormData) => {
+    if (data.parent && !data.parentId) {
+      showToast.error("Please select a parent from the search results.");
+      return;
+    }
+
     // Check if there are any validation errors
     if (Object.keys(errors).length > 0) {
-      console.log("Form has validation errors:", errors);
+      showToast.error("Please fix the errors in the form.");
       return;
     }
 
@@ -241,11 +248,11 @@ export function AddNewStudent() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen} modal={false}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
-          New
+          New Student
         </Button>
       </DialogTrigger>
 
@@ -254,10 +261,6 @@ export function AddNewStudent() {
           <DialogTitle className="text-2xl font-bold text-center">
             Add New Student
           </DialogTitle>
-          <p className="text-sm text-gray-600 text-center mt-2">
-            Fields marked with <span className="text-red-500">*</span> are
-            required
-          </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -365,34 +368,15 @@ export function AddNewStudent() {
             <div className="flex flex-col gap-2">
               <Label htmlFor="dob">DOB *</Label>
               <div className="relative">
-                {/* Hidden native date input */}
-                <input
-                  type="date"
-                  ref={(e) => {
-                    dateRHFRef(e);
-                    if (dateRef.current !== e) {
-                      dateRef.current = e;
-                    }
-                  }}
-                  onChange={(e) => setValue("dob", e.target.value)}
-                  className="absolute opacity-0 pointer-events-none"
-                  style={{ zIndex: -1 }}
+                <Calendar22
+                  date={watch("dob") ? new Date(watch("dob")) : undefined}
+                  onChange={(date) =>
+                    setValue(
+                      "dob",
+                      date ? date.toLocaleDateString("en-CA") : ""
+                    )
+                  }
                 />
-
-                {/* Custom trigger button */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => dateRef.current?.showPicker()}
-                  className={`w-full justify-between font-normal border ${
-                    errors.dob ? "border-red-500" : "border-black"
-                  }`}
-                >
-                  {watch("dob")
-                    ? new Date(watch("dob")).toLocaleDateString()
-                    : "Select date of birth"}
-                  <Calendar className="h-4 w-4" />
-                </Button>
               </div>
               {errors.dob && (
                 <p className="text-red-500 text-xs mt-1">
@@ -500,6 +484,19 @@ export function AddNewStudent() {
                     {errors.phone.message}
                   </p>
                 )}
+              </div>
+            </div>
+
+            {/* National ID */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="nationalId">National ID</Label>
+              <div className="relative">
+                <Input
+                  id="nationalId"
+                  {...register("nationalId")}
+                  placeholder="Enter national ID"
+                  className="border-black"
+                />
               </div>
             </div>
             {/* Checkbox */}
