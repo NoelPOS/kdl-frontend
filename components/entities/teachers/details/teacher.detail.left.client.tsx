@@ -147,7 +147,7 @@ export default function TeacherDetailClient({
           onClick={handleImageClick}
         >
           <Image
-            src={imagePreview || teacher.profilePicture || "./default.png"}
+            src={imagePreview || teacher.profilePicture || "/default.png"}
             alt="teacher profile"
             width={90}
             height={90}

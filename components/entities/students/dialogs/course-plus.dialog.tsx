@@ -134,16 +134,6 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-sm text-blue-800">
-            <strong>What is Course Plus?</strong>
-            <ul className="mt-1 ml-4 list-disc space-y-1">
-              <li>Adds extra classes to your existing session</li>
-              <li>Uses the same session ID (keeps progress together)</li>
-              <li>Creates separate enrollment and invoice for billing</li>
-              <li>New schedules marked as &quot;Course Plus&quot;</li>
-            </ul>
-          </div> */}
-
           <div className="space-y-2">
             <Label htmlFor="additionalClasses">
               Number of Additional Classes{" "}
@@ -208,7 +198,6 @@ export function CoursePlusDialog({ course }: CoursePlusDialogProps) {
   );
 }
 
-// interface CoursePlusFormData {
 //   numberOfClasses: number;
 //   amount: number;
 //   description: string;

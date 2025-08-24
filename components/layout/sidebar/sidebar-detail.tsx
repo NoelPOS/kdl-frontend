@@ -109,12 +109,12 @@ const menuItems: MenuItem[] = [
     url: "/invoices",
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
-  {
-    title: "receipts",
-    icon: Receipt,
-    url: "/receipts",
-    roles: [UserRole.ADMIN, UserRole.REGISTRAR],
-  },
+  // {
+  //   title: "receipts",
+  //   icon: Receipt,
+  //   url: "/receipts",
+  //   roles: [UserRole.ADMIN, UserRole.REGISTRAR],
+  // },
   {
     title: "session",
     icon: Calendar,
