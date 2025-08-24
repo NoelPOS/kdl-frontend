@@ -106,7 +106,6 @@ export default function ClassScheduleConfirm({
   useEffect(() => {
     const init = async () => {
       const rows = generateScheduleRows(students, classSchedule, teacherData);
-
       try {
         const formattedSchedules = rows.map((row) => {
           const [startTime, endTime] = row.time.split(" - ");
@@ -229,7 +228,7 @@ export default function ClassScheduleConfirm({
           classOptionId: Number(classSchedule.classType.id),
           classCancel: 0,
           payment: isFromPackage ? "Paid" : "Unpaid",
-          status: "Pending",
+          status: "wip",
           isFromPackage: isFromPackage,
           packageId: packageId,
         });
