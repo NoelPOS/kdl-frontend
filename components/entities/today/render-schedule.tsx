@@ -32,7 +32,6 @@ const RenderSchedule: React.FC<RenderScheduleProps> = ({ scheduleData }) => {
       scheduleData.courses
     );
     const slots = generateTimeSlots(scheduleData.courses);
-    console.log("Generated slots:", slots);
     return slots;
   }, [scheduleData.courses]);
 

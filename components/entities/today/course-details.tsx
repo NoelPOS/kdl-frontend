@@ -26,13 +26,6 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
           <div>
             <span className="font-medium">Time:</span> {selectedCourse.fullTime}
           </div>
-          <div>
-            <span className="font-medium">Teacher:</span>{" "}
-            {selectedCourse.teacher}
-          </div>
-          <div>
-            <span className="font-medium">Room:</span> {selectedCourse.room}
-          </div>
         </div>
       </div>
       <RoleAwareScheduleTable

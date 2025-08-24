@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MessageSquare, User, BookOpen, Calendar } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
   if (!attendance) return null;
@@ -63,6 +64,8 @@ export default function RoleAwareScheduleTable({
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [feedbackSchedule, setFeedbackSchedule] =
     useState<ClassSchedule | null>(null);
+
+  const router = useRouter();
   const [localSchedules, setLocalSchedules] =
     useState<ClassSchedule[]>(schedules);
 
@@ -123,15 +126,14 @@ export default function RoleAwareScheduleTable({
             student_nickname: updatedFormData.nickname || "",
             schedule_feedback:
               updatedFormData.feedback || schedule.schedule_feedback || "",
+            schedule_warning: updatedFormData.warning || "",
           } as ClassSchedule;
         }
         return schedule;
       })
     );
 
-    if (onScheduleUpdate) {
-      onScheduleUpdate(updatedFormData);
-    }
+    router.refresh();
     setIsEditDialogOpen(false);
     setSelectedSchedule(null);
   };
@@ -155,7 +157,7 @@ export default function RoleAwareScheduleTable({
         status: selectedSchedule.schedule_attendance,
         courseId: parseInt(selectedSchedule.schedule_courseId),
         studentId: parseInt(selectedSchedule.student_id),
-        warning: selectedSchedule.schedule_warning,
+        warning: selectedSchedule.schedule_warning || "hello world",
       }
     : undefined;
 
@@ -220,16 +222,15 @@ export default function RoleAwareScheduleTable({
                     Time
                   </TableHead>
                 )}
-                {!hideCourseInfo && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
-                    Teacher
-                  </TableHead>
-                )}
-                {!hideCourseInfo && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
-                    Room
-                  </TableHead>
-                )}
+
+                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
+                  Teacher
+                </TableHead>
+
+                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
+                  Room
+                </TableHead>
+
                 <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden sm:table-cell">
                   Attendance
                 </TableHead>
@@ -305,16 +306,15 @@ export default function RoleAwareScheduleTable({
                       {`${session.schedule_startTime} - ${session.schedule_endTime}`}
                     </TableCell>
                   )}
-                  {!hideCourseInfo && (
-                    <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
-                      {session.teacher_name || "TBD"}
-                    </TableCell>
-                  )}
-                  {!hideCourseInfo && (
-                    <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
-                      {session.schedule_room}
-                    </TableCell>
-                  )}
+
+                  <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                    {session.teacher_name || "TBD"}
+                  </TableCell>
+
+                  <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                    {session.schedule_room}
+                  </TableCell>
+
                   <TableCell className="border h-30 text-center whitespace-normal hidden sm:table-cell">
                     {getAttendanceBadge(session.schedule_attendance)}
                   </TableCell>

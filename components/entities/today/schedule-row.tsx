@@ -51,14 +51,11 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
     >
       <div className="text-center">
         <div className="text-xs sm:text-sm font-semibold leading-tight">
-          {/* Mobile: Show only course name, Desktop: Show full title */}
           <span className="block sm:hidden">
             {course.title.split(" (")[0]}{" "}
-            {/* Extract course name before teacher */}
           </span>
           <span className="hidden sm:block">{course.title}</span>
         </div>
-        {/* Show room on desktop only */}
         <div className="hidden md:block text-xs opacity-90 mt-1">
           Room: {course.room}
         </div>
