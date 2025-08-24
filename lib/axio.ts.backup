@@ -654,7 +654,10 @@ export async function getStudentSessionsFiltered(
 
 export async function changeSessionStatus(
   sessionId: string | number,
-  status: string
+  statusUpdate: {
+    payment?: string;
+    invoiceDone?: boolean;
+  }
 ): Promise<boolean> {
   try {
     const sessionIdStr = sessionId.toString();
@@ -670,7 +673,7 @@ export async function changeSessionStatus(
       endpoint = `/sessions/${sessionId}/payment`;
     }
 
-    const response = await api.patch(endpoint, { status });
+    const response = await api.patch(endpoint, statusUpdate);
     return response.status === 200;
   } catch (error) {
     console.error("Error changing session status:", error);
@@ -680,8 +683,9 @@ export async function changeSessionStatus(
 
 export async function completeSession(sessionId: number): Promise<boolean> {
   try {
-    await api.patch(`/sessions/${sessionId}`, { status: "completed" });
-    return true;
+    return await changeSessionStatus(sessionId, {
+      payment: "completed"
+    });
   } catch (error) {
     console.error("Error completing session:", error);
     return false;

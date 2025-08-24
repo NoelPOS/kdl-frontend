@@ -1,5 +1,6 @@
 import { SessionOverview } from "@/app/types/session.type";
 import { clientApi, createServerApi } from "./config";
+import { SessionStatusUpdate } from "@/app/types/session.type";
 
 export interface SessionData {
   studentId: number;
@@ -54,6 +55,16 @@ export async function getStudentSession(
 ): Promise<SessionOverview[]> {
   const res = await clientApi.get<SessionOverview[]>(
     `/sessions/overview/${studentId}`
+  );
+  return res.data;
+}
+
+export async function checkStudentHasWipSession(
+  studentId: number,
+  courseId: number
+): Promise<{ hasWipSession: boolean }> {
+  const res = await clientApi.get<{ hasWipSession: boolean }>(
+    `/sessions/student/${studentId}/course/${courseId}/has-wip`
   );
   return res.data;
 }
@@ -140,7 +151,7 @@ export async function getTeacherSessionsFiltered(
 
 export async function changeSessionStatus(
   sessionId: string | number,
-  status: string
+  statusUpdate: SessionStatusUpdate
 ): Promise<boolean> {
   try {
     const sessionIdStr = sessionId.toString();
@@ -150,13 +161,13 @@ export async function changeSessionStatus(
     // Check if it's courseplus (starts with cp-)
     if (sessionIdStr.startsWith("cp-")) {
       actualId = sessionIdStr.substring(3); // Remove 'cp-' prefix
-      endpoint = `/courseplus/${actualId}`;
+      endpoint = `/course-plus/${actualId}`;
     } else {
       actualId = sessionIdStr;
       endpoint = `/sessions/${actualId}/status`;
     }
 
-    const response = await clientApi.patch(endpoint, { status });
+    const response = await clientApi.patch(endpoint, statusUpdate);
     return response.status === 200;
   } catch (error) {
     console.error("Error changing session status:", error);
@@ -197,7 +208,7 @@ export async function addCoursePlus(
     const response = await clientApi.post("/sessions/course-plus", {
       sessionId,
       additionalClasses,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleDateString("en-GB"),
     });
     return response.status === 200 || response.status === 201;
   } catch (error) {

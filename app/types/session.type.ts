@@ -10,3 +10,8 @@ export interface SessionOverview {
   medium: string;
   status: string;
 }
+
+export interface SessionStatusUpdate {
+  payment?: string;
+  invoiceDone?: boolean;
+}
