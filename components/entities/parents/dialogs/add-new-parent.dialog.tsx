@@ -122,7 +122,7 @@ export default function AddNewParent() {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
-          New
+          New Parent
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px] p-8">

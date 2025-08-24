@@ -32,7 +32,7 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
             Total Amount
           </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
-            Receipt Done
+            Payment Successful
           </TableHead>
           <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
             Action

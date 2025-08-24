@@ -13,9 +13,9 @@ import { searchCourses } from "@/lib/api";
 import { Course } from "@/app/types/course.type";
 
 const statusOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "All", value: "all" },
+  { label: "Yes", value: "active" },
+  { label: "No", value: "inactive" },
+  { label: "Both", value: "all" },
 ];
 
 type FilterFormData = {
@@ -232,7 +232,7 @@ export default function TeacherFilter() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">Have Scheduled Class</Label>
               <div className="relative">
                 <select
                   id="status"

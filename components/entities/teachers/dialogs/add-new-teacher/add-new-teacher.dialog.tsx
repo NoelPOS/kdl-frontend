@@ -122,7 +122,7 @@ export default function AddNewTeacher() {
         profilePicture: imageUrl,
         profileKey: key,
       };
-      console.log("Creating teacher with data:", teacherData);
+      // console.log("Creating teacher with data:", teacherData);
       const newTeacher = await addNewTeacher(teacherData);
       showToast.dismiss(toastId);
       showToast.success("Teacher created successfully");
@@ -200,7 +200,7 @@ export default function AddNewTeacher() {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
-          New
+          New Teacher
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px] p-8 max-h-[80vh] overflow-y-auto">
