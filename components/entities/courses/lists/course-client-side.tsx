@@ -175,6 +175,7 @@ function CourseClientSide({
           onOpenChange={setOpen}
           onSubmit={handleStudentSubmit}
           onCancel={handleDialogClose}
+          courseId={courseId}
         />
         <ClassTypeSelectionDialog
           open={courseTypeOpen}

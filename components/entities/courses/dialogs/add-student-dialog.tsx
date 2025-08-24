@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
 
-import { searchStudents } from "@/lib/api";
+import { searchStudents, checkStudentHasWipSession } from "@/lib/api";
 
 import { Student } from "@/app/types/course.type";
 
@@ -31,6 +31,7 @@ interface AddStudentProps {
   onOpenChange: (open: boolean) => void;
   onSubmit?: (students: Student[]) => void;
   onCancel?: () => void;
+  courseId?: number; // Add course ID
 }
 
 export function AddStudent({
@@ -38,6 +39,7 @@ export function AddStudent({
   onOpenChange,
   onSubmit: afterStudent,
   onCancel,
+  courseId, // Add this
 }: AddStudentProps) {
   const {
     control,
@@ -67,6 +69,9 @@ export function AddStudent({
   const [activeSearchField, setActiveSearchField] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStudents, setSelectedStudents] = useState<
+    Record<number, Student>
+  >({});
 
   // Debounce the search query
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
@@ -101,6 +106,11 @@ export function AddStudent({
     setActiveSearchIndex(-1);
     setActiveSearchField("");
     setSearchQuery("");
+
+    setSelectedStudents((prev) => ({
+      ...prev,
+      [index]: student,
+    }));
   };
 
   const handleSearch = (query: string, index: number, field: string) => {
@@ -123,8 +133,7 @@ export function AddStudent({
     }
   };
 
-  const onSubmit = (data: FormData) => {
-    // Check if no student is filled at all (all fields empty for all students)
+  const onSubmit = async (data: FormData) => {
     const hasAnyStudentData = data.students.some(
       (student) => student.name.trim() !== "" || student.nickname.trim() !== ""
     );
@@ -134,30 +143,76 @@ export function AddStudent({
       return;
     }
 
-    // Validate that all students have required fields
-    const isValid = data.students.every(
-      (student) =>
-        student.name.trim() !== "" &&
-        student.nickname.trim() !== "" &&
-        student.id
-    );
+    for (let i = 0; i < data.students.length; i++) {
+      const current = data.students[i];
+      const original = selectedStudents[i];
 
-    if (!isValid) {
-      showToast.error("Please fill in all required fields for all students.");
-      return;
+      // If something was typed but never selected
+      if (!original && (current.name || current.nickname || current.id)) {
+        showToast.error(
+          "Please select students from the dropdown list. Manual input is not allowed."
+        );
+        return;
+      }
+
+      // If selected but modified afterwards
+      if (
+        original &&
+        (current.name !== original.name ||
+          current.nickname !== original.nickname ||
+          current.id !== original.id)
+      ) {
+        showToast.error(
+          "You modified a selected student. Please reselect from the dropdown."
+        );
+        return;
+      }
     }
 
-    // Check for duplicate student IDs
-    const studentIds = data.students.map((student) => student.id);
+    // ✅ Duplicates check
+    const studentIds = data.students.map((s) => s.id).filter(Boolean);
     const duplicateIds = studentIds.filter(
       (id, index) => studentIds.indexOf(id) !== index
     );
-
     if (duplicateIds.length > 0) {
       showToast.error(
         "Duplicate students found. Please remove duplicate entries."
       );
       return;
+    }
+
+    if (courseId) {
+      try {
+        const validStudents = data.students.filter((s) => s.id && s.name);
+        const wipCheckPromises = validStudents.map(async (student) => {
+          const { hasWipSession } = await checkStudentHasWipSession(
+            Number(student.id),
+            courseId
+          );
+          return { student, hasWipSession };
+        });
+
+        const wipCheckResults = await Promise.all(wipCheckPromises);
+        const studentsWithWip = wipCheckResults.filter(
+          (result) => result.hasWipSession
+        );
+
+        if (studentsWithWip.length > 0) {
+          const studentNames = studentsWithWip
+            .map((result) => result.student.name)
+            .join(", ");
+          showToast.error(
+            ` ${studentNames} are already enrolled in this course.`
+          );
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking WIP sessions:", error);
+        showToast.error(
+          "Failed to check student enrollment status. Please try again."
+        );
+        return;
+      }
     }
 
     showToast.success("Students added successfully!");

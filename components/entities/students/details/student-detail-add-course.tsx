@@ -13,9 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search } from "lucide-react";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { searchCourses } from "@/lib/api";
+import { searchCourses, checkStudentHasWipSession } from "@/lib/api";
 import { useDebouncedCallback } from "use-debounce";
 import { Course } from "@/app/types/course.type";
+import { showToast } from "@/lib/toast";
 
 interface StudentDetailAddCourseProps {
   open: boolean;
@@ -23,6 +24,7 @@ interface StudentDetailAddCourseProps {
   onSubmit?: (course: Pick<Course, "id" | "title">) => void;
   onCancel?: () => void;
   courseData?: Pick<Course, "id" | "title">;
+  studentId: string | number; // Add student ID
 }
 
 export function StudentDetailAddCourse({
@@ -31,8 +33,15 @@ export function StudentDetailAddCourse({
   onSubmit: afterCourse,
   onCancel,
   courseData, // Add this
+  studentId, // Add this
 }: StudentDetailAddCourseProps) {
-  const { register, handleSubmit, setValue, reset } = useForm<{
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<{
     course: string;
   }>({
     defaultValues: {
@@ -76,20 +85,44 @@ export function StudentDetailAddCourse({
     setSearchResults([]);
   };
 
-  const onSubmit = () => {
-    if (selectedCourse && afterCourse) {
-      afterCourse(selectedCourse);
-      const query = new URLSearchParams();
-      query.set("id", String(selectedCourse.id));
-      query.set("course", selectedCourse.title);
-      if (typeof window !== "undefined") {
-        window.history.pushState({}, "", `?${query.toString()}`);
+  const onSubmit = async () => {
+    if (!selectedCourse) return;
+
+    try {
+      // Check if student already has a WIP session for this course
+      const { hasWipSession } = await checkStudentHasWipSession(
+        Number(studentId),
+        selectedCourse.id
+      );
+
+      if (hasWipSession) {
+        showToast.error(
+          `Student is already attending "${selectedCourse.title}" course.`
+        );
+        return;
       }
+
+      // If no WIP session, proceed with adding the course
+      if (afterCourse) {
+        afterCourse(selectedCourse);
+        const query = new URLSearchParams();
+        query.set("id", String(selectedCourse.id));
+        query.set("course", selectedCourse.title);
+        if (typeof window !== "undefined") {
+          window.history.pushState({}, "", `?${query.toString()}`);
+        }
+      }
+
+      reset();
+      setSelectedCourse(undefined);
+      setSearchResults([]);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error checking WIP session:", error);
+      showToast.error(
+        "Failed to check course enrollment status. Please try again."
+      );
     }
-    reset();
-    setSelectedCourse(undefined);
-    setSearchResults([]);
-    onOpenChange(false);
   };
 
   return (
@@ -157,9 +190,16 @@ export function StudentDetailAddCourse({
               <Button
                 type="submit"
                 className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1"
-                disabled={!selectedCourse}
+                disabled={!selectedCourse || isSubmitting}
               >
-                Next
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Checking...
+                  </>
+                ) : (
+                  "Next"
+                )}
               </Button>
             </DialogFooter>
           </form>

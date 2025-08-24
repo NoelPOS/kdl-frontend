@@ -165,6 +165,7 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
         onSubmit={handleCourseSubmit}
         onCancel={handleDialogClose}
         courseData={courseData}
+        studentId={studentData[0]?.id || ""}
       />
       <ClassTypeSelectionDialog
         open={courseTypeOpen}
