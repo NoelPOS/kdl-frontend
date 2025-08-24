@@ -21,6 +21,7 @@ import { formatDateLocal } from "@/lib/utils";
 import { TimeInput } from "@/components/shared/schedule/time-input";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
 import { toast } from "sonner";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 interface EditScheduleDialogProps {
   open: boolean;
@@ -69,25 +70,6 @@ export function EditScheduleDialog({
   // Watch form values for validation
   const startTime = watch("starttime");
   const endTime = watch("endtime");
-  const selectedDate = watch("date");
-
-  // console.log("EditScheduleDialog initialData:", initialData);
-
-  const { ref: dateRHFRef } = register("date", {
-    required: "Date is required",
-    validate: (value) => {
-      if (!value) return "Date is required";
-      const selectedDate = new Date(value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        return "Cannot select a past date";
-      }
-      return true;
-    },
-  });
-  const { ref: starttimeRHFRef } = register("starttime");
-  const { ref: endtimeRHFRef } = register("endtime");
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
 
@@ -166,11 +148,11 @@ export function EditScheduleDialog({
     fetchTeachers();
   }, [open, initialData?.course, courseId]);
 
-  const dateRef = useRef<HTMLInputElement>(null);
   const starttimeRef = useRef<HTMLInputElement>(null);
   const endtimeRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: EditScheduleFormData) => {
+    console.log("Submitting schedule data:", data);
     try {
       console.log("Schedule Updated:", data);
       console.log("Teacher ID:", data.teacherId); // Log the teacherId to verify it's being captured
@@ -186,42 +168,30 @@ export function EditScheduleDialog({
   console.log("teachers:", teachers);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="sm:max-w-[700px] p-8">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
-            Edit Class Schedule
+            Edit Class Schedule is here
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {/* Date */}
-            <div
-              className="flex flex-col gap-2"
-              onClick={() => dateRef.current?.showPicker()}
-            >
-              <Label htmlFor="date">Date *</Label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  {...register("date")}
-                  ref={(e) => {
-                    dateRHFRef(e);
-                    dateRef.current = e;
-                  }}
-                  className={`border-black ${
-                    errors.date ? "border-red-500 focus:border-red-500" : ""
-                  }`}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
-              </div>
-              {errors.date && (
-                <span className="text-red-500 text-sm">
-                  {errors.date.message}
-                </span>
-              )}
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="date">Date</Label>
+              <Calendar22
+                date={
+                  watch("date") !== undefined && watch("date") !== ""
+                    ? new Date(watch("date") as string)
+                    : undefined
+                }
+                onChange={(date) =>
+                  setValue("date", date ? date.toLocaleDateString("en-CA") : "")
+                }
+              />
             </div>
 
             {/* Course (Read-only) */}

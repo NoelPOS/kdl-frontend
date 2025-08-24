@@ -26,6 +26,7 @@ import { Teacher } from "@/app/types/teacher.type";
 import { TimeInput } from "@/components/shared/schedule";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
 import { formatDateLocal } from "@/lib/utils";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 interface ConflictDetail {
   conflictType: string;
@@ -142,6 +143,8 @@ export function EditSchedule({
             excludeId: initialData?.scheduleId || 0,
           });
 
+          console.log("Conflict result:", conflictResult);
+
           if (conflictResult) {
             warningMessage = generateConflictWarning(conflictResult);
           }
@@ -182,13 +185,13 @@ export function EditSchedule({
           nickname: data.nickname || "",
           remark: data.remark || "",
           status: data.status || "",
+          warning: warningMessage || "hello world",
           // Add any other required FormData fields here
         };
         if (onScheduleUpdate) {
           onScheduleUpdate(updatedFormData);
         }
 
-        // Refresh the router to update all pages with new schedule data
         router.refresh();
 
         if (warningMessage) {
@@ -230,9 +233,6 @@ export function EditSchedule({
   }, [initialData?.courseId]);
 
   useEffect(() => {
-    // console.log("EditSchedule opened, fetching teachers if needed");
-    // console.log("Open state:", open);
-    // console.log("Initial data course ID:", initialData?.courseId);
     if (open && initialData?.courseId) {
       fetchTeachers();
     }
@@ -262,7 +262,7 @@ export function EditSchedule({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="sm:max-w-[700px] p-8">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
@@ -273,26 +273,15 @@ export function EditSchedule({
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {/* Date */}
-            <div
-              className="flex flex-col gap-2"
-              onClick={() => dateRef.current?.showPicker()}
-            >
+            <div className="flex flex-col gap-2">
               <Label htmlFor="date">Date *</Label>
-              <div className="relative">
-                <Input
-                  id="date"
-                  type="date"
-                  {...register("date")}
-                  ref={(e) => {
-                    dateRHFRef(e); // connect RHF ref
-                    dateRef.current = e; // also assign to your own ref
-                  }}
-                  className={`border-black ${
-                    errors.date ? "border-red-500 focus:border-red-500" : ""
-                  }`}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
-              </div>
+              <Calendar22
+                date={watch("date") ? new Date(watch("date")) : undefined}
+                onChange={(date) =>
+                  setValue("date", date ? date.toLocaleDateString("en-CA") : "")
+                }
+              />
+
               {errors.date && (
                 <span className="text-red-500 text-sm">
                   {errors.date.message}
@@ -301,9 +290,10 @@ export function EditSchedule({
             </div>
             {/* Course */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="course">Course (Optional)</Label>
+              <Label htmlFor="course">Course</Label>
               <div className="relative">
                 <Input
+                  disabled={true}
                   id="course"
                   {...register("course")}
                   placeholder="Search for a course (optional)"
@@ -359,9 +349,10 @@ export function EditSchedule({
             </div>
             {/* Student */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="student">Student (Optional)</Label>
+              <Label htmlFor="student">Student </Label>
               <div className="relative">
                 <Input
+                  disabled={true}
                   id="student"
                   {...register("student")}
                   className="border-black"
@@ -395,12 +386,13 @@ export function EditSchedule({
             </div>
             {/* Nickname */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nickname">Nickname (Optional)</Label>
+              <Label htmlFor="nickname">Nickname</Label>
               <Input
+                disabled={true}
                 id="nickname"
                 {...register("nickname")}
                 className="border-black"
-                placeholder="Enter nickname (optional)"
+                placeholder="Enter nickname"
               />
             </div>
 
