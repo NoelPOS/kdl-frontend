@@ -72,6 +72,7 @@ export async function checkScheduleConflict(
     "/schedules/conflict",
     params
   );
+  // console.log("Conflict check result:", res.data);
   return res.data;
 }
 
@@ -82,6 +83,7 @@ export async function checkScheduleConflicts(
     "/schedules/conflicts",
     batch
   );
+  // console.log("Batch conflict check result:", res.data);
   return res.data;
 }
 

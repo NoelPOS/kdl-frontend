@@ -5,7 +5,8 @@ import { Pagination } from "@/components/ui/pagination";
 import { cookies } from "next/headers";
 
 export default async function EnrollmentList({
-  date,
+  startDate,
+  endDate,
   status,
   course,
   teacher,
@@ -13,7 +14,8 @@ export default async function EnrollmentList({
   transactionType,
   page = 1,
 }: {
-  date: string;
+  startDate: string;
+  endDate: string;
   status: string;
   course: string;
   teacher: string;
@@ -25,7 +27,8 @@ export default async function EnrollmentList({
   const accessToken = cookieStore.get("accessToken")?.value;
 
   const filter: EnrollmentFilter = {
-    date,
+    startDate,
+    endDate,
     status,
     course,
     teacher,

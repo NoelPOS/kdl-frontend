@@ -28,14 +28,13 @@ import {
   ComfirmScheduleRow,
   Student,
   TeacherData,
-  ConflictDetail,
   Course,
   EditScheduleFormData,
 } from "@/app/types/course.type";
 import { SessionOverview } from "@/app/types/session.type";
 
 // Utils
-import { generateScheduleRows } from "@/lib/utils";
+import { generateConflictWarning, generateScheduleRows } from "@/lib/utils";
 
 // Component imports
 import EditScheduleDialog from "../../courses/schedule/class-schedule-confirm-edit";
@@ -54,30 +53,6 @@ interface ScheduleConfirmationDialogProps {
   isFromPackage?: boolean;
   packageId?: number;
 }
-
-// Helper function to generate conflict warning message
-const generateConflictWarning = (conflict: ConflictDetail) => {
-  const { conflictType, courseTitle, teacherName, studentName } = conflict;
-
-  switch (conflictType) {
-    case "room":
-      return `Room conflict with ${courseTitle}`;
-    case "teacher":
-      return `Teacher conflict with ${teacherName}`;
-    case "student":
-      return `Student conflict with ${studentName} in ${courseTitle}`;
-    case "room_teacher":
-      return `Room and teacher conflict with ${courseTitle} / ${teacherName}`;
-    case "room_student":
-      return `Room and student conflict with ${courseTitle} / ${studentName}`;
-    case "teacher_student":
-      return `Teacher and student conflict with ${teacherName} / ${studentName} in ${courseTitle}`;
-    case "all":
-      return `Room, teacher, and student conflict with ${courseTitle} / ${teacherName} / ${studentName}`;
-    default:
-      return `Conflict with ${courseTitle}`;
-  }
-};
 
 export default function ScheduleConfirmationDialog({
   course,
@@ -124,12 +99,30 @@ export default function ScheduleConfirmationDialog({
         });
 
         const updatedRows = rows.map((row) => {
-          const conflictCourse = conflicts.find(
-            (c) =>
-              c.date === row.date &&
-              c.room === row.room &&
-              row.time.includes(c.startTime)
-          );
+          // console.log("Checking row for conflicts:", row);
+
+          const [rowStartTime, rowEndTime] = row.time.split(" - ");
+
+          const conflictCourse = conflicts.find((c) => {
+            if (c.date !== row.date || c.room !== row.room) {
+              return false;
+            }
+
+            const toMinutes = (time: string) => {
+              const [hours, minutes] = time.split(":").map(Number);
+              return hours * 60 + minutes;
+            };
+
+            const rowStart = toMinutes(rowStartTime);
+            const rowEnd = toMinutes(rowEndTime);
+            const conflictStart = toMinutes(c.startTime);
+            const conflictEnd = toMinutes(c.endTime);
+
+            const hasTimeOverlap =
+              rowStart < conflictEnd && conflictStart < rowEnd;
+
+            return hasTimeOverlap;
+          });
 
           return {
             ...row,

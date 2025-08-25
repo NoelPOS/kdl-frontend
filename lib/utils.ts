@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge";
 import {
   ComfirmClassScheduleData,
   ComfirmScheduleRow,
+  ConflictDetail,
   Student,
   TeacherData,
 } from "@/app/types/course.type";
@@ -142,4 +143,28 @@ export const formatDateLocal = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+export const generateConflictWarning = (conflict: ConflictDetail) => {
+  const { conflictType, courseTitle, teacherName, studentName, room, time } =
+    conflict;
+
+  switch (conflictType) {
+    case "room":
+      return `${room} is not available. There is a ${courseTitle} class at ${time}.`;
+    case "teacher":
+      return `Teacher ${teacherName} is not available. Teacher ${teacherName} is teaching ${courseTitle} at ${time}.`;
+    case "student":
+      return `Student ${studentName} is not available. Student ${studentName} is learning ${courseTitle} at ${time}.`;
+    case "room_teacher":
+      return `${room} is not available. Teacher ${teacherName} is teaching ${courseTitle} at ${time}.`;
+    case "room_student":
+      return `${room} is not available. Student ${studentName} is learning ${courseTitle} at ${time}.`;
+    case "teacher_student":
+      return `Teacher ${teacherName} is not available. Student ${studentName} is learning ${courseTitle} at ${time}.`;
+    case "all":
+      return `Room ${room} is not available. Teacher ${teacherName} is teaching ${courseTitle} at ${time}. Student ${studentName} is learning ${courseTitle} at ${time}.`;
+    default:
+      return `Conflict with ${courseTitle}`;
+  }
 };

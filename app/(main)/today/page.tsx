@@ -46,7 +46,7 @@ export default async function TodayPage() {
 
   return (
     <div className="p-6 bg-white h-screen">
-      <div className="max-w-6xl mx-auto">
+      <div className=" mx-auto">
         <h1 className="text-2xl font-bold mb-6">{formattedDate}</h1>
         {hasCourses ? (
           <RenderSchedule

@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Invoice } from "@/app/types/invoice.type";
+import { DownloadReceiptButton } from "../components/download-receipt-button";
 
 export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
   return (
@@ -61,15 +62,11 @@ export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
             <TableCell
               className={`border-2 border-gray-300 h-20 text-center whitespace-normal `}
             >
-              <p
-                className={`rounded-lg w-24 mx-auto ${
-                  invoice.receiptDone
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {invoice.receiptDone ? "Yes" : "No"}
-              </p>
+              {invoice.receiptDone ? (
+                <DownloadReceiptButton invoice={invoice} />
+              ) : (
+                <p className=" w-24 mx-auto  py-1">No</p>
+              )}
             </TableCell>
             <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
               <Link

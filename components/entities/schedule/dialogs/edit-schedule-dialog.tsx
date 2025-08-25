@@ -25,7 +25,7 @@ import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { TimeInput } from "@/components/shared/schedule";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
-import { formatDateLocal } from "@/lib/utils";
+import { formatDateLocal, generateConflictWarning } from "@/lib/utils";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 interface ConflictDetail {
@@ -38,29 +38,6 @@ interface ConflictDetail {
   endTime: string;
   room: string;
 }
-
-const generateConflictWarning = (conflict: ConflictDetail) => {
-  const { conflictType, courseTitle, teacherName, studentName } = conflict;
-
-  switch (conflictType) {
-    case "room":
-      return `Room conflict with ${courseTitle}`;
-    case "teacher":
-      return `Teacher conflict with ${teacherName}`;
-    case "student":
-      return `Student conflict with ${studentName} in ${courseTitle}`;
-    case "room_teacher":
-      return `Room and teacher conflict with ${courseTitle} / ${teacherName}`;
-    case "room_student":
-      return `Room and student conflict with ${courseTitle} / ${studentName}`;
-    case "teacher_student":
-      return `Teacher and student conflict with ${teacherName} / ${studentName} in ${courseTitle}`;
-    case "all":
-      return `Room, teacher, and student conflict with ${courseTitle} / ${teacherName} / ${studentName}`;
-    default:
-      return `Conflict with ${courseTitle}`;
-  }
-};
 
 interface EditScheduleProps {
   open: boolean;

@@ -68,6 +68,7 @@ export type ComfirmScheduleRow = {
 export type ConflictDetail = {
   date: string;
   room: string;
+  time: string;
   startTime: string;
   endTime: string;
   conflictType: string;

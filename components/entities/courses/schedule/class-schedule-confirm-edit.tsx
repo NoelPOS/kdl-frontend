@@ -114,9 +114,7 @@ export function EditScheduleDialog({
       let formattedDate = initialData.date || "";
       if (formattedDate && !formattedDate.includes("-")) {
         const parsed = new Date(formattedDate);
-        console.log("Parsed Date:", parsed.toLocaleDateString("en-GB"));
         if (!isNaN(parsed.getTime())) {
-          // Use local date format instead of UTC conversion
           formattedDate = formatDateLocal(parsed);
         }
       }
@@ -125,8 +123,8 @@ export function EditScheduleDialog({
         date: formattedDate,
         starttime: initialData.starttime,
         endtime: initialData.endtime,
-        course: initialData.course || courseName || "", // Ensure course name is preserved
-        teacherId: initialData.teacherId, // Preserve teacherId
+        course: initialData.course || courseName || "",
+        teacherId: initialData.teacherId,
         student: initialData.student || "",
         nickname: initialData.nickname || "",
       });
@@ -138,7 +136,6 @@ export function EditScheduleDialog({
       if (!open) return;
       try {
         const teacherList = await getTeacherByCourseId(courseId);
-        // console.log("Fetched teachers:", teacherList);
         setTeachers(teacherList);
       } catch (error) {
         console.error("Failed to fetch teachers:", error);
@@ -164,8 +161,6 @@ export function EditScheduleDialog({
       toast.error("Failed to update schedule. Please try again.");
     }
   };
-
-  console.log("teachers:", teachers);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={false}>

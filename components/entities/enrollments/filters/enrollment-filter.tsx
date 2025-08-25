@@ -24,7 +24,8 @@ const transactionTypeOptions = [
 ];
 
 type FilterFormData = {
-  date: string;
+  startDate: string;
+  endDate: string;
   status: string;
   course: string;
   teacher: string;
@@ -41,7 +42,8 @@ function EnrollmentFilter() {
   const { register, handleSubmit, watch, reset, setValue } =
     useForm<FilterFormData>({
       defaultValues: {
-        date: searchParams.get("date") || "",
+        startDate: searchParams.get("startDate") || "",
+        endDate: searchParams.get("endDate") || "",
         status: searchParams.get("status") || "",
         course: searchParams.get("course") || "",
         teacher: searchParams.get("teacher") || "",
@@ -62,10 +64,15 @@ function EnrollmentFilter() {
     // Always reset to page 1 when filtering
     params.delete("page");
 
-    if (data.date) {
-      params.set("date", data.date);
+    if (data.startDate) {
+      params.set("startDate", data.startDate);
     } else {
-      params.delete("date");
+      params.delete("startDate");
+    }
+    if (data.endDate) {
+      params.set("endDate", data.endDate);
+    } else {
+      params.delete("endDate");
     }
     if (data.status && data.status !== "all") {
       params.set("status", data.status);
@@ -93,7 +100,8 @@ function EnrollmentFilter() {
       params.delete("transactionType");
     }
     if (
-      !data.date &&
+      !data.startDate &&
+      !data.endDate &&
       !data.status &&
       !data.course &&
       !data.teacher &&
@@ -113,7 +121,8 @@ function EnrollmentFilter() {
 
   const handleClearFilters = useCallback(() => {
     reset({
-      date: "",
+      startDate: "",
+      endDate: "",
       status: "",
       course: "",
       teacher: "",
@@ -176,11 +185,28 @@ function EnrollmentFilter() {
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0 ">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="startDate">Start Date</Label>
               <Calendar22
-                date={watch("date") ? new Date(watch("date")) : undefined}
+                date={
+                  watch("startDate") ? new Date(watch("startDate")) : undefined
+                }
                 onChange={(date) =>
-                  setValue("date", date ? date.toLocaleDateString("en-CA") : "")
+                  setValue(
+                    "startDate",
+                    date ? date.toLocaleDateString("en-CA") : ""
+                  )
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="endDate">End Date</Label>
+              <Calendar22
+                date={watch("endDate") ? new Date(watch("endDate")) : undefined}
+                onChange={(date) =>
+                  setValue(
+                    "endDate",
+                    date ? date.toLocaleDateString("en-CA") : ""
+                  )
                 }
               />
             </div>

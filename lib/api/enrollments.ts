@@ -1,9 +1,9 @@
 import { Enrollment } from "@/app/types/enrollment.type";
 import { clientApi, createServerApi } from "./config";
-import { access } from "fs";
 
 export interface EnrollmentFilter {
-  date?: string;
+  startDate?: string;
+  endDate?: string;
   status?: string;
   course?: string;
   teacher?: string;
@@ -48,7 +48,8 @@ export async function fetchEnrollments(
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
-  if (filter.date) params.set("date", filter.date);
+  if (filter.startDate) params.set("startDate", filter.startDate);
+  if (filter.endDate) params.set("endDate", filter.endDate);
   if (filter.status) params.set("status", filter.status);
   if (filter.course) params.set("course", filter.course);
   if (filter.teacher) params.set("teacher", filter.teacher);
@@ -70,7 +71,7 @@ export async function fetchEnrollments(
       hasPrev: boolean;
     };
   }>(`/sessions/pending-invoice?${params.toString()}`);
-  console.log("Enrollments fetched:", response.data);
+  // console.log("Enrollments fetched:", response.data);
   return response.data;
 }
 

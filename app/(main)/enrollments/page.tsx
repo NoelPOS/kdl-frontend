@@ -6,7 +6,8 @@ export default async function EnrollmentPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    date?: string;
+    startDate?: string;
+    endDate?: string;
     status?: string;
     course?: string;
     teacher?: string;
@@ -15,8 +16,16 @@ export default async function EnrollmentPage({
     page?: string;
   }>;
 }) {
-  const { date, status, course, teacher, student, transactionType, page } =
-    (await searchParams) || {};
+  const {
+    startDate,
+    endDate,
+    status,
+    course,
+    teacher,
+    student,
+    transactionType,
+    page,
+  } = (await searchParams) || {};
   const currentPage = parseInt(page || "1", 10);
 
   return (
@@ -27,7 +36,8 @@ export default async function EnrollmentPage({
         </div>
       </div>
       <EnrollmentFilter />
-      {!date &&
+      {!startDate &&
+      !endDate &&
       !status &&
       !course &&
       !teacher &&
@@ -38,13 +48,16 @@ export default async function EnrollmentPage({
         </div>
       ) : (
         <Suspense
-          key={`${date || ""}${status || ""}${course || ""}${teacher || ""}${
-            student || ""
-          }${transactionType || ""}${currentPage}`}
+          key={`${startDate || ""}${endDate || ""}${status || ""}${
+            course || ""
+          }${teacher || ""}${student || ""}${
+            transactionType || ""
+          }${currentPage}`}
           fallback={<div>Loading...</div>}
         >
           <EnrollmentList
-            date={date || ""}
+            startDate={startDate || ""}
+            endDate={endDate || ""}
             status={status || ""}
             course={course || ""}
             teacher={teacher || ""}

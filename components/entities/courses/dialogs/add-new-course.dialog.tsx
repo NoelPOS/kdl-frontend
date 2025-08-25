@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,7 +32,6 @@ export function AddNewCourse({
 }: {
   onCourseAdded?: (course: Course) => void;
 }) {
-  const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
   const {
     register,
