@@ -1,4 +1,4 @@
-import InvoiceFilterNew from "@/components/entities/invoices/filters/invoice-filter-new";
+import InvoiceFilterNew from "@/components/entities/invoices/filters/invoice-filter";
 import InvoiceList from "@/components/entities/invoices/lists/invoice.list";
 import { Suspense } from "react";
 

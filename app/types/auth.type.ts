@@ -42,6 +42,7 @@ export const USER_ROLE_LABELS = {
 export const ROUTE_PERMISSIONS = {
   // Admin has access to everything
   [UserRole.ADMIN]: [
+    "/",
     "/today",
     "/courses",
     "/students",
@@ -58,6 +59,7 @@ export const ROUTE_PERMISSIONS = {
   ],
   // Registrar has limited access
   [UserRole.REGISTRAR]: [
+    "/",
     "/today",
     "/courses",
     "/students",
@@ -67,7 +69,8 @@ export const ROUTE_PERMISSIONS = {
     "/invoices",
     "/receipts",
     "/schedule",
+    "/feedbacks",
   ],
   // Teacher has most limited access
-  [UserRole.TEACHER]: ["/today", "/courses", "/students", "/schedule"],
+  [UserRole.TEACHER]: ["/", "/today", "/courses", "/students", "/schedule"],
 } as const;

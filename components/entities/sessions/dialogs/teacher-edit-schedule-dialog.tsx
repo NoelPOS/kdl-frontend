@@ -310,7 +310,7 @@ export default function TeacherEditScheduleDialog({
             disabled={isSubmitting || !formData.status}
             className="bg-yellow-600 hover:bg-yellow-700"
           >
-            {isSubmitting ? "Updating..." : "Update Schedule"}
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -13,7 +13,7 @@ export default async function TodayPage() {
 
   const raw = await getTodaySchedules(accessToken || "");
   const grouped = raw.reduce((acc: Record<string, Course>, item) => {
-    const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}-${item.student_nickname}`;
+    const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}`;
 
     if (!acc[key]) {
       acc[key] = {

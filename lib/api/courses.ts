@@ -23,8 +23,13 @@ export async function getCourseIdByCourseName(name: string): Promise<Course> {
 type NewCourseData = Omit<Course, "id">;
 
 export async function addNewCourse(course: NewCourseData): Promise<Course> {
-  const response = await clientApi.post<Course>("/courses", course);
-  return response.data;
+  try {
+    const response = await clientApi.post<Course>("/courses", course);
+    return response.data;
+  } catch (error: any) {
+    console.error("Failed to create course:", error);
+    throw error;
+  }
 }
 
 // Server-side functions

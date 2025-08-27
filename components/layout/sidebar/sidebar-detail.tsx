@@ -95,7 +95,7 @@ const menuItems: MenuItem[] = [
     title: "feedback",
     icon: MessageSquare,
     url: "/feedback",
-    roles: [UserRole.ADMIN],
+    roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
   {
     title: "enrollments",

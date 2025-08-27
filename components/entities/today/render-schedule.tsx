@@ -19,11 +19,14 @@ interface RenderScheduleProps {
 }
 
 const RenderSchedule: React.FC<RenderScheduleProps> = ({ scheduleData }) => {
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const handleCourseClick = useCallback((course: Course) => {
-    setSelectedCourse(course);
+    setSelectedCourseId(course.id);
   }, []);
+
+  const selectedCourse = useMemo(() => {
+    return scheduleData.courses.find((c) => c.id === selectedCourseId) || null;
+  }, [selectedCourseId, scheduleData.courses]);
 
   // Generate dynamic time slots based on actual schedule data
   const dynamicTimeSlots = useMemo(() => {

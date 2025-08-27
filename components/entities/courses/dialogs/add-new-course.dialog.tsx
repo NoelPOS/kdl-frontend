@@ -61,12 +61,16 @@ export function AddNewCourse({
         reset();
         closeRef.current?.click();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create course:", error);
-      showToast.error(
-        "Failed to create course",
-        "Please try again or contact support if the problem persists."
-      );
+
+      // Check if backend returned a duplicate-course error
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to create course. Please try again.";
+
+      showToast.error(message);
     }
   };
 

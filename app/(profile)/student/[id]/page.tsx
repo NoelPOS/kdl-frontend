@@ -22,7 +22,7 @@ export default async function StudentDetailPage({
   const { id } = (await params) || -1;
   const resolvedSearchParams = (await searchParams) || {};
   const student = await getStudentById(Number(id), accessToken);
-  console.log("StudentDetailPage", student);
+  // console.log("StudentDetailPage", student);
   return (
     <div className="relative">
       <div className="flex min-h-screen ">

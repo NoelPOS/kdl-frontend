@@ -124,6 +124,7 @@ export default function AssignCourseFlow({
         open={currentStep === "course"}
         onCourseSelected={handleCourseSelected}
         onCancel={handleCancel}
+        studentId={studentId}
       />
 
       {/* Step 2: Class Type Selection */}

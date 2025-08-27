@@ -207,6 +207,7 @@ export default function ScheduleConfirmationDialog({
       time: `${startTime} - ${endTime}`,
       student: editedData.nickname || editedData.student,
       teacher: editedData.teacher,
+      teacherId: editedData.teacherId,
       room: editedData.room,
       remark: editedData.remark,
       warning: conflictCourse ? generateConflictWarning(conflictCourse) : "",
@@ -234,11 +235,11 @@ export default function ScheduleConfirmationDialog({
 
       if (mode === "assign" && session) {
         // Mode: assign - Update existing session
-        console.log("=== Updating Session and Creating Schedules ===");
-        console.log("Session ID:", session.sessionId);
-        console.log("Course:", course);
-        console.log("Teacher:", teacherData);
-        console.log("Class Schedule:", classSchedule);
+        // console.log("=== Updating Session and Creating Schedules ===");
+        // console.log("Session ID:", session.sessionId);
+        // console.log("Course:", course);
+        // console.log("Teacher:", teacherData);
+        // console.log("Class Schedule:", classSchedule);
 
         // Update the existing session with new course details
         await updateSession(session.sessionId, {
@@ -267,7 +268,7 @@ export default function ScheduleConfirmationDialog({
             classOptionId: Number(classSchedule.classType.id),
             classCancel: 0,
             payment: isFromPackage ? "Paid" : "Unpaid",
-            status: "Pending",
+            status: "wip",
             isFromPackage: isFromPackage,
             packageId: packageId,
           });
@@ -288,8 +289,11 @@ export default function ScheduleConfirmationDialog({
           sessionId: sessionsMap[student!.id],
           courseId: course.id,
           studentId: Number(student!.id),
-          teacherId:
-            teacherData.teacherId === -1 ? undefined : teacherData.teacherId,
+          teacherId: row.teacherId
+            ? row.teacherId
+            : teacherData.teacherId === -1
+            ? undefined
+            : teacherData.teacherId,
           date: row.date,
           startTime,
           endTime,

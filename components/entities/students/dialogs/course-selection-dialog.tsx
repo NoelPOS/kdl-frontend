@@ -17,12 +17,15 @@ import { Search } from "lucide-react";
 import { searchCourses } from "@/lib/api";
 import { useDebouncedCallback } from "use-debounce";
 import { Course } from "@/app/types/course.type";
+import { checkStudentHasWipSession } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 interface CourseSelectionDialogProps {
   open: boolean;
   onCourseSelected: (course: Pick<Course, "id" | "title">) => void;
   onCancel: () => void;
   courseData?: Pick<Course, "id" | "title">;
+  studentId: string | number;
 }
 
 export default function CourseSelectionDialog({
@@ -30,8 +33,15 @@ export default function CourseSelectionDialog({
   onCourseSelected,
   onCancel,
   courseData,
+  studentId,
 }: CourseSelectionDialogProps) {
-  const { register, handleSubmit, setValue, reset } = useForm<{
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<{
     course: string;
   }>({
     defaultValues: {
@@ -75,11 +85,32 @@ export default function CourseSelectionDialog({
     setSearchResults([]);
   };
 
-  const onSubmit = () => {
-    if (selectedCourse && onCourseSelected) {
-      onCourseSelected(selectedCourse);
+  const onSubmit = async () => {
+    if (!selectedCourse) return;
+
+    try {
+      const { hasWipSession } = await checkStudentHasWipSession(
+        Number(studentId),
+        selectedCourse.id
+      );
+
+      if (hasWipSession) {
+        showToast.error(
+          `Student is already attending "${selectedCourse.title}" course.`
+        );
+        return;
+      }
+      if (onCourseSelected) {
+        onCourseSelected(selectedCourse);
+      }
+
+      reset();
+    } catch (error) {
+      console.error("Error checking WIP session:", error);
+      showToast.error(
+        "Failed to check course enrollment status. Please try again."
+      );
     }
-    reset();
   };
 
   return (
@@ -143,7 +174,7 @@ export default function CourseSelectionDialog({
                 className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1"
                 disabled={!selectedCourse}
               >
-                Select
+                {isSubmitting ? "Checking..." : "Next"}
               </Button>
             </DialogFooter>
           </form>

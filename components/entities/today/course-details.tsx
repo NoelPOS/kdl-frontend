@@ -18,7 +18,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
   return (
     <div className="space-y-6">
       <div className="bg-gray-50 p-4 rounded-lg">
-        <div className="flex flex-col text-sm">
+        <div className="flex flex-col text-sm mb-4">
           <div>
             <span className="font-medium">Class:</span>{" "}
             {selectedCourse.title.split(" (")[0]}
@@ -26,14 +26,22 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
           <div>
             <span className="font-medium">Time:</span> {selectedCourse.fullTime}
           </div>
+          <div>
+            <span className="font-medium">Teacher:</span>{" "}
+            {selectedCourse.teacher}
+          </div>
+          <div>
+            <span className="font-medium">Room:</span> {selectedCourse.room}
+          </div>
         </div>
+        <RoleAwareScheduleTable
+          schedules={selectedCourse.students}
+          userRole={user?.role ?? UserRole.ADMIN}
+          showStudentHeader={false}
+          hideCourseInfo={true}
+          shouldRefreshOnUpdate={true}
+        />
       </div>
-      <RoleAwareScheduleTable
-        schedules={selectedCourse.students}
-        userRole={user?.role ?? UserRole.ADMIN}
-        showStudentHeader={false}
-        hideCourseInfo={true}
-      />
     </div>
   );
 };

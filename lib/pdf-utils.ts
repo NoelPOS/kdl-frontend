@@ -34,11 +34,12 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
           
           <!-- Company Information -->
           <div style="flex: 1;">
-            <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 8px 0; text-align: center; color: #000000;">Online English Language School</h2>
+            <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 8px 0; text-align: center; color: #000000;">Kiddee Lab Education Center</h2>
             <div style="text-align: center; font-size: 12px; line-height: 1.3; margin-bottom: 20px; color: #000000;">
-              <p style="margin: 2px 0;">540 Soi 7, Ayutthaya 2 Building Project, Floor H-209, Rama 4 Road</p>
-              <p style="margin: 2px 0;">Suriyawong, Bang Rak, Bangkok 10500</p>
-              <p style="margin: 2px 0;">Phone: 063 887 1899 Fax: 02-634-9876 Email: info@kideelabonline.com</p>
+              <p style="margin: 2px 0;">Lasalle's Avenue 2nd Floor Room No. H-209
+No. 549, 549/1 Lasalle-Baring Road</p>
+              <p style="margin: 2px 0;">Sub-District Bangnatai, District Bangna, Bangkok 10260</p>
+              <p style="margin: 2px 0;">Phone: 083 887 1899 Tax Number: 0105561131663</p>
             </div>
           </div>
         </div>
@@ -129,16 +130,6 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
                   minimumFractionDigits: 2,
                 })}</strong></td>
               </tr>
-              <!-- Total in words -->
-              <tr>
-                <td style="border: 1px solid #000000; padding: 8px; background: #ffffff;"></td>
-                <td style="border: 1px solid #000000; padding: 8px; color: #000000; background: #ffffff;"><strong>Amount (in words)</strong></td>
-                <td style="border: 1px solid #000000; padding: 8px; text-align: right; background: #e9ecef; color: #000000;"><strong>${Number.parseFloat(
-                  invoice.totalAmount
-                ).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                })}</strong></td>
-              </tr>
               <!-- Payment method -->
               <tr>
                 <td style="border: 1px solid #000000; padding: 8px; background: #ffffff;"></td>
@@ -153,7 +144,7 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
 
         <!-- Tax Info -->
         <div style="text-align: center; font-size: 12px; margin-bottom: 30px;">
-          <p style="margin: 0; color: #000000;">Note: The above prices include 7% VAT. This receipt serves as proof of payment.</p>
+          <p style="margin: 0; color: #000000;">Note: for bank transfer, please use SCB:4321254904.</p>
         </div>
 
         <!-- Signatures -->

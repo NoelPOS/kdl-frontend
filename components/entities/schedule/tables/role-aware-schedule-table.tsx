@@ -49,6 +49,7 @@ interface RoleAwareScheduleTableProps {
   showStudentHeader?: boolean; // true for student detail page, false for general schedule page
   onScheduleUpdate?: (schedule: FormData) => void;
   hideCourseInfo?: boolean; // true for today page, false for other pages
+  shouldRefreshOnUpdate?: boolean;
 }
 
 export default function RoleAwareScheduleTable({
@@ -57,6 +58,7 @@ export default function RoleAwareScheduleTable({
   showStudentHeader = true,
   onScheduleUpdate,
   hideCourseInfo = false,
+  shouldRefreshOnUpdate = false,
 }: RoleAwareScheduleTableProps) {
   const [selectedSchedule, setSelectedSchedule] =
     useState<ClassSchedule | null>(null);
