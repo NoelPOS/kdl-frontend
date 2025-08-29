@@ -35,7 +35,7 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
           <!-- Company Information -->
           <div style="flex: 1;">
             <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 8px 0; text-align: center; color: #000000;">Kiddee Lab Education Center</h2>
-            <div style="text-align: center; font-size: 12px; line-height: 1.3; margin-bottom: 20px; color: #000000;">
+            <div style="text-align: center; font-size: 12px; line-height: 2; margin-bottom: 20px; color: #000000;">
               <p style="margin: 2px 0;">Lasalle's Avenue 2nd Floor Room No. H-209
 No. 549, 549/1 Lasalle-Baring Road</p>
               <p style="margin: 2px 0;">Sub-District Bangnatai, District Bangna, Bangkok 10260</p>
