@@ -95,6 +95,8 @@ export function StudentDetailAddCourse({
         selectedCourse.id
       );
 
+      console.log("Has WIP session:", hasWipSession);
+
       if (hasWipSession) {
         showToast.error(
           `Student is already attending "${selectedCourse.title}" course.`

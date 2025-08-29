@@ -5,16 +5,10 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Calendar, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
-import { useRef, useCallback, useState } from "react";
+import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
-
-// const statusOptions = [
-//   { label: "Pending", value: "pending" },
-//   { label: "Completed", value: "completed" },
-//   { label: "All", value: "all" },
-// ];
 
 const transactionTypeOptions = [
   { label: "All Types", value: "" },

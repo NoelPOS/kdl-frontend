@@ -63,9 +63,17 @@ export async function checkStudentHasWipSession(
   studentId: number,
   courseId: number
 ): Promise<{ hasWipSession: boolean }> {
+  console.log(
+    "Checking WIP session for student:",
+    studentId,
+    "course:",
+    courseId
+  );
   const res = await clientApi.get<{ hasWipSession: boolean }>(
     `/sessions/student/${studentId}/course/${courseId}/has-wip`
   );
+
+  console.log("WIP session check result:", res.data);
   return res.data;
 }
 

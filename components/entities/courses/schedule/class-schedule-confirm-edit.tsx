@@ -21,6 +21,7 @@ import { formatDateLocal } from "@/lib/utils";
 import { TimeInput } from "@/components/shared/schedule/time-input";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
 import { toast } from "sonner";
+import { showToast } from "@/lib/toast";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 interface EditScheduleDialogProps {
@@ -65,6 +66,7 @@ export function EditScheduleDialog({
       remark: "",
       status: "",
     },
+    mode: "onSubmit", // Only validate on submit
   });
 
   // Watch form values for validation
@@ -72,6 +74,7 @@ export function EditScheduleDialog({
   const endTime = watch("endtime");
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   // Validation functions
   const validateStartTime = (value: string) => {
@@ -110,6 +113,9 @@ export function EditScheduleDialog({
 
   useEffect(() => {
     if (initialData && open) {
+      // Reset validation errors when dialog opens
+      setShowValidationErrors(false);
+
       // Convert date format if needed
       let formattedDate = initialData.date || "";
       if (formattedDate && !formattedDate.includes("-")) {
@@ -128,8 +134,21 @@ export function EditScheduleDialog({
         student: initialData.student || "",
         nickname: initialData.nickname || "",
       });
+
+      // If we have teacher data but no teacherId, try to find and set the teacherId
+      if (initialData.teacher && !initialData.teacherId) {
+        const matchingTeacher = teachers.find(
+          (t) => t.name === initialData.teacher
+        );
+        if (matchingTeacher) {
+          setValue("teacherId", matchingTeacher.id);
+        }
+      }
+    } else if (!open) {
+      // Reset validation errors when dialog closes
+      setShowValidationErrors(false);
     }
-  }, [initialData, reset, open, courseName]);
+  }, [initialData, reset, open, courseName, teachers, setValue]);
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -137,28 +156,53 @@ export function EditScheduleDialog({
       try {
         const teacherList = await getTeacherByCourseId(courseId);
         setTeachers(teacherList);
+
+        // If we have initial data with a teacher name but no teacherId, find and set it
+        const currentTeacher = watch("teacher");
+        const currentTeacherId = watch("teacherId");
+
+        if (currentTeacher && !currentTeacherId) {
+          const matchingTeacher = teacherList.find(
+            (t) => t.name === currentTeacher
+          );
+          if (matchingTeacher) {
+            setValue("teacherId", matchingTeacher.id);
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch teachers:", error);
+        showToast.error("Failed to load teachers. Please try again.");
       }
     };
 
     fetchTeachers();
-  }, [open, initialData?.course, courseId]);
+  }, [open, initialData?.course, courseId, watch, setValue]);
 
   const starttimeRef = useRef<HTMLInputElement>(null);
   const endtimeRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: EditScheduleFormData) => {
     console.log("Submitting schedule data:", data);
+
+    // Enable validation error display
+    setShowValidationErrors(true);
+
+    // Only validate date field manually (since it's a custom component)
+    if (!data.date) {
+      showToast.error("Please select a date before submitting");
+      return;
+    }
+
+    // React Hook Form will handle teacher, room, and status validation automatically
+
     try {
-      console.log("Schedule Updated:", data);
-      console.log("Teacher ID:", data.teacherId); // Log the teacherId to verify it's being captured
       onSave(data, originalIndex);
       onOpenChange(false);
-      toast.success("Schedule updated successfully!");
+      showToast.success("Schedule updated successfully!");
+      setShowValidationErrors(false);
     } catch (error) {
       console.error("Error updating schedule:", error);
-      toast.error("Failed to update schedule. Please try again.");
+      showToast.error("Failed to update schedule. Please try again.");
     }
   };
 
@@ -176,7 +220,7 @@ export function EditScheduleDialog({
             {/* Date */}
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Date *</Label>
               <Calendar22
                 date={
                   watch("date") !== undefined && watch("date") !== ""
@@ -187,6 +231,11 @@ export function EditScheduleDialog({
                   setValue("date", date ? date.toLocaleDateString("en-CA") : "")
                 }
               />
+              {showValidationErrors && !watch("date") && (
+                <span className="text-red-500 text-sm">
+                  Date selection is required
+                </span>
+              )}
             </div>
 
             {/* Course (Read-only) */}
@@ -235,13 +284,17 @@ export function EditScheduleDialog({
 
             {/* Teacher */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="teacher">Teacher</Label>
+              <Label htmlFor="teacher">Teacher *</Label>
               <div className="relative">
                 <select
                   id="teacher"
-                  {...register("teacher")}
+                  {...register("teacher", {
+                    required: "Teacher selection is required",
+                  })}
                   onChange={handleTeacherChange}
-                  className="border-black w-full border rounded-md py-1.5 px-2"
+                  className={`w-full border rounded-md py-1.5 px-2 ${
+                    errors.teacher ? "border-red-500" : "border-black"
+                  }`}
                   style={{ fontSize: "0.875rem" }}
                 >
                   <option value="" disabled hidden>
@@ -255,6 +308,11 @@ export function EditScheduleDialog({
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
+              {errors.teacher && (
+                <span className="text-red-500 text-sm">
+                  {errors.teacher.message}
+                </span>
+              )}
             </div>
 
             {/* Student */}
@@ -273,12 +331,16 @@ export function EditScheduleDialog({
 
             {/* Room */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="room">Room</Label>
+              <Label htmlFor="room">Room *</Label>
               <div className="relative">
                 <select
                   id="room"
-                  {...register("room")}
-                  className="border-black w-full border rounded-md py-1.5 px-2"
+                  {...register("room", {
+                    required: "Room selection is required",
+                  })}
+                  className={`w-full border rounded-md py-1.5 px-2 ${
+                    errors.room ? "border-red-500" : "border-black"
+                  }`}
                   style={{ fontSize: "0.875rem" }}
                 >
                   <option value="" disabled hidden>
@@ -292,6 +354,11 @@ export function EditScheduleDialog({
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
+              {errors.room && (
+                <span className="text-red-500 text-sm">
+                  {errors.room.message}
+                </span>
+              )}
             </div>
 
             {/* Nickname */}
@@ -329,21 +396,31 @@ export function EditScheduleDialog({
 
             {/* Status */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">Status *</Label>
               <div className="relative">
                 <select
                   id="status"
-                  {...register("status")}
-                  className="border-black w-full border rounded-md py-1.5 px-2"
+                  {...register("status", {
+                    required: "Status selection is required",
+                  })}
+                  className={`w-full border rounded-md py-1.5 px-2 ${
+                    errors.status ? "border-red-500" : "border-black"
+                  }`}
                   style={{ fontSize: "0.875rem" }}
                 >
                   <option value="">Select status</option>
-                  <option value="Confirmed">Confirmed</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending">Pending</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Completed</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
+              {errors.status && (
+                <span className="text-red-500 text-sm">
+                  {errors.status.message}
+                </span>
+              )}
             </div>
           </div>
 

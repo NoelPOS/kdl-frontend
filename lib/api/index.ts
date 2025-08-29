@@ -40,8 +40,5 @@ export * from "./invoices";
 // Receipts
 export * from "./receipts";
 
-// Packages
-export * from "./packages";
-
 // Feedbacks
 export * from "./feedbacks";

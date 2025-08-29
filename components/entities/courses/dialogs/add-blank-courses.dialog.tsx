@@ -130,7 +130,7 @@ export default function AddBlankCoursesDialog() {
           classOptionId: 2,
           classCancel: 0,
           payment: "Unpaid",
-          status: "Pending",
+          status: "wip",
           teacherId: DEFAULT_TEACHER_ID,
           isFromPackage: false,
           packageId: undefined,

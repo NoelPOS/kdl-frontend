@@ -174,7 +174,7 @@ export default function ScheduleConfirmationDialog({
       nickname: student?.nickname || "",
       studentId: student?.id || "",
       remark: row.remark,
-      status: "Pending",
+      status: row.attendance,
     });
 
     setSelectedRowIndex(index);
@@ -185,9 +185,7 @@ export default function ScheduleConfirmationDialog({
     editedData: EditScheduleFormData,
     originalIndex: number
   ) => {
-    console.log("Saving edited data:", editedData);
     const updatedRows = [...scheduleRows];
-
     const startTime = editedData.starttime;
     const endTime = editedData.endtime;
     const date = normalizeDate(editedData.date);
@@ -210,6 +208,7 @@ export default function ScheduleConfirmationDialog({
       teacherId: editedData.teacherId,
       room: editedData.room,
       remark: editedData.remark,
+      attendance: editedData.status,
       warning: conflictCourse ? generateConflictWarning(conflictCourse) : "",
     };
 
@@ -234,13 +233,6 @@ export default function ScheduleConfirmationDialog({
       const sessionsMap: Record<string, number> = {};
 
       if (mode === "assign" && session) {
-        // Mode: assign - Update existing session
-        // console.log("=== Updating Session and Creating Schedules ===");
-        // console.log("Session ID:", session.sessionId);
-        // console.log("Course:", course);
-        // console.log("Teacher:", teacherData);
-        // console.log("Class Schedule:", classSchedule);
-
         // Update the existing session with new course details
         await updateSession(session.sessionId, {
           courseId: course.id,
@@ -274,8 +266,6 @@ export default function ScheduleConfirmationDialog({
           });
           sessionsMap[student.id] = newSession.id;
         }
-
-        console.log("Sessions created successfully");
       }
 
       // Create schedule entries for both modes
@@ -284,7 +274,6 @@ export default function ScheduleConfirmationDialog({
         const student = students.find(
           (s) => s.nickname === row.student || s.name === row.student
         );
-
         return {
           sessionId: sessionsMap[student!.id],
           courseId: course.id,
@@ -299,7 +288,7 @@ export default function ScheduleConfirmationDialog({
           endTime,
           room: row.room,
           remark: row.remark,
-          attendance: "pending",
+          attendance: row.attendance || "pending",
           feedback: "",
           verifyFb: false,
           classNumber: index + 1,
@@ -307,12 +296,8 @@ export default function ScheduleConfirmationDialog({
         };
       });
 
-      console.log("Schedule Payload:", schedulePayload);
-
       // Send schedules to backend
       await createBulkSchedules(schedulePayload);
-
-      console.log("Schedules created successfully");
 
       showToast.dismiss(toastId);
 
