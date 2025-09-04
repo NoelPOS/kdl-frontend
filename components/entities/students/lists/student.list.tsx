@@ -1,28 +1,31 @@
 import React from "react";
 import { StudentCard } from "../cards/student-card";
 import { fetchStudents } from "@/lib/api";
-import { Student } from "@/app/types/student.type";
 import { Pagination } from "@/components/ui/pagination";
+import LastUpdated from "@/components/shared/last-updated";
 import { cookies } from "next/headers";
 
 export default async function StudentList({
   query,
   active,
   course,
+  courseType,
   page = 1,
 }: {
   query: string;
   active: string;
   course: string;
+  courseType: "fixed" | "camp" | "check" | "all" | "";
   page?: number;
 }) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  const { students, pagination } = await fetchStudents(
+  const { students, pagination, lastUpdated } = await fetchStudents(
     query,
     active,
     course,
+    courseType,
     page,
     10,
     accessToken
@@ -30,6 +33,11 @@ export default async function StudentList({
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-medium">Students List</h2>
+        <LastUpdated timestamp={lastUpdated} />
+      </div>
+      
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
         {students.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 py-8">

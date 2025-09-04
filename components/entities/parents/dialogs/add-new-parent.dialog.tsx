@@ -36,7 +36,7 @@ export default function AddNewParent() {
     register,
     handleSubmit,
     setValue,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<ParentFormData>({
     defaultValues: {
       name: "",
@@ -46,6 +46,7 @@ export default function AddNewParent() {
       address: "",
       profilePicture: "",
     },
+    mode: "onSubmit",
   });
   const router = useRouter();
 
@@ -149,46 +150,93 @@ export default function AddNewParent() {
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                {...register("name")}
+                {...register("name", { required: "Name is required" })}
                 placeholder="Enter parent name"
                 className="border-black "
               />
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                {...register("email")}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Invalid email address",
+                  },
+                })}
                 placeholder="Enter email"
                 className="border-black "
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="contactNo">Contact No</Label>
               <Input
                 id="contactNo"
-                {...register("contactNo")}
+                {...register("contactNo", {
+                  required: "Contact number is required",
+                  pattern: {
+                    value: /^\d+$/,
+                    message: "Contact number must contain only numbers",
+                  },
+                  minLength: {
+                    value: 8,
+                    message: "Contact number must be at least 8 digits",
+                  },
+                })}
                 placeholder="Enter contact number"
                 className="border-black "
               />
+              {errors.contactNo && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.contactNo.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="lineId">Line ID</Label>
               <Input
                 id="lineId"
-                {...register("lineId")}
+                {...register("lineId", {
+                  pattern: {
+                    value: /^[a-zA-Z0-9_.-]+$/,
+                    message:
+                      "Line ID can only contain letters, numbers, underscore, dot, and hyphen",
+                  },
+                })}
                 placeholder="Enter Line ID"
                 className="border-black "
               />
+              {errors.lineId && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.lineId.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="address">Address</Label>
               <Input
                 id="address"
-                {...register("address")}
+                {...register("address", { required: "Address is required" })}
                 placeholder="Enter address"
                 className="border-black "
               />
+              {errors.address && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.address.message}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter className="flex justify-end gap-2 mt-8">

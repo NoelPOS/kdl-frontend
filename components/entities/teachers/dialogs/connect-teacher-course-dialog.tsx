@@ -208,7 +208,8 @@ export function ConnectTeacherCourseDialog({
                                 }
                                 className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
                               >
-                                {course.title} ({course.ageRange})
+                                {course.title} ({course.ageRange} ) (
+                                {course.medium})
                               </li>
                             ))}
                           </ul>
@@ -257,7 +258,7 @@ export function ConnectTeacherCourseDialog({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-500 text-white hover:bg-blue-600 rounded-full flex-1 disabled:opacity-50"
+                className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full flex-1 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

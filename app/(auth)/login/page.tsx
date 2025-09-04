@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { login } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 import {
   LoginFormData,
   UserRole,
@@ -46,9 +47,31 @@ const Login = () => {
 
       // Pass the full response (token is already stored by axios login function)
       auth.login(response);
+      showToast.success("Login successful!");
     } catch (error) {
       console.error("Login failed:", error);
-      // You might want to show an error message to the user here
+
+      // Extract error message from API response
+      let errorMessage = "Login failed. Please try again.";
+
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as any;
+        if (apiError.response?.data?.message) {
+          errorMessage = apiError.response.data.message;
+        } else if (apiError.response?.data?.error) {
+          errorMessage = apiError.response.data.error;
+        } else if (apiError.response?.data) {
+          // If response.data is a string
+          errorMessage =
+            typeof apiError.response.data === "string"
+              ? apiError.response.data
+              : errorMessage;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      showToast.error(errorMessage);
     }
   };
 

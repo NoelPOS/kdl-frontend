@@ -1,3 +1,4 @@
+
 import { SessionOverview } from "@/app/types/session.type";
 import { clientApi, createServerApi } from "./config";
 import { SessionStatusUpdate } from "@/app/types/session.type";
@@ -10,8 +11,6 @@ export interface SessionData {
   classCancel: number;
   payment: string;
   status: string;
-  isFromPackage?: boolean;
-  packageId?: number;
 }
 
 export interface UpdateSessionData {
@@ -39,6 +38,7 @@ export async function createSession(
   return res.data;
 }
 
+
 export async function updateSession(
   sessionId: number,
   data: UpdateSessionData
@@ -56,6 +56,13 @@ export async function getStudentSession(
   const res = await clientApi.get<SessionOverview[]>(
     `/sessions/overview/${studentId}`
   );
+  return res.data;
+}
+
+// Create package API
+export async function createPackage(data: { studentId: number; courseName: string; classOption: string }): Promise<{ success: boolean }> {
+  // You can change the endpoint to match your backend implementation
+  const res = await clientApi.post<{ success: boolean }>("/sessions/package", data);
   return res.data;
 }
 
@@ -133,6 +140,7 @@ export async function getTeacherSessionsFiltered(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const params = new URLSearchParams();
 
@@ -154,7 +162,10 @@ export async function getTeacherSessionsFiltered(
       hasPrev: boolean;
     };
   }>(`/sessions/teacher/${teacherId}/filtered?${params.toString()}`);
-  return res.data;
+  return {
+    ...res.data,
+    lastUpdated: res.lastFetched
+  };
 }
 
 export async function changeSessionStatus(

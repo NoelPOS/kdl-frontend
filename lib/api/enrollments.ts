@@ -45,6 +45,7 @@ export async function fetchEnrollments(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
@@ -72,7 +73,10 @@ export async function fetchEnrollments(
     };
   }>(`/sessions/pending-invoice?${params.toString()}`);
   // console.log("Enrollments fetched:", response.data);
-  return response.data;
+  return {
+    ...response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchPendingInvoices(

@@ -6,6 +6,9 @@ declare module "axios" {
   interface InternalAxiosRequestConfig {
     metadata?: { startTime: Date };
   }
+  interface AxiosResponse {
+    lastFetched?: Date;
+  }
 }
 
 // Base axios instance
@@ -56,6 +59,9 @@ clientApi.interceptors.response.use(
     const endTime = new Date();
     const startTime = response.config.metadata?.startTime;
     const duration = startTime ? endTime.getTime() - startTime.getTime() : 0;
+
+    // Add last fetched timestamp to response
+    response.lastFetched = endTime;
 
     if (duration > 2000) {
       console.warn(`Slow API call: ${response.config.url} took ${duration}ms`);
@@ -136,6 +142,9 @@ export const createServerApi = async (
       const endTime = new Date();
       const startTime = response.config.metadata?.startTime;
       const duration = startTime ? endTime.getTime() - startTime.getTime() : 0;
+
+      // Add last fetched timestamp to response
+      response.lastFetched = endTime;
 
       if (duration > 2000) {
         console.warn(

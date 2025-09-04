@@ -16,12 +16,12 @@ export default async function CourseList({
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  const { courses, pagination } = await fetchFilteredCourses(
+  const { courses, pagination, lastUpdated } = await fetchFilteredCourses(
     { query, ageRange, medium },
     page,
     10,
     accessToken
   );
 
-  return <CourseClientSide courses={courses} pagination={pagination} />;
+  return <CourseClientSide courses={courses} pagination={pagination} lastUpdated={lastUpdated} />;
 }

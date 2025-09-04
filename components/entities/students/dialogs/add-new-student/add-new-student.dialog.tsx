@@ -84,11 +84,6 @@ export function AddNewStudent() {
     },
   });
 
-  const { ref: dateRHFRef } = register("dob", {
-    required: "Date of birth is required",
-  });
-  const dateRef = useRef<HTMLInputElement>(null);
-
   // Effect to handle debounced search
   useEffect(() => {
     const performSearch = async () => {
@@ -220,12 +215,13 @@ export function AddNewStudent() {
       }
 
       showToast.success("Student created successfully!");
-      setOpen(false); // Close dialog using state
-      reset(); // Reset form
+      // Close dialog using state
+      reset();
       setImagePreview(""); // Reset image preview
       setImageFile(null); // Reset image file
       setSelectedParent(null); // Reset selected parent
       setParentQuery(""); // Reset parent query
+      setOpen(false);
       router.refresh();
     } catch (error) {
       showToast.dismiss();
@@ -295,9 +291,7 @@ export function AddNewStudent() {
                     },
                   })}
                   placeholder="Enter student name"
-                  className={`border ${
-                    errors.name ? "border-red-500" : "border-black"
-                  }`}
+                  className={` ${errors.name ? "border-red-500" : ""}`}
                 />
                 {errors.name && (
                   <p className="text-red-500 text-xs mt-1">
@@ -317,9 +311,7 @@ export function AddNewStudent() {
                     required: "School is required",
                   })}
                   placeholder="Enter school name"
-                  className={`border ${
-                    errors.school ? "border-red-500" : "border-black"
-                  }`}
+                  className={` ${errors.school ? "border-red-500" : ""}`}
                 />
                 {errors.school && (
                   <p className="text-red-500 text-xs mt-1">
@@ -339,9 +331,7 @@ export function AddNewStudent() {
                     required: "Nickname is required",
                   })}
                   placeholder="Enter nickname"
-                  className={`border ${
-                    errors.nickname ? "border-red-500" : "border-black"
-                  }`}
+                  className={` ${errors.nickname ? "border-red-500" : ""}`}
                 />
                 {errors.nickname && (
                   <p className="text-red-500 text-xs mt-1">
@@ -359,7 +349,7 @@ export function AddNewStudent() {
                   id="allergic"
                   {...register("allergic")}
                   placeholder="Enter allergies"
-                  className="border-black "
+                  className=" "
                 />
               </div>
             </div>
@@ -393,7 +383,7 @@ export function AddNewStudent() {
                   id="doNotEat"
                   {...register("doNotEat")}
                   placeholder="Enter do not eat"
-                  className="border-black "
+                  className=""
                 />
               </div>
             </div>
@@ -408,7 +398,7 @@ export function AddNewStudent() {
                     required: "Gender is required",
                   })}
                   className={`w-full border rounded-md py-1.5 px-2 ${
-                    errors.gender ? "border-red-500" : "border-black"
+                    errors.gender ? "border-red-500" : ""
                   }`}
                   style={{ fontSize: "0.875rem" }}
                 >
@@ -434,7 +424,7 @@ export function AddNewStudent() {
                 <Input
                   id="parent"
                   {...register("parent")}
-                  className="border-black pr-16"
+                  className=" pr-16"
                   placeholder="Search for a parent"
                   onChange={(e) => handleParentSearch(e.target.value)}
                   onBlur={handleParentInputBlur}
@@ -475,9 +465,7 @@ export function AddNewStudent() {
                     },
                   })}
                   placeholder="Enter student phone"
-                  className={`border ${
-                    errors.phone ? "border-red-500" : "border-black"
-                  }`}
+                  className={`border ${errors.phone ? "border-red-500" : ""}`}
                 />
                 {errors.phone && (
                   <p className="text-red-500 text-xs mt-1">
@@ -493,10 +481,22 @@ export function AddNewStudent() {
               <div className="relative">
                 <Input
                   id="nationalId"
-                  {...register("nationalId")}
-                  placeholder="Enter national ID"
-                  className="border-black"
+                  {...register("nationalId", {
+                    pattern: {
+                      value: /^\d/,
+                      message: "National ID must be  digits",
+                    },
+                  })}
+                  placeholder="Enter 13-digit national ID"
+                  className={`border ${
+                    errors.nationalId ? "border-red-500" : ""
+                  }`}
                 />
+                {errors.nationalId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.nationalId.message}
+                  </p>
+                )}
               </div>
             </div>
             {/* Checkbox */}

@@ -4,6 +4,7 @@ import { MiddlewareCookies } from "./lib/cookies";
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
+  "/",
   "/login",
   "/forgot-password",
   "/unauthorized",

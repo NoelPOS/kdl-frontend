@@ -189,17 +189,37 @@ export default function ParentDetailClient({
         <div>
           <Label className="text-xs text-black block">Phone</Label>
           <Input
-            {...register("phone")}
+            {...register("phone", {
+              pattern: {
+                value: /^\d+$/,
+                message: "Phone number must contain only numbers",
+              },
+              minLength: {
+                value: 8,
+                message: "Phone number must be at least 8 digits",
+              },
+            })}
             className="bg-white border border-black"
           />
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+          )}
         </div>
 
         <div>
           <Label className="text-xs text-black block">Email</Label>
           <Input
-            {...register("email")}
+            {...register("email", {
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: "Invalid email address",
+              },
+            })}
             className="bg-white border border-black"
           />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+          )}
         </div>
 
         <div>
@@ -213,9 +233,18 @@ export default function ParentDetailClient({
         <div>
           <Label className="text-xs text-black block">Line ID</Label>
           <Input
-            {...register("lineId")}
+            {...register("lineId", {
+              pattern: {
+                value: /^[a-zA-Z0-9_.-]+$/,
+                message:
+                  "Line ID can only contain letters, numbers, underscore, dot, and hyphen",
+              },
+            })}
             className="bg-white border border-black"
           />
+          {errors.lineId && (
+            <p className="text-red-500 text-xs mt-1">{errors.lineId.message}</p>
+          )}
         </div>
 
         {message && (

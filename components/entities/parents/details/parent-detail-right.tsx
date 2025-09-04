@@ -27,7 +27,7 @@ export default function ParentDetailRight({
   return (
     <div className="flex-1 p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Children</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Children</h1>
         <ConnectParentStudentDialog
           parentId={parentId}
           onSuccess={handleConnectSuccess}

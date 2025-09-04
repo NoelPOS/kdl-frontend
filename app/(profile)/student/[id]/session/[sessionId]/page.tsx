@@ -1,4 +1,3 @@
-import StudentSchedule from "@/components/entities/students/details/student-schedule";
 import { getSchedulesByStudentAndSession } from "@/lib/api";
 import Link from "next/link";
 import React from "react";

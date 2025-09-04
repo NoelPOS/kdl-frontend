@@ -48,6 +48,7 @@ export default function AddNewTeacher() {
     handleSubmit,
     setValue,
     control,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<TeacherFormData>({
     defaultValues: {
@@ -134,7 +135,10 @@ export default function AddNewTeacher() {
         showToast.dismiss(toastId);
         showToast.success("Courses assigned");
       }
+      setImagePreview("");
+      setImageFile(null);
       closeRef.current?.click();
+      reset();
       router.refresh();
     } catch (error) {
       showToast.dismiss();
@@ -263,6 +267,14 @@ export default function AddNewTeacher() {
                 id="contactNo"
                 {...register("contactNo", {
                   required: "Contact number is required",
+                  pattern: {
+                    value: /^\d+$/,
+                    message: "Contact number must contain only numbers",
+                  },
+                  minLength: {
+                    value: 8,
+                    message: "Contact number must be at least 8 digits",
+                  },
                 })}
                 placeholder="Enter contact number"
                 className="border-black "
@@ -277,7 +289,14 @@ export default function AddNewTeacher() {
               <Label htmlFor="lineId">Line ID</Label>
               <Input
                 id="lineId"
-                {...register("lineId", { required: "Line ID is required" })}
+                {...register("lineId", {
+                  required: "Line ID is required",
+                  pattern: {
+                    value: /^[a-zA-Z0-9_.-]+$/,
+                    message:
+                      "Line ID can only contain letters, numbers, underscore, dot, and hyphen",
+                  },
+                })}
                 placeholder="Enter Line ID"
                 className="border-black "
               />
@@ -382,7 +401,8 @@ export default function AddNewTeacher() {
                                 }
                                 className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
                               >
-                                {course.title}
+                                {course.title} ({course.ageRange}) (
+                                {course.medium})
                               </li>
                             ))}
                           </ul>

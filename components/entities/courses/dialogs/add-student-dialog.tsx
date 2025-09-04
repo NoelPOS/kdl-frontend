@@ -72,6 +72,7 @@ export function AddStudent({
   const [selectedStudents, setSelectedStudents] = useState<
     Record<number, Student>
   >({});
+  const [displayIds, setDisplayIds] = useState<Record<number, string>>({});
 
   // Debounce the search query
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
@@ -101,7 +102,14 @@ export function AddStudent({
   const handleSelectStudent = (index: number, student: Student) => {
     setValue(`students.${index}.name`, student.name);
     setValue(`students.${index}.nickname`, student.nickname);
-    setValue(`students.${index}.id`, student.id);
+    setValue(`students.${index}.id`, student.id); // Keep using id for logic
+
+    // Set the display ID for showing studentId
+    setDisplayIds((prev) => ({
+      ...prev,
+      [index]: student.studentId || student.id, // Show studentId if available, fallback to id
+    }));
+
     setSearchResults([]);
     setActiveSearchIndex(-1);
     setActiveSearchField("");
@@ -335,16 +343,26 @@ export function AddStudent({
                         htmlFor={`students.${index}.id`}
                         className="text-xs text-gray-500"
                       >
-                        ID
+                        Student ID
                       </Label>
+                      {/* Hidden input to maintain form registration */}
+                      <input
+                        type="hidden"
+                        {...register(`students.${index}.id` as const, {
+                          required: "Student ID is required",
+                        })}
+                      />
                       <div className="relative">
                         <Input
-                          {...register(`students.${index}.id` as const, {
-                            required: "Student ID is required",
-                          })}
-                          onChange={(e) =>
-                            handleSearch(e.target.value, index, "id")
-                          }
+                          value={displayIds[index] || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setDisplayIds((prev) => ({
+                              ...prev,
+                              [index]: value,
+                            }));
+                            handleSearch(value, index, "id");
+                          }}
                           placeholder="202501001"
                           className="border-gray-300 rounded-lg"
                         />

@@ -134,6 +134,10 @@ export function StudentCard({ student }: StudentCardProps) {
             {student.name}
           </div>
           <div className="flex items-center gap-2">
+            <IdCard className="h-4 w-4" />
+            ID: {student.studentId}
+          </div>
+          <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             {calculateAge(student.dob)} yrs old
           </div>
@@ -144,7 +148,7 @@ export function StudentCard({ student }: StudentCardProps) {
           {student.nationalId && (
             <div className="flex items-center gap-2">
               <IdCard className="h-4 w-4" />
-              {student.nationalId}
+              National ID: {student.nationalId}
             </div>
           )}
         </div>

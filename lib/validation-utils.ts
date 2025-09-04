@@ -1,6 +1,4 @@
-/**
- * Validation utilities for schedule components
- */
+
 
 // Time validation constants
 export const BUSINESS_HOURS = {
@@ -8,22 +6,11 @@ export const BUSINESS_HOURS = {
   END: "17:00",
 } as const;
 
-/**
- * Validates if a time is within business hours (9 AM to 5 PM)
- * @param time - Time string in HH:MM format
- * @returns boolean
- */
 export const isWithinBusinessHours = (time: string): boolean => {
   if (!time) return false;
   return time >= BUSINESS_HOURS.START && time <= BUSINESS_HOURS.END;
 };
 
-/**
- * Validates if end time is after start time
- * @param startTime - Start time string in HH:MM format
- * @param endTime - End time string in HH:MM format
- * @returns boolean
- */
 export const isValidTimeRange = (
   startTime: string,
   endTime: string
@@ -32,11 +19,6 @@ export const isValidTimeRange = (
   return endTime > startTime;
 };
 
-/**
- * Validates if a date is not in the past
- * @param dateStr - Date string in YYYY-MM-DD format
- * @returns boolean
- */
 export const isNotPastDate = (dateStr: string): boolean => {
   if (!dateStr) return false;
   const selectedDate = new Date(dateStr);
@@ -45,12 +27,6 @@ export const isNotPastDate = (dateStr: string): boolean => {
   return selectedDate >= today;
 };
 
-/**
- * Validates if the correct number of dates are selected for camp types
- * @param classMode - The class mode (e.g., "5 days camp", "2 days camp")
- * @param selectedDates - Array of selected date strings
- * @returns boolean
- */
 export const isCorrectCampDateCount = (
   classMode: string,
   selectedDates: string[]
@@ -63,23 +39,12 @@ export const isCorrectCampDateCount = (
   return true; // For non-camp types, any number is valid
 };
 
-/**
- * Get the required number of dates for a camp type
- * @param classMode - The class mode
- * @returns number
- */
 export const getRequiredCampDateCount = (classMode: string): number => {
   if (classMode === "5 days camp") return 5;
   if (classMode === "2 days camp") return 2;
   return 0;
 };
 
-/**
- * Get validation message for camp date selection
- * @param classMode - The class mode
- * @param selectedCount - Number of currently selected dates
- * @returns string
- */
 export const getCampDateValidationMessage = (
   classMode: string,
   selectedCount: number
@@ -100,9 +65,6 @@ export const getCampDateValidationMessage = (
   return "";
 };
 
-/**
- * Time validation rules for react-hook-form
- */
 export const getTimeValidationRules = (
   fieldName: "start" | "end",
   otherTimeValue?: string
@@ -132,11 +94,6 @@ export const getTimeValidationRules = (
   return rules;
 };
 
-/**
- * Get validation error message for time input
- * @param error - Error object from react-hook-form
- * @returns string | undefined
- */
 export const getTimeErrorMessage = (error: any): string | undefined => {
   if (!error) return undefined;
 

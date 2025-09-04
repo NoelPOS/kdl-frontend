@@ -31,11 +31,14 @@ export async function addNewDiscount(
 // Server-side functions
 export async function fetchDiscounts(
   accessToken?: string
-): Promise<Discount[]> {
+): Promise<{ discounts: Discount[], lastUpdated?: Date }> {
   const api = await createServerApi(accessToken);
   const response = await api.get<Discount[]>("/discounts");
   console.log("Discounts fetched:", response.data);
-  return response.data;
+  return {
+    discounts: response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchActiveDiscounts(

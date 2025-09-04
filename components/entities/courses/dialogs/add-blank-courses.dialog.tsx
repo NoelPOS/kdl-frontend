@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { searchStudents, createSession } from "@/lib/api";
+import { searchStudents, createPackage } from "@/lib/api";
 import { Student } from "@/app/types/student.type";
 import { useRouter } from "next/navigation";
 
@@ -26,7 +26,7 @@ interface AddBlankCoursesFormData {
   studentName: string;
   studentNickname: string;
   studentId: string;
-  numberOfCourses: number;
+  coursePackage: string;
 }
 
 export default function AddBlankCoursesDialog() {
@@ -76,12 +76,12 @@ export default function AddBlankCoursesDialog() {
       studentName: "",
       studentNickname: "",
       studentId: "",
-      numberOfCourses: 1,
+      coursePackage: "",
     },
   });
 
-  // Watch the number of courses to ensure it's valid
-  const numberOfCourses = watch("numberOfCourses");
+  // Watch the selected package
+  const coursePackage = watch("coursePackage");
 
   // Handle search for different fields
   const handleSearch = (query: string, field: string) => {
@@ -106,47 +106,19 @@ export default function AddBlankCoursesDialog() {
       return;
     }
 
-    if (
-      !data.numberOfCourses ||
-      data.numberOfCourses < 1 ||
-      data.numberOfCourses > 50
-    ) {
-      showToast.error("Please enter a valid number of courses (1-50).");
+    if (!data.coursePackage) {
+      showToast.error("Please select a course package.");
       return;
     }
-
     try {
-      // Replace with your actual blank course ID (this course should have title "TBC" in your database)
-      const BLANK_COURSE_ID = 10;
-
-      // Replace with a valid teacher ID from your database
-      const DEFAULT_TEACHER_ID = 1;
-
-      // Create session data for each blank course
-      for (let i = 1; i <= data.numberOfCourses; i++) {
-        const sessionData = {
-          studentId: data.selectedStudentId,
-          courseId: BLANK_COURSE_ID,
-          classOptionId: 2,
-          classCancel: 0,
-          payment: "Unpaid",
-          status: "wip",
-          teacherId: DEFAULT_TEACHER_ID,
-          isFromPackage: false,
-          packageId: undefined,
-        };
-
-        console.log(`Creating blank course session ${i}:`, sessionData);
-
-        const result = await createSession(sessionData);
-        console.log(`Blank course session ${i} created:`, result);
-      }
-
-      // Success feedback
-      console.log("All blank course sessions created successfully!");
-      showToast.success(
-        `Successfully created ${data.numberOfCourses} blank course sessions for ${data.studentName}`
-      );
+      // Prepare payload for createPackage
+      const payload = {
+        studentId: data.selectedStudentId,
+        courseName: data.coursePackage,
+        classOption: data.coursePackage,
+      };
+      await createPackage(payload);
+      showToast.success(`Successfully created ${data.coursePackage} for ${data.studentName}`);
 
       // Close dialog and reset form
       setIsOpen(false);
@@ -157,10 +129,8 @@ export default function AddBlankCoursesDialog() {
       // Refresh the page to show new sessions
       router.refresh();
     } catch (error) {
-      console.error("Error creating blank course sessions:", error);
-      showToast.error(
-        "Error creating blank course sessions. Please try again."
-      );
+      console.error("Error creating package:", error);
+      showToast.error("Error creating package. Please try again.");
     }
   };
 
@@ -186,10 +156,9 @@ export default function AddBlankCoursesDialog() {
 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Blank Courses to Student</DialogTitle>
+          <DialogTitle>Add Course Package to Student</DialogTitle>
           <DialogDescription>
-            Select a student and specify the number of blank course slots to add
-            to their account.
+            Select a student and choose a course package to add to their account.
           </DialogDescription>
         </DialogHeader>
 
@@ -291,28 +260,26 @@ export default function AddBlankCoursesDialog() {
           </div>
 
           {/* Number of Courses Input */}
+          {/* Course Package Select */}
           <div className="space-y-2">
-            <Label htmlFor="numberOfCourses">
-              Number of Courses <span className="text-red-500">*</span>
+            <Label htmlFor="coursePackage">
+              Course Package <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="numberOfCourses"
-              type="number"
-              min="1"
-              max="50"
-              placeholder="Enter number of courses to add..."
-              {...register("numberOfCourses", {
-                required: "Please enter number of courses",
-                min: { value: 1, message: "Must be at least 1 course" },
-                max: { value: 50, message: "Cannot exceed 50 courses" },
-                valueAsNumber: true,
-              })}
-              className="w-full"
-            />
-            {errors.numberOfCourses && (
-              <p className="text-red-500 text-sm">
-                {errors.numberOfCourses.message}
-              </p>
+            <div className="relative">
+              <select
+                id="coursePackage"
+                {...register("coursePackage", { required: "Please select a package" })}
+                className="w-full border rounded-md px-3 py-2 pr-10 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select a package...</option>
+                <option value="2 courses package">2 courses package</option>
+                <option value="4 courses package">4 courses package</option>
+                <option value="10 courses package">10 courses package</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
+            {errors.coursePackage && (
+              <p className="text-red-500 text-sm">{errors.coursePackage.message}</p>
             )}
           </div>
 
@@ -333,12 +300,12 @@ export default function AddBlankCoursesDialog() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Sessions...
+                  Creating Package...
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Blank Courses
+                  Add Package
                 </>
               )}
             </Button>

@@ -51,6 +51,7 @@ export async function fetchStudents(
   query?: string,
   active?: string,
   course?: string,
+  courseType?: "fixed" | "camp" | "check" | "all" | "",
   page: number = 1,
   limit: number = 10,
   accessToken?: string
@@ -63,6 +64,7 @@ export async function fetchStudents(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const response = await api.get<{
@@ -75,9 +77,12 @@ export async function fetchStudents(
       hasPrev: boolean;
     };
   }>("/students", {
-    params: { query, active, course, page, limit },
+    params: { query, active, course, courseType, page, limit },
   });
-  return response.data;
+  return {
+    ...response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchActiveStudents(

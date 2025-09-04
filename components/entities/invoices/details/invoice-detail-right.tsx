@@ -29,18 +29,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/app/types/invoice.type";
-import { changeSessionStatus, createReceipt } from "@/lib/api";
-import {
-  cancelInvoice,
-  confirmPayment,
-  updateInvoicePaymentMethod,
-} from "@/lib/api/invoices";
+import { cancelInvoice, confirmPayment } from "@/lib/api/invoices";
+import { generateReceiptPDF } from "@/lib/pdf-utils";
+import { generateSimpleReceiptPDF } from "@/lib/simple-pdf-utils";
 
 const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState(invoice.paymentMethod);
   const [isPaymentConfirmOpen, setIsPaymentConfirmOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [isDownloadPromptOpen, setIsDownloadPromptOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleConfirmPayment = async (invoiceId: number) => {
     try {
@@ -49,13 +48,38 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
       showToast.dismiss(toastId);
       showToast.success("Payment confirmed successfully!");
       setIsPaymentConfirmOpen(false);
-      router.push("/invoices");
+      // Show download receipt prompt
+      setIsDownloadPromptOpen(true);
     } catch (error) {
       console.error("Error confirming payment:", error);
       showToast.error(
         "Error processing payment confirmation. Please try again."
       );
     }
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (isDownloading) return;
+
+    setIsDownloading(true);
+
+    try {
+      await generateReceiptPDF(invoice);
+      showToast.success("Receipt downloaded successfully!");
+    } catch (error) {
+      await generateSimpleReceiptPDF(invoice);
+      console.error("Error downloading receipt:", error);
+      showToast.error("Failed to download receipt. Please try again.");
+    } finally {
+      setIsDownloading(false);
+      setIsDownloadPromptOpen(false);
+      router.push("/invoices");
+    }
+  };
+
+  const handleSkipDownload = () => {
+    setIsDownloadPromptOpen(false);
+    router.push("/invoices");
   };
 
   const handleCancelInvoice = async (invoiceId: number) => {
@@ -257,6 +281,52 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
           )}
         </div>
       </div>
+
+      {/* Download Receipt Prompt Dialog */}
+      <Dialog
+        open={isDownloadPromptOpen}
+        onOpenChange={setIsDownloadPromptOpen}
+      >
+        <DialogContent className="sm:max-w-[500px] p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              Payment Confirmed!
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="text-center">
+            <p className="mb-4">
+              Payment has been successfully confirmed. Would you like to
+              download the receipt now?
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSkipDownload}
+              disabled={isDownloading}
+            >
+              Skip
+            </Button>
+            <Button
+              onClick={handleDownloadReceipt}
+              disabled={isDownloading}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              {isDownloading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Downloading...
+                </>
+              ) : (
+                "Download Receipt"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

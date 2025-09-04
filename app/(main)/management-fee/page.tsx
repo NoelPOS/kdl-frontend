@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import DiscountFilter from "@/components/entities/discounts/filters/filter-discount";
 import { AddNewDiscount } from "@/components/entities/discounts/dialogs/add-new-discount/add-new-discount.dialog";
 import DiscountList from "@/components/entities/discounts/lists/discount.list";
+import PageHeader from "@/components/shared/page-header";
+import { fetchDiscounts } from "@/lib/api";
+import { cookies } from "next/headers";
 
 export default async function DiscountsPage({
   searchParams,
@@ -12,12 +15,22 @@ export default async function DiscountsPage({
 }) {
   const { query } = (await searchParams) || {};
 
+  // Get timestamp for discounts data
+  let lastUpdated: Date | undefined;
+  try {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const { lastUpdated: timestamp } = await fetchDiscounts(accessToken);
+    lastUpdated = timestamp;
+  } catch (error) {
+    console.error("Failed to get timestamp:", error);
+  }
+
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-medium">Management Fees</h1>
+      <PageHeader title="Management Fees" lastUpdated={lastUpdated}>
         <AddNewDiscount />
-      </div>
+      </PageHeader>
 
       <DiscountFilter />
 

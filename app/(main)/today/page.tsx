@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { Course } from "@/app/types/today.type";
 import RenderSchedule from "@/components/entities/today/render-schedule";
+import PageHeader from "@/components/shared/page-header";
 import { getTodaySchedules } from "@/lib/api";
 import { cookies } from "next/headers";
 import Image from "next/image";
@@ -11,7 +12,7 @@ export default async function TodayPage() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  const raw = await getTodaySchedules(accessToken || "");
+  const { schedules: raw, lastUpdated } = await getTodaySchedules(accessToken || "");
   const grouped = raw.reduce((acc: Record<string, Course>, item) => {
     const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}`;
 
@@ -47,7 +48,8 @@ export default async function TodayPage() {
   return (
     <div className="p-6 bg-white h-screen">
       <div className=" mx-auto">
-        <h1 className="text-2xl font-bold mb-6">{formattedDate}</h1>
+        <PageHeader title={formattedDate} lastUpdated={lastUpdated} className="mb-6" />
+        
         {hasCourses ? (
           <RenderSchedule
             scheduleData={{

@@ -168,3 +168,24 @@ export const generateConflictWarning = (conflict: ConflictDetail) => {
       return `Conflict with ${courseTitle}`;
   }
 };
+
+// Format last updated timestamp
+export const formatLastUpdated = (timestamp: Date | undefined): string => {
+  if (!timestamp) return "Unknown";
+  
+  const now = new Date();
+  const diffMs = now.getTime() - timestamp.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  
+  if (diffSecs < 60) {
+    return "Just now";
+  } else if (diffMins < 60) {
+    return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  } else {
+    return timestamp.toLocaleString();
+  }
+};

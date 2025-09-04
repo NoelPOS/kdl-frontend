@@ -261,8 +261,6 @@ export default function ScheduleConfirmationDialog({
             classCancel: 0,
             payment: isFromPackage ? "Paid" : "Unpaid",
             status: "wip",
-            isFromPackage: isFromPackage,
-            packageId: packageId,
           });
           sessionsMap[student.id] = newSession.id;
         }

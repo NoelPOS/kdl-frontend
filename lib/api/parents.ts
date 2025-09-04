@@ -123,6 +123,7 @@ export async function fetchParents(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
@@ -142,7 +143,10 @@ export async function fetchParents(
       hasPrev: boolean;
     };
   }>(`/parents/search?${params.toString()}`);
-  return response.data;
+  return {
+    ...response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchAllParents(accessToken?: string): Promise<Parent[]> {

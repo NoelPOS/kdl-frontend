@@ -13,7 +13,7 @@ export default async function DiscountList({ query }: { query: string }) {
   if (query) {
     discounts = await searchDiscounts(query, accessToken);
   } else {
-    discounts = await fetchDiscounts(accessToken);
+    ({ discounts } = await fetchDiscounts(accessToken));
   }
 
   return (

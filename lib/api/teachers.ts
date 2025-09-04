@@ -104,6 +104,7 @@ export async function fetchTeachers(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
@@ -123,7 +124,10 @@ export async function fetchTeachers(
       hasPrev: boolean;
     };
   }>(`/teachers?${params.toString()}`);
-  return response.data;
+  return {
+    ...response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchAllTeachers(

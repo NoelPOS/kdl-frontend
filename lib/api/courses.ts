@@ -47,6 +47,7 @@ export async function fetchFilteredCourses(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
@@ -68,7 +69,10 @@ export async function fetchFilteredCourses(
       hasPrev: boolean;
     };
   }>(`/courses/filter?${params.toString()}`);
-  return response.data;
+  return {
+    ...response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchCourses(

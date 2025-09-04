@@ -29,15 +29,13 @@ const getAttendanceBadge = (attendance: string | null | undefined) => {
 
   const badgeClass =
     attendance === "completed" || attendance === "present"
-      ? "bg-blue-100 text-blue-800"
-      : attendance === "absent"
-      ? "bg-red-100 text-red-800"
+      ? "bg-[#52c41a] text-[#ffffff]"
+      : attendance === "cancelled"
+      ? "bg-red-500 text-[#ffffff]"
       : attendance === "confirmed"
-      ? "bg-blue-100 text-blue-800"
-      : attendance === "late"
-      ? "bg-yellow-100 text-yellow-800"
-      : attendance === "excused"
-      ? "bg-blue-100 text-blue-800"
+      ? "bg-[#1890ff] text-[#ffffff]"
+      : attendance === "pending"
+      ? "bg-[#faad14] text-[#ffffff]"
       : "bg-gray-100 text-gray-800";
 
   return <Badge className={badgeClass}>{attendance}</Badge>;
@@ -246,11 +244,11 @@ export default function RoleAwareScheduleTable({
                   </TableHead>
                 )}
                 {/* Show Feedback column for student session detail pages */}
-                {showStudentHeader && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
-                    Feedback
-                  </TableHead>
-                )}
+                {/* {showStudentHeader && ( */}
+                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
+                  Feedback
+                </TableHead>
+                {/* )} */}
                 <TableHead className="border h-30 text-center font-semibold w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
                   Warning
                 </TableHead>
@@ -344,25 +342,23 @@ export default function RoleAwareScheduleTable({
                     </TableCell>
                   )}
                   {/* Show Feedback column for student session detail pages */}
-                  {showStudentHeader && (
-                    <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
-                      {session.schedule_feedback ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewFeedback(session);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 underline text-sm font-medium"
-                        >
-                          View Feedback
-                        </button>
-                      ) : (
-                        <span className="text-gray-400 text-sm">
-                          No feedback
-                        </span>
-                      )}
-                    </TableCell>
-                  )}
+                  {/* {showStudentHeader && ( */}
+                  <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
+                    {session.schedule_feedback ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewFeedback(session);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 underline text-sm font-medium"
+                      >
+                        View Feedback
+                      </button>
+                    ) : (
+                      <span className="text-gray-400 text-sm">No feedback</span>
+                    )}
+                  </TableCell>
+                  {/* )} */}
                   <TableCell className="border h-30 text-center text-red-500 w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
                     {session.schedule_warning}
                   </TableCell>

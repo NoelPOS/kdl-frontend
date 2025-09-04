@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const statusOptions = [
   { label: "Choose Status", value: "" },
@@ -20,6 +27,7 @@ type FilterFormData = {
   query: string;
   status: string;
   course: string;
+  courseType: "fixed" | "camp" | "check" | "all";
 };
 
 function StudentFilter() {
@@ -33,6 +41,12 @@ function StudentFilter() {
       query: searchParams.get("query") || "",
       status: searchParams.get("active") || "",
       course: searchParams.get("course") || "",
+      courseType:
+        (searchParams.get("courseType") as
+          | "fixed"
+          | "camp"
+          | "check"
+          | "all") || "all",
     },
   });
 
@@ -63,10 +77,17 @@ function StudentFilter() {
     } else {
       params.delete("course");
     }
-    if (!data.query && !data.status && !data.course) {
+
+    if (data.courseType) {
+      params.set("courseType", data.courseType);
+    } else {
+      params.delete("courseType");
+    }
+    if (!data.query && !data.status && !data.course && !data.courseType) {
       params.delete("query");
       params.delete("active");
       params.delete("course");
+      params.delete("courseType");
       params.set("active", "all");
     }
     params.delete("page");
@@ -78,6 +99,7 @@ function StudentFilter() {
       query: "",
       status: "",
       course: "",
+      courseType: "all",
     });
     router.replace(pathname);
   }, [reset, router, pathname]);
@@ -167,6 +189,23 @@ function StudentFilter() {
                       {opt.label}
                     </option>
                   ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="courseType">Course Type</Label>
+              <div className="relative">
+                <select
+                  id="courseType"
+                  {...register("courseType")}
+                  className="w-full border border-gray-300 rounded-md py-1.5 px-3 appearance-none text-sm text-gray-500"
+                >
+                  <option value="all">All</option>
+                  <option value="fixed">Fixed</option>
+                  <option value="check">Check</option>
+                  <option value="camp">Camp</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>

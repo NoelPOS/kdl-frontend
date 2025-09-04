@@ -98,9 +98,9 @@ const menuItems: MenuItem[] = [
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
   {
-    title: "enrollments",
+    title: "create Invoice",
     icon: FileText,
-    url: "/enrollments",
+    url: "/create-invoice",
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
   {
@@ -116,9 +116,9 @@ const menuItems: MenuItem[] = [
   //   roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   // },
   {
-    title: "session",
+    title: "My Schedules",
     icon: Calendar,
-    url: "/session",
+    url: "/my-schedules",
     roles: [UserRole.TEACHER],
   },
 ];

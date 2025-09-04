@@ -6,6 +6,9 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const nextConfig: NextConfig = {
+  // Enable standalone output for Docker
+  // output: "standalone",
+
   images: {
     // Modern remotePatterns configuration (replaces deprecated domains)
     remotePatterns: [
@@ -80,7 +83,7 @@ const nextConfig: NextConfig = {
 
           // Students feature bundle
           students: {
-            test: /[\\/]components[\\/]students[\\/]|[\\/]app[\\/]\(main\)[\\/]students[\\/]|[\\/]app[\\/]\(profile\)[\\/]student[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/]students[\\/]|[\\/]app[\\/]\(main\)[\\/]students[\\/]|[\\/]app[\\/]\(profile\)[\\/]student[\\/]/,
             name: "students-chunk",
             priority: 10,
             chunks: "all",
@@ -89,7 +92,7 @@ const nextConfig: NextConfig = {
 
           // Teachers feature bundle
           teachers: {
-            test: /[\\/]components[\\/]teachers[\\/]|[\\/]app[\\/]\(main\)[\\/]teachers[\\/]|[\\/]app[\\/]\(profile\)[\\/]teacher[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/]teachers[\\/]|[\\/]app[\\/]\(main\)[\\/]teachers[\\/]|[\\/]app[\\/]\(profile\)[\\/]teacher[\\/]/,
             name: "teachers-chunk",
             priority: 10,
             chunks: "all",
@@ -98,7 +101,7 @@ const nextConfig: NextConfig = {
 
           // Courses feature bundle
           courses: {
-            test: /[\\/]components[\\/]courses[\\/]|[\\/]app[\\/]\(main\)[\\/]courses[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/]courses[\\/]|[\\/]app[\\/]\(main\)[\\/]courses[\\/]/,
             name: "courses-chunk",
             priority: 10,
             chunks: "all",
@@ -107,16 +110,16 @@ const nextConfig: NextConfig = {
 
           // Invoices feature bundle
           invoices: {
-            test: /[\\/]components[\\/]invoices[\\/]|[\\/]app[\\/]\(main\)[\\/]invoices[\\/]|[\\/]app[\\/]\(profile\)[\\/]invoice[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/]invoices[\\/]|[\\/]app[\\/]\(main\)[\\/]invoices[\\/]|[\\/]app[\\/]\(profile\)[\\/]invoice[\\/]/,
             name: "invoices-chunk",
             priority: 10,
             chunks: "all",
             minChunks: 1,
           },
 
-          // Enrollments feature bundle
+          // Create Invoice/Enrollments feature bundle (main route: create-invoice, components: enrollments)
           enrollments: {
-            test: /[\\/]components[\\/]enrollments[\\/]|[\\/]app[\\/]\(main\)[\\/]enrollments[\\/]|[\\/]app[\\/]\(profile\)[\\/]enrollment[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/]enrollments[\\/]|[\\/]app[\\/]\(main\)[\\/]create-invoice[\\/]|[\\/]app[\\/]\(profile\)[\\/]enrollment[\\/]/,
             name: "enrollments-chunk",
             priority: 10,
             chunks: "all",
@@ -125,7 +128,7 @@ const nextConfig: NextConfig = {
 
           // Parents feature bundle
           parents: {
-            test: /[\\/]components[\\/]parents[\\/]|[\\/]app[\\/]\(main\)[\\/]parents[\\/]|[\\/]app[\\/]\(profile\)[\\/]parent[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/]parents[\\/]|[\\/]app[\\/]\(main\)[\\/]parents[\\/]|[\\/]app[\\/]\(profile\)[\\/]parent[\\/]/,
             name: "parents-chunk",
             priority: 10,
             chunks: "all",
@@ -134,7 +137,7 @@ const nextConfig: NextConfig = {
 
           // Schedule and Today features
           schedule: {
-            test: /[\\/]components[\\/](schedule|today)[\\/]|[\\/]app[\\/]\(main\)[\\/](schedule|today)[\\/]/,
+            test: /[\\/]components[\\/]entities[\\/](schedule|today)[\\/]|[\\/]app[\\/]\(main\)[\\/](schedule|today|my-schedules)[\\/]/,
             name: "schedule-chunk",
             priority: 10,
             chunks: "all",
@@ -143,11 +146,20 @@ const nextConfig: NextConfig = {
 
           // Shared UI components
           sharedUI: {
-            test: /[\\/]components[\\/](ui|sidebar|protected-hoc|discounts)[\\/]/,
+            test: /[\\/]components[\\/](ui|layout|shared|auth)[\\/]|[\\/]components[\\/]entities[\\/](discounts|feedbacks|sessions)[\\/]/,
             name: "shared-ui",
             priority: 8,
             chunks: "all",
             minChunks: 2,
+          },
+
+          // Additional main features (feedback, management-fee, notifications, receipts, sessions)
+          additionalFeatures: {
+            test: /[\\/]app[\\/]\(main\)[\\/](feedback|management-fee|notifications|receipts|sessions)[\\/]/,
+            name: "additional-features",
+            priority: 7,
+            chunks: "all",
+            minChunks: 1,
           },
 
           // Context and hooks

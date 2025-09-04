@@ -13,6 +13,7 @@ interface CourseCardProps {
   setCourseId: (id: number) => void;
   onOpenDialog?: (courseId: number) => void;
   setCourseName: (name: string) => void;
+  isTeacher?: boolean;
 }
 
 export function CourseCard({
@@ -21,6 +22,7 @@ export function CourseCard({
   setCourseId,
   onOpenDialog,
   setCourseName,
+  isTeacher = false,
 }: CourseCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -61,13 +63,14 @@ export function CourseCard({
               {course.medium}
             </div>
           </div>
-
-          <Button
-            className="w-full bg-blue-400 hover:bg-blue-500 mt-auto"
-            onClick={handleAddStudent}
-          >
-            Add Student
-          </Button>
+          {!isTeacher && (
+            <Button
+              className="w-full bg-blue-400 hover:bg-blue-500 mt-auto"
+              onClick={handleAddStudent}
+            >
+              Add Student
+            </Button>
+          )}
         </>
       ) : (
         <div

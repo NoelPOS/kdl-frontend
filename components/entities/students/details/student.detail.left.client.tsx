@@ -16,6 +16,7 @@ import { updateStudentById, searchParents } from "@/lib/api";
 import { useRef } from "react";
 
 interface StudentFormData {
+  id: string;
   name: string;
   nickname: string;
   gender: string;
@@ -32,6 +33,7 @@ export default function StudentDetailClient({
 }: {
   student: Partial<Student>;
 }) {
+  console.log("Student is here", student)
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -57,6 +59,7 @@ export default function StudentDetailClient({
     formState: { errors },
   } = useForm<StudentFormData>({
     defaultValues: {
+      id: student.id,
       name: student.name || "",
       nickname: student.nickname || "",
       gender: student.gender || "",
@@ -261,7 +264,7 @@ export default function StudentDetailClient({
         <div className="">
           <Label className="text-xs text-black block">Student ID</Label>
           <Input
-            value={student.id}
+            value={student.studentId}
             readOnly
             className="bg-gray-100 border border-black"
           />
@@ -322,10 +325,20 @@ export default function StudentDetailClient({
         <div>
           <Label className="text-xs text-black block">National ID</Label>
           <Input
-            {...register("nationalId")}
+            {...register("nationalId", {
+              pattern: {
+                value: /^\d$/,
+                message: "National ID must be exactly digits",
+              },
+            })}
             className="bg-white border border-black"
-            placeholder="Enter national ID"
+            placeholder="Enter 13-digit national ID"
           />
+          {errors.nationalId && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.nationalId.message}
+            </p>
+          )}
         </div>
 
         <div>

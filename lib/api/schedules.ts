@@ -121,10 +121,13 @@ export async function getSchedulesBySession(
 // Server-side functions
 export async function getTodaySchedules(
   accessToken: string
-): Promise<ClassSchedule[]> {
+): Promise<{ schedules: ClassSchedule[], lastUpdated?: Date }> {
   const api = await createServerApi(accessToken);
   const res = await api.get<ClassSchedule[]>("/schedules/today");
-  return res.data;
+  return {
+    schedules: res.data,
+    lastUpdated: res.lastFetched
+  };
 }
 
 export async function getAllSchedules(
@@ -149,6 +152,7 @@ export async function getFilteredSchedules(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
@@ -182,5 +186,8 @@ export async function getFilteredSchedules(
     };
   }>(`/schedules/filter?${params.toString()}`);
   console.log("API response:", res.data);
-  return res.data;
+  return {
+    ...res.data,
+    lastUpdated: res.lastFetched
+  };
 }

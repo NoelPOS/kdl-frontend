@@ -91,7 +91,7 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
       "/students",
       "/teachers",
       "/parents",
-      "/enrollments",
+      "/create-invoice",
       "/packages",
       "/invoices",
       "/receipts",
@@ -111,7 +111,7 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
       "/students",
       "/teachers",
       "/parents",
-      "/enrollments",
+      "/create-invoice",
       "/packages",
       "/invoices",
       "/receipts",
@@ -129,7 +129,7 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
       "/courses",
       "/students",
       "/schedule",
-      "/session",
+      "/my-schedules",
     ],
   };
 

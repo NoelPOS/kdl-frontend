@@ -99,6 +99,7 @@ export default function TeacherCoursesListContent({
             setCourseId={() => {}}
             setCourseName={() => {}}
             onOpenDialog={() => {}}
+            isTeacher={true}
           />
         ))}
       </div>

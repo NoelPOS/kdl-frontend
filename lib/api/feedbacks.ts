@@ -12,7 +12,7 @@ export async function getFilteredFeedbacks(
   page: number = 1,
   limit: number = 10,
   accessToken?: string
-): Promise<FeedbackResponse> {
+): Promise<FeedbackResponse & { lastUpdated?: Date }> {
   const api = await createServerApi(accessToken);
 
   const params = new URLSearchParams();
@@ -29,7 +29,10 @@ export async function getFilteredFeedbacks(
   const res = await api.get<FeedbackResponse>(
     `/schedules/feedbacks?${params.toString()}`
   );
-  return res.data;
+  return {
+    ...res.data,
+    lastUpdated: res.lastFetched
+  };
 }
 
 // Update feedback and mark as verified (client-side for admin/registrar)

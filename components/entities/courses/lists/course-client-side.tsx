@@ -10,6 +10,7 @@ import ClassTypeSelectionDialog from "@/components/entities/students/dialogs/cla
 import ScheduleConfirmationDialog from "@/components/entities/students/dialogs/schedule-confirmation-dialog";
 import { CourseCard } from "../cards/course-card";
 import { Pagination } from "@/components/ui/pagination";
+import LastUpdated from "@/components/shared/last-updated";
 
 // type imports
 import {
@@ -32,9 +33,11 @@ interface PaginationData {
 function CourseClientSide({
   courses,
   pagination,
+  lastUpdated,
 }: {
   courses: Course[];
   pagination: PaginationData;
+  lastUpdated?: Date;
 }) {
   // Navigation state
   const [currentStep, setCurrentStep] = useState<DialogStep>("closed");

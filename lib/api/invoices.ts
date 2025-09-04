@@ -81,6 +81,7 @@ export async function fetchInvoices(
     hasNext: boolean;
     hasPrev: boolean;
   };
+  lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
@@ -103,7 +104,10 @@ export async function fetchInvoices(
       hasPrev: boolean;
     };
   }>(`/invoices?${params.toString()}`);
-  return response.data;
+  return {
+    ...response.data,
+    lastUpdated: response.lastFetched
+  };
 }
 
 export async function fetchAllInvoices(

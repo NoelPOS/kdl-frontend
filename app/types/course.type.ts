@@ -2,6 +2,7 @@ export type Student = {
   name: string;
   nickname: string;
   id: string;
+  studentId?: string;
 };
 
 export type TeacherData = {
