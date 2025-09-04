@@ -11,15 +11,6 @@ const PUBLIC_ROUTES = [
   "/not-found",
 ];
 
-// Routes that require authentication but are accessible to all roles
-const PROTECTED_COMMON_ROUTES = [
-  "/enrollment", // profile routes
-  "/invoice",
-  "/parent",
-  "/student",
-  "/teacher",
-];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 

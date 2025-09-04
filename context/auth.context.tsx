@@ -75,6 +75,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!isLoading && user && pathname) {
       // Allow auth pages and profile pages for all authenticated users
       if (
+        pathname.startsWith("/") ||
         pathname.startsWith("/login") ||
         pathname.startsWith("/forgot-password") ||
         pathname.startsWith("/unauthorized") ||
