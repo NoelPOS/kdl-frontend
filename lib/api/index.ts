@@ -22,6 +22,9 @@ export * from "./sessions";
 // Parents
 export * from "./parents";
 
+// Registrars
+export * from "./registrars";
+
 // Enrollments
 export * from "./enrollments";
 

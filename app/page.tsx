@@ -1,5 +1,6 @@
 "use client";
 
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import { useAuth } from "@/context/auth.context";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
@@ -17,7 +18,7 @@ const RootePage = () => {
     }
   }, [auth, router]);
 
-  return <div>Loading...</div>;
+  return <AuthLoadingPage />;
 };
 
 export default RootePage;

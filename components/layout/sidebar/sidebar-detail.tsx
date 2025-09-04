@@ -80,6 +80,12 @@ const menuItems: MenuItem[] = [
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
   {
+    title: "registrars",
+    icon: UserCheck,
+    url: "/registrars",
+    roles: [UserRole.ADMIN],
+  },
+  {
     title: "management-fee",
     icon: Percent,
     url: "/management-fee",
