@@ -58,10 +58,28 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               removeStoredToken();
             }
           }
+        } else {
+          // No token found, redirect to login if not on a public page
+          if (
+            !pathname.startsWith("/login") &&
+            !pathname.startsWith("/forgot-password") &&
+            !pathname.startsWith("/unauthorized") &&
+            !pathname.startsWith("/not-found")
+          ) {
+            router.push("/login");
+          }
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
         removeStoredToken();
+        if (
+          !pathname.startsWith("/login") &&
+          !pathname.startsWith("/forgot-password") &&
+          !pathname.startsWith("/unauthorized") &&
+          !pathname.startsWith("/not-found")
+        ) {
+          router.push("/login");
+        }
       } finally {
         setIsLoading(false);
       }

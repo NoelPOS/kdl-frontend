@@ -172,7 +172,7 @@ function ForgotPassword() {
         <Mail className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
         <h2 className="text-2xl font-bold text-gray-900">Check Your Email</h2>
         <p className="text-gray-600 mt-2">
-          We've sent a 6-digit code to <strong>{email}</strong>
+          We&apos;ve sent a 6-digit code to <strong>{email}</strong>
         </p>
       </div>
 

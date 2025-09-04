@@ -53,8 +53,8 @@ export default async function EnrollmentPage({
 
   return (
     <div className="p-6">
-      <PageHeader title="Enrollments" lastUpdated={lastUpdated} />
-      
+      <PageHeader title="Create Invoice" lastUpdated={lastUpdated} />
+
       <EnrollmentFilter />
       {!hasFilters ? (
         <div className="text-center text-gray-500 mt-4">

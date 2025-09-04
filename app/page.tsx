@@ -6,17 +6,19 @@ import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
 const RootePage = () => {
-  const auth = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    console.log("auth", auth);
-    if (auth.user) {
-      router.push("/today");
-    } else {
-      router.push("/login");
+    // Only redirect when auth is not loading
+    if (!isLoading) {
+      if (user) {
+        router.push("/today");
+      } else {
+        router.push("/login");
+      }
     }
-  }, [auth, router]);
+  }, [user, isLoading, router]);
 
   return <AuthLoadingPage />;
 };

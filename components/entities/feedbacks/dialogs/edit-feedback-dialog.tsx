@@ -258,7 +258,7 @@ export default function EditFeedbackDialog({
                 disabled={isSubmitting || !feedbackText.trim()}
                 className="bg-yellow-600 hover:bg-yellow-700"
               >
-                {isSubmitting ? "Processing..." : "Save & Verify"}
+                {isSubmitting ? "Processing..." : "Save & Approve"}
               </Button>
             </div>
           </div>

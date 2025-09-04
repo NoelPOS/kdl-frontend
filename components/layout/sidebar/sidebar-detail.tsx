@@ -86,7 +86,7 @@ const menuItems: MenuItem[] = [
     roles: [UserRole.ADMIN],
   },
   {
-    title: "management-fee",
+    title: "fees & Discounts",
     icon: Percent,
     url: "/management-fee",
     roles: [UserRole.ADMIN],
@@ -110,7 +110,7 @@ const menuItems: MenuItem[] = [
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
   {
-    title: "invoices",
+    title: "invoices & Receipts",
     icon: ReceiptIcon,
     url: "/invoices",
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],

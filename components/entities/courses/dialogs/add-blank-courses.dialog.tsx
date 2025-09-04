@@ -150,7 +150,7 @@ export default function AddBlankCoursesDialog() {
           className="border-yellow-500  hover:bg-yellow-500"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Blank Courses
+          Add Course Package
         </Button>
       </DialogTrigger>
 

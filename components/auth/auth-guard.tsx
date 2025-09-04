@@ -33,7 +33,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }
 
   // For protected routes, user must be authenticated
-  // The context already handles redirects to login/unauthorized pages
+  // If no user and not loading, the auth context should have already redirected
+  // But just in case, show loading briefly to allow redirect to complete
   if (!user) {
     return <AuthLoadingPage />;
   }
