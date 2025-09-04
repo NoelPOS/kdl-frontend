@@ -150,14 +150,14 @@ const Login = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            {/* <div className="text-sm">
+            <div className="text-sm">
               <Link
                 href="/forgot-password"
                 className="font-medium text-yellow-600 hover:text-yellow-500"
               >
                 Forgot your password?
               </Link>
-            </div> */}
+            </div>
           </div>
 
           <div>
