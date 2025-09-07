@@ -14,8 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
-import { getTeacherByCourseId } from "@/lib/api";
+import { getTeacherByCourseId, getAllRooms } from "@/lib/api";
 import { Teacher } from "@/app/types/teacher.type";
+import { Room } from "@/app/types/room.type";
 import { TeacherData } from "@/app/types/course.type";
 
 export type FormData = {
@@ -54,6 +55,7 @@ export default function TeacherRoomSelectionDialog({
   });
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -67,9 +69,20 @@ export default function TeacherRoomSelectionDialog({
       }
     };
 
+    const fetchRooms = async () => {
+      try {
+        const roomList = await getAllRooms();
+        setRooms(roomList);
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error);
+        showToast.error("Failed to fetch rooms", "Please try again later.");
+      }
+    };
+
     if (courseId && courseId > 0) {
       fetchTeachers();
     }
+    fetchRooms();
   }, [open, courseId]);
 
   const onSubmit = (data: FormData) => {
@@ -147,11 +160,11 @@ export default function TeacherRoomSelectionDialog({
                 <option value="" disabled>
                   Select a room
                 </option>
-                <option value="Room 1">Room 1</option>
-                <option value="Room 2">Room 2</option>
-                <option value="Room 3">Room 3</option>
-                <option value="Room 4">Room 4</option>
-                <option value="Room 5">Room 5</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.name}>
+                    {room.name}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
             </div>

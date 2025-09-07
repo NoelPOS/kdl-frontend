@@ -248,13 +248,13 @@ const EnrollmentDetailRightMultiple = ({
               variant="outline"
               className="bg-yellow-500 hover:bg-yellow-600 text-white"
             >
-              <span className="text-sm">Add Discount</span>
+              <span className="text-sm">Add Discount/Fees</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px] p-8">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-center">
-                Add Discount
+                Add Discount/Fees
               </DialogTitle>
             </DialogHeader>
 

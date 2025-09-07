@@ -21,6 +21,7 @@ import { Plus, Search, Trash2 } from "lucide-react";
 import { searchStudents, checkStudentHasWipSession } from "@/lib/api";
 
 import { Student } from "@/app/types/course.type";
+import { set } from "nprogress";
 
 type FormData = {
   students: Student[];
@@ -55,6 +56,7 @@ export function AddStudent({
           name: "",
           nickname: "",
           id: "",
+          studentId: "",
         },
       ],
     },
@@ -102,7 +104,8 @@ export function AddStudent({
   const handleSelectStudent = (index: number, student: Student) => {
     setValue(`students.${index}.name`, student.name);
     setValue(`students.${index}.nickname`, student.nickname);
-    setValue(`students.${index}.id`, student.id); // Keep using id for logic
+    setValue(`students.${index}.id`, student.id);
+    setValue(`students.${index}.studentId`, student.studentId);
 
     // Set the display ID for showing studentId
     setDisplayIds((prev) => ({

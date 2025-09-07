@@ -80,6 +80,32 @@ export function removeStoredToken(): void {
 }
 
 /**
+ * Server-side function to get user from cookies
+ * Use this in server components and API routes
+ */
+export async function getServerSideUser(): Promise<AuthUser | null> {
+  try {
+    // Dynamic import to avoid issues in client-side
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("accessToken")?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    if (isTokenExpired(token)) {
+      return null;
+    }
+
+    return getUserFromToken(token);
+  } catch (error) {
+    console.error("Error getting server-side user:", error);
+    return null;
+  }
+}
+
+/**
  * Check if user has permission to access a route
  */
 export function hasRoutePermission(userRole: UserRole, route: string): boolean {

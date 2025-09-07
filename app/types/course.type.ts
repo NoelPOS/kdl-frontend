@@ -48,6 +48,7 @@ export type EditScheduleFormData = {
   room: string;
   nickname: string;
   studentId: string;
+  studentIdDisplay?: string;
   remark: string;
   status?: string;
 };
@@ -64,6 +65,7 @@ export type ComfirmScheduleRow = {
   warning?: string;
   attendance?: string;
   studentId: number;
+  studentIdDisplay?: string; 
 };
 
 export type ConflictDetail = {

@@ -173,6 +173,7 @@ export default function ScheduleConfirmationDialog({
       room: row.room,
       nickname: student?.nickname || "",
       studentId: student?.id || "",
+      studentIdDisplay: student?.studentId || "",
       remark: row.remark,
       status: row.attendance,
     });
@@ -190,13 +191,18 @@ export default function ScheduleConfirmationDialog({
     const endTime = editedData.endtime;
     const date = normalizeDate(editedData.date);
 
+    // Find the student to get the actual ID for API calls
+    const student = students.find(
+      (s) => s.studentId === editedData.studentId || s.id === editedData.studentId
+    );
+
     const conflictCourse = await checkScheduleConflict({
       date,
       startTime,
       endTime,
       room: editedData.room,
       teacherId: editedData.teacherId,
-      studentId: Number(editedData.studentId),
+      studentId: Number(student?.id || editedData.studentId),
     });
 
     updatedRows[originalIndex] = {

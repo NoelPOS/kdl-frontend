@@ -26,6 +26,7 @@ interface AddBlankCoursesFormData {
   studentName: string;
   studentNickname: string;
   studentId: string;
+  studentIdDisplay?: string;
   coursePackage: string;
 }
 
@@ -76,6 +77,7 @@ export default function AddBlankCoursesDialog() {
       studentName: "",
       studentNickname: "",
       studentId: "",
+      studentIdDisplay: "",
       coursePackage: "",
     },
   });
@@ -95,6 +97,7 @@ export default function AddBlankCoursesDialog() {
     setValue("studentName", student.name);
     setValue("studentNickname", student.nickname || "");
     setValue("studentId", student.id);
+    setValue("studentIdDisplay", student.studentId || "");
     setSearchResults([]);
     setActiveSearchField("");
     setSearchQuery("");
@@ -234,7 +237,7 @@ export default function AddBlankCoursesDialog() {
             </Label>
             <div className="relative">
               <Input
-                {...register("studentId", {
+                {...register("studentIdDisplay", {
                   required: "Student ID is required",
                 })}
                 placeholder="202501001"

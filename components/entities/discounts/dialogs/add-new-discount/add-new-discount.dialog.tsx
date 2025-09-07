@@ -58,7 +58,7 @@ export function AddNewDiscount() {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
-          New Discount
+          Add Discount/Fees
         </Button>
       </DialogTrigger>
 

@@ -24,9 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
-import { searchStudents, searchCourses } from "@/lib/api";
+import { searchStudents, searchCourses, getAllRooms } from "@/lib/api";
 import { Student } from "@/app/types/student.type";
 import { Course } from "@/app/types/course.type";
+import { Room } from "@/app/types/room.type";
 import { showToast } from "@/lib/toast";
 
 // Define the form data type
@@ -72,11 +73,6 @@ const SORT_OPTIONS = [
 
 const ROOM_OPTIONS = [
   { value: "all", label: "All Rooms" },
-  { value: "Room 1", label: "Room 1" },
-  { value: "Room 2", label: "Room 2" },
-  { value: "Room 3", label: "Room 3" },
-  { value: "Room 4", label: "Room 4" },
-  { value: "Room 5", label: "Room 5" },
 ];
 
 interface ScheduleFilterFormProps {
@@ -107,6 +103,10 @@ export function ScheduleFilterForm({
   const [showCourseResults, setShowCourseResults] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [courseQuery, setCourseQuery] = useState("");
+
+  // Room state
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomOptions, setRoomOptions] = useState(ROOM_OPTIONS);
 
   // Debounce the search queries
   const [debouncedStudentQuery] = useDebounce(studentQuery, 300);
@@ -190,6 +190,29 @@ export function ScheduleFilterForm({
 
     performCourseSearch();
   }, [debouncedCourseQuery]);
+
+  // Effect to fetch rooms
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const roomList = await getAllRooms();
+        setRooms(roomList);
+        const dynamicRoomOptions = [
+          { value: "all", label: "All Rooms" },
+          ...roomList.map(room => ({
+            value: room.name,
+            label: room.name
+          }))
+        ];
+        setRoomOptions(dynamicRoomOptions);
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error);
+        // Keep default room options on error
+      }
+    };
+
+    fetchRooms();
+  }, []);
 
   // Student search handlers
   const handleStudentSearch = (query: string) => {
@@ -514,7 +537,7 @@ export function ScheduleFilterForm({
                     <SelectValue placeholder="Select room" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ROOM_OPTIONS.map((opt) => (
+                    {roomOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>

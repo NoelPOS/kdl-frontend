@@ -25,7 +25,8 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
   };
 
   // Check if this is a TBC (To Be Confirmed) course
-  const isTBCCourse = course.courseTitle?.toLowerCase() === "tbc";
+  const isTBCCourse = course.courseTitle?.toLowerCase() === "tbc" ;
+  const isFreeTrial = course.courseTitle?.toLowerCase() === "free trial";
 
   return (
     <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[350px] max-h-[400px] w-[250px]">
@@ -94,6 +95,13 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
                   </Button>
                 }
               />
+            ) : isFreeTrial ? (
+                <Button
+                  className="bg-blue-400 hover:bg-blue-500 text-white w-full"
+                  onClick={() => handleClick(course.sessionId)}
+                >
+                  Details
+                </Button>
             ) : (
               <>
                 <Button

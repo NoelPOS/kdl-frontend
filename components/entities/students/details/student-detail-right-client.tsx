@@ -109,7 +109,7 @@ function StudentDetailRightClient({ studentData }: { studentData: Student[] }) {
 
   const handleClassScheduleSubmit = (schedule: ComfirmClassScheduleData) => {
     setClassScheduleData(schedule);
-    if (schedule.classType.id === 2) {
+    if (schedule.classType.id === 2 || schedule.classType.id === 11) {
       // If class type is 12 times check, go directly to confirm step
       setCurrentStep("confirm");
       setCourseTypeOpen(false);

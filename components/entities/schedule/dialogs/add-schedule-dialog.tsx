@@ -14,7 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Calendar, Clock, ChevronDown } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { getAllRooms } from "@/lib/api";
+import { Room } from "@/app/types/room.type";
 
 export type FormData = {
   date: string;
@@ -47,6 +49,21 @@ export function AddSchedule() {
       remark: "",
     },
   });
+
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const roomList = await getAllRooms();
+        setRooms(roomList);
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error);
+      }
+    };
+
+    fetchRooms();
+  }, []);
 
   const { ref: dateRHFRef } = register("date");
   const { ref: starttimeRHFRef } = register("starttime");
@@ -207,7 +224,11 @@ export function AddSchedule() {
                     Select a room
                   </option>
                   <option value="Online">Online</option>
-                  <option value="Room 101">Room 101</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.name}>
+                      {room.name}
+                    </option>
+                  ))}
                   <option value="Auditorium">Auditorium</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />

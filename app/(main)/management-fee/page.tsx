@@ -28,7 +28,7 @@ export default async function DiscountsPage({
 
   return (
     <div className="p-6">
-      <PageHeader title="Management Fees" lastUpdated={lastUpdated}>
+      <PageHeader title="Discounts and Fees Management" lastUpdated={lastUpdated}>
         <AddNewDiscount />
       </PageHeader>
 

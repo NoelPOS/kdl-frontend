@@ -14,6 +14,7 @@ import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { UserRole } from "@/app/types/auth.type";
 import Image from "next/image";
 import EditSchedule from "../dialogs/edit-schedule-dialog";
+import FreeTrialEditDialog from "../dialogs/free-trial-edit-dialog";
 import TeacherEditScheduleDialog from "@/components/entities/sessions/dialogs/teacher-edit-schedule-dialog";
 import {
   Dialog,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { MessageSquare, User, BookOpen, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { set } from "nprogress";
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
   if (!attendance) return null;
@@ -62,6 +64,7 @@ export default function RoleAwareScheduleTable({
     useState<ClassSchedule | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [isFreeTrialDialogOpen, setIsFreeTrialDialogOpen] = useState(false);
   const [feedbackSchedule, setFeedbackSchedule] =
     useState<ClassSchedule | null>(null);
 
@@ -98,8 +101,14 @@ export default function RoleAwareScheduleTable({
     //   warning: schedule.schedule_warning,
     // };
 
+    if (schedule.course_title?.toLowerCase() === "free trial") {
+      setSelectedSchedule(schedule);
+      setIsFreeTrialDialogOpen(true);
+    }
+    else{
     setSelectedSchedule(schedule);
     setIsEditDialogOpen(true);
+    }
   };
 
   const handleViewFeedback = (schedule: ClassSchedule) => {
@@ -383,6 +392,14 @@ export default function RoleAwareScheduleTable({
               onScheduleUpdate={handleScheduleUpdate}
             />
           )}
+
+          {/* Free Trial Edit Dialog */}
+          <FreeTrialEditDialog
+            open={isFreeTrialDialogOpen}
+            onOpenChange={setIsFreeTrialDialogOpen}
+            initialData={selectedFormData}
+            onScheduleUpdate={handleScheduleUpdate}
+          />
 
           {/* Feedback View Dialog */}
           <Dialog

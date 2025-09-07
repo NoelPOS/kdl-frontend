@@ -45,3 +45,9 @@ export * from "./receipts";
 
 // Feedbacks
 export * from "./feedbacks";
+
+// Rooms
+export * from "./rooms";
+
+// Analytics
+export * from "./analytics";

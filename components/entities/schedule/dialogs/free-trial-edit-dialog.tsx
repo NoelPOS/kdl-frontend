@@ -21,14 +21,17 @@ import {
   updateSchedule,
   checkScheduleConflict,
   getAllRooms,
+  searchCourses,
 } from "@/lib/api";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
-import { TimeInput } from "@/components/shared/schedule";
+import { Course } from "@/app/types/course.type";
+import { TimeInput } from "@/components/shared/schedule/time-input";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
 import { formatDateLocal, generateConflictWarning } from "@/lib/utils";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
+import { useDebouncedCallback } from "use-debounce";
 
 interface ConflictDetail {
   conflictType: string;
@@ -41,19 +44,19 @@ interface ConflictDetail {
   room: string;
 }
 
-interface EditScheduleProps {
+interface FreeTrialEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData?: Partial<FormData>;
   onScheduleUpdate?: (schedule: FormData) => void;
 }
 
-export function EditSchedule({
+export function FreeTrialEditDialog({
   open,
   onOpenChange,
   initialData,
   onScheduleUpdate,
-}: EditScheduleProps) {
+}: FreeTrialEditDialogProps) {
   const router = useRouter();
   const {
     register,
@@ -80,6 +83,10 @@ export function EditSchedule({
   const endTimeRef = useRef<HTMLInputElement>(null);
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  
+  // Course search states
+  const [courseSearchResults, setCourseSearchResults] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   // Validation functions
   const validateStartTime = (value: string) => {
@@ -103,6 +110,41 @@ export function EditSchedule({
     }
     return true;
   };
+
+  // Debounced course search
+  const debouncedCourseSearch = useDebouncedCallback(async (value: string) => {
+    if (value.length >= 2) {
+      try {
+        const results = await searchCourses(value);
+        setCourseSearchResults(results);
+      } catch (err) {
+        console.error("Course search failed", err);
+        setCourseSearchResults([]);
+      }
+    } else {
+      setCourseSearchResults([]);
+    }
+  }, 300);
+
+  const handleSelectCourse = (course: Course) => {
+    setValue("course", course.title);
+    setValue("courseId", course.id);
+    setSelectedCourse(course);
+    setCourseSearchResults([]);
+    
+    // Fetch teachers for the new course
+    fetchTeachersForCourse(course.id);
+  };
+
+  const fetchTeachersForCourse = useCallback(async (courseId: number) => {
+    try {
+      const result = await getTeacherByCourseId(courseId);
+      setTeachers(result);
+    } catch (err) {
+      console.error("Failed to load teachers", err);
+      setTeachers([]);
+    }
+  }, []);
 
   const onSubmit = useCallback(
     async (data: FormData) => {
@@ -143,19 +185,21 @@ export function EditSchedule({
             teachers.find((t) => t.name === data.teacher)?.id ||
             initialData?.courseId ||
             0,
+          courseId: data.courseId || selectedCourse?.id || 0,
           teacherName: data.teacher,
           studentName: data.student,
           nickname: data.nickname,
           courseName: data.course,
           warning: warningMessage,
         };
+
         console.log("Update data:", updateData);
         await updateSchedule(Number(data.scheduleId), updateData);
 
         // Construct updated FormData for direct state update
         const updatedFormData: FormData = {
           scheduleId: Number(data.scheduleId),
-          courseId: initialData?.courseId ?? 0,
+          courseId: data.courseId || selectedCourse?.id || 0,
           date: data.date,
           starttime: data.starttime,
           endtime: data.endtime,
@@ -166,19 +210,19 @@ export function EditSchedule({
           nickname: data.nickname || "",
           remark: data.remark || "",
           status: data.status || "",
-          warning: warningMessage || "hello world",
-          // Add any other required FormData fields here
+          warning: warningMessage || "",
         };
+        
         if (onScheduleUpdate) {
           onScheduleUpdate(updatedFormData);
         }
 
         router.refresh();
 
-        if (warningMessage) {
+        if (warningMessage && warningMessage !== "none") {
           showToast.warning(`Schedule updated with warning: ${warningMessage}`);
         } else {
-          showToast.success("Schedule updated successfully!");
+          showToast.success("Free trial schedule updated successfully!");
         }
         onOpenChange(false);
       } catch (error) {
@@ -193,35 +237,30 @@ export function EditSchedule({
       initialData?.courseId,
       initialData?.scheduleId,
       initialData?.student,
+      selectedCourse?.id,
       router,
     ]
   );
 
-  // Memoized teacher fetching to prevent unnecessary API calls
-  const fetchTeachers = useCallback(async () => {
-    console.log("Fetching teachers for course ID:", initialData?.courseId);
-    try {
-      if (typeof initialData?.courseId === "number") {
-        const result = await getTeacherByCourseId(initialData.courseId);
-        setTeachers(result);
-      } else {
-        setTeachers([]);
-      }
-    } catch (err) {
-      console.error("Failed to load teachers", err);
-      setTeachers([]);
-    }
-  }, [initialData?.courseId]);
-
   useEffect(() => {
     if (open && initialData?.courseId) {
-      fetchTeachers();
+      fetchTeachersForCourse(initialData.courseId);
     }
-  }, [open, initialData?.courseId, fetchTeachers]);
+  }, [open, initialData?.courseId, fetchTeachersForCourse]);
 
   useEffect(() => {
     if (initialData) {
       reset(initialData);
+      // Set the selected course if we have course data
+      if (initialData.course && initialData.courseId) {
+        setSelectedCourse({
+          id: initialData.courseId,
+          title: initialData.course,
+          description: "",
+          ageRange: "",
+          medium: "",
+        });
+      }
     }
   }, [initialData, reset]);
 
@@ -262,7 +301,7 @@ export function EditSchedule({
       <DialogContent className="sm:max-w-[700px] p-8">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
-            Edit Class Schedule
+            Edit Free Trial Schedule
           </DialogTitle>
         </DialogHeader>
 
@@ -284,20 +323,46 @@ export function EditSchedule({
                 </span>
               )}
             </div>
-            {/* Course */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="course">Course</Label>
+
+            {/* Course - Editable with search */}
+            <div className="flex flex-col gap-2 relative">
+              <Label htmlFor="course">Course *</Label>
               <div className="relative">
                 <Input
-                  disabled={true}
                   id="course"
-                  {...register("course")}
-                  placeholder="Search for a course (optional)"
+                  {...register("course", { required: "Course is required" })}
+                  placeholder="Search for a course"
                   className="border-black"
+                  onChange={(e) => {
+                    setSelectedCourse(null);
+                    debouncedCourseSearch(e.target.value);
+                  }}
+                  autoComplete="off"
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
+
+              {courseSearchResults.length > 0 && (
+                <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto top-full">
+                  {courseSearchResults.map((course) => (
+                    <li
+                      key={course.id}
+                      onClick={() => handleSelectCourse(course)}
+                      className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                    >
+                      {course.title}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {errors.course && (
+                <span className="text-red-500 text-sm">
+                  {errors.course.message}
+                </span>
+              )}
             </div>
+
             {/* Start Time */}
             <TimeInput
               label="Start Time"
@@ -343,24 +408,25 @@ export function EditSchedule({
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
             </div>
+
             {/* Student */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="student">Student </Label>
+              <Label htmlFor="student">Student</Label>
               <div className="relative">
                 <Input
                   disabled={true}
                   id="student"
                   {...register("student")}
                   className="border-black"
-                  placeholder="Search for a student (optional)"
+                  placeholder="Student name"
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black" />
               </div>
             </div>
+
             {/* Room */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="room">Room</Label>
-
               <div className="relative">
                 <select
                   id="room"
@@ -380,6 +446,7 @@ export function EditSchedule({
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
             </div>
+
             {/* Nickname */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="nickname">Nickname</Label>
@@ -402,6 +469,7 @@ export function EditSchedule({
                 placeholder="Enter any remarks or notes"
               />
             </div>
+
             {/* Status */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="status">Status</Label>
@@ -450,4 +518,5 @@ export function EditSchedule({
     </Dialog>
   );
 }
-export default EditSchedule;
+
+export default FreeTrialEditDialog;

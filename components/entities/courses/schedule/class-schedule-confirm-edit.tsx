@@ -14,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getTeacherByCourseId } from "@/lib/api";
+import { getTeacherByCourseId, getAllRooms } from "@/lib/api";
 import { EditScheduleFormData } from "@/app/types/course.type";
 import { Teacher } from "@/app/types/teacher.type";
+import { Room } from "@/app/types/room.type";
 import { formatDateLocal } from "@/lib/utils";
 import { TimeInput } from "@/components/shared/schedule/time-input";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
@@ -43,7 +44,6 @@ export function EditScheduleDialog({
   courseId,
   courseName,
 }: EditScheduleDialogProps) {
-  console.log("Class Name:", courseName);
   const {
     register,
     handleSubmit,
@@ -74,6 +74,7 @@ export function EditScheduleDialog({
   const endTime = watch("endtime");
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   // Validation functions
@@ -133,6 +134,7 @@ export function EditScheduleDialog({
         teacherId: initialData.teacherId,
         student: initialData.student || "",
         nickname: initialData.nickname || "",
+        studentId: initialData.studentIdDisplay || "",
       });
 
       // If we have teacher data but no teacherId, try to find and set the teacherId
@@ -177,6 +179,21 @@ export function EditScheduleDialog({
 
     fetchTeachers();
   }, [open, initialData?.course, courseId, watch, setValue]);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!open) return;
+      try {
+        const roomList = await getAllRooms();
+        setRooms(roomList);
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error);
+        showToast.error("Failed to load rooms. Please try again.");
+      }
+    };
+
+    fetchRooms();
+  }, [open]);
 
   const starttimeRef = useRef<HTMLInputElement>(null);
   const endtimeRef = useRef<HTMLInputElement>(null);
@@ -346,11 +363,11 @@ export function EditScheduleDialog({
                   <option value="" disabled hidden>
                     Select a room
                   </option>
-                  <option value="Room 1">Room 1</option>
-                  <option value="Room 2">Room 2</option>
-                  <option value="Room 3">Room 3</option>
-                  <option value="Room 4">Room 4</option>
-                  <option value="Room 5">Room 5</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.name}>
+                      {room.name}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>

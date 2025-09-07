@@ -4,6 +4,7 @@ import AddBlankCoursesDialog from "@/components/entities/courses/dialogs/add-bla
 import FilterCourse from "@/components/entities/courses/filters/filter-course";
 import PageHeader from "@/components/shared/page-header";
 import { fetchFilteredCourses } from "@/lib/api";
+import { getServerSideUser } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
 
@@ -19,6 +20,10 @@ export default async function CoursesPage({
 }) {
   const { query, ageRange, medium, page } = (await searchParams) || {};
   const currentPage = parseInt(page || "1", 10);
+
+  // Get user information from server-side
+  const user = await getServerSideUser();
+  const canAddCourses = user?.role === "admin";
 
   // Get timestamp by making a lightweight API call when filters are active
   let lastUpdated: Date | undefined;
@@ -42,7 +47,12 @@ export default async function CoursesPage({
     <div className="p-6">
       <PageHeader title="Courses" lastUpdated={lastUpdated}>
         <AddBlankCoursesDialog />
-        <AddNewCourse />
+        {canAddCourses && (
+          <>
+            
+            <AddNewCourse />
+          </>
+        )}
       </PageHeader>
       
       <FilterCourse />

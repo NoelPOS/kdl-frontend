@@ -71,7 +71,13 @@ export default function AssignCourseFlow({
       classType: classSchedule.classType,
       classSchedule,
     }));
+
+    if (classSchedule.classType.id === 2 || classSchedule.classType.id === 11) {
+      // If class type is 12 times check or 12 times fixed, go directly to confirm step
+      setCurrentStep("confirm");
+    } else {
     setCurrentStep("teacher");
+    }
   };
 
   const handleTeacherRoomSelected = (teacherData: TeacherData) => {

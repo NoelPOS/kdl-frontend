@@ -38,12 +38,6 @@ export function canAccessFinancials(userRole: UserRole): boolean {
   return [UserRole.ADMIN, UserRole.REGISTRAR].includes(userRole);
 }
 
-/**
- * Check if user can manage courses
- */
-export function canManageCourses(userRole: UserRole): boolean {
-  return [UserRole.ADMIN, UserRole.REGISTRAR].includes(userRole);
-}
 
 /**
  * Check if user can view all student data

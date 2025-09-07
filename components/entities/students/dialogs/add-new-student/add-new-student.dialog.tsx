@@ -341,6 +341,31 @@ export function AddNewStudent() {
               </div>
             </div>
 
+                        {/* National ID */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="nationalId">National ID</Label>
+              <div className="relative">
+                <Input
+                  id="nationalId"
+                  {...register("nationalId", {
+                    pattern: {
+                      value: /^\d/,
+                      message: "National ID must be  digits",
+                    },
+                  })}
+                  placeholder="Enter 13-digit national ID"
+                  className={`border ${
+                    errors.nationalId ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.nationalId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.nationalId.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/* allergic */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="allergic">Allergic</Label>
@@ -475,30 +500,7 @@ export function AddNewStudent() {
               </div>
             </div>
 
-            {/* National ID */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="nationalId">National ID</Label>
-              <div className="relative">
-                <Input
-                  id="nationalId"
-                  {...register("nationalId", {
-                    pattern: {
-                      value: /^\d/,
-                      message: "National ID must be  digits",
-                    },
-                  })}
-                  placeholder="Enter 13-digit national ID"
-                  className={`border ${
-                    errors.nationalId ? "border-red-500" : ""
-                  }`}
-                />
-                {errors.nationalId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.nationalId.message}
-                  </p>
-                )}
-              </div>
-            </div>
+
             {/* Checkbox */}
             <div className="flex items-center space-x-2">
               <Checkbox

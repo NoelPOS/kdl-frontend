@@ -47,6 +47,7 @@ export function generateScheduleRows(
           remark: "TBD",
           warning: "TBD",
           studentId: Number(student.id),
+          studentIdDisplay: student.studentId 
         });
       });
     }
@@ -85,7 +86,8 @@ export function generateScheduleRows(
             room: teacherData.room,
             remark: teacherData.remark,
             attendance: "pending",
-            studentId: Number(student.id),
+            studentId: Number(student.id), 
+            studentIdDisplay: student.studentId
           });
         });
       });
@@ -110,11 +112,28 @@ export function generateScheduleRows(
             room: teacherData.room,
             remark: teacherData.remark,
             attendance: "pending",
-            studentId: Number(student.id),
+            studentId: Number(student.id), 
+            studentIdDisplay: student.studentId
           });
         });
       });
     }
+  }
+  else if (classSchedule.classType.classMode === "1 times check") {
+    students.forEach((student) => {
+      rows.push({
+        date: undefined, // Placeholder, will be set later  
+        time: "TBD - TBD",
+        student: student.nickname || student.name,
+        teacher: "TBD",
+        room: "TBD",
+        remark: "TBD",
+        warning: "TBD",
+        studentId: Number(student.id),
+        studentIdDisplay: student.studentId 
+      });
+    }
+    );
   }
 
   return rows;
