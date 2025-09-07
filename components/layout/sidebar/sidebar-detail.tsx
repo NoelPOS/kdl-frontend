@@ -15,6 +15,7 @@ import {
   Receipt,
   ReceiptIcon,
   Package,
+  BarChart3,
 } from "lucide-react";
 
 import {
@@ -89,6 +90,12 @@ const menuItems: MenuItem[] = [
     title: "fees & Discounts",
     icon: Percent,
     url: "/management-fee",
+    roles: [UserRole.ADMIN],
+  },
+  {
+    title: "statistics",
+    icon: BarChart3,
+    url: "/statistics",
     roles: [UserRole.ADMIN],
   },
   // {
