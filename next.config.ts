@@ -7,7 +7,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker
-  // output: "standalone",
+  output: "standalone",
 
   images: {
     // Modern remotePatterns configuration (replaces deprecated domains)

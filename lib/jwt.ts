@@ -1,7 +1,6 @@
 import { DecodedToken, AuthUser, UserRole } from "@/app/types/auth.type";
 import { ClientCookies } from "./cookies";
 
-const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || "your-secret-key"; // Should match backend secret
 
 /**
  * Decode JWT token and extract payload

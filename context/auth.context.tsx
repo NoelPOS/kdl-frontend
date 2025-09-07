@@ -32,9 +32,17 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure component is mounted before accessing browser APIs
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Initialize auth state from stored token
   useEffect(() => {
+    if (!isMounted) return; // Wait for client-side mounting
+
     const initializeAuth = () => {
       try {
         const token = getStoredToken();
@@ -86,11 +94,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     initializeAuth();
-  }, [router, pathname]);
+  }, [router, pathname, isMounted]);
 
   // Check route permissions on pathname change
   useEffect(() => {
-    if (!isLoading && user && pathname) {
+    if (!isLoading && user && pathname && isMounted) {
       // Allow auth pages and profile pages for all authenticated users
       if (
         pathname.startsWith("/") ||
@@ -107,7 +115,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         router.push("/unauthorized");
       }
     }
-  }, [user, pathname, isLoading, router]);
+  }, [user, pathname, isLoading, router, isMounted]);
 
   const login = (response: AuthResponse) => {
     try {

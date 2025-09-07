@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "@/context/auth.context";
+import ClientAuthProvider from "@/components/auth/client-auth-provider";
 import AuthGuard from "@/components/auth/auth-guard";
 import NProgressProvider from "@/components/layout/nprogress-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -33,9 +33,9 @@ const RootLayout = ({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NProgressProvider />
-        <AuthProvider>
+        <ClientAuthProvider>
           <AuthGuard>{children}</AuthGuard>
-        </AuthProvider>
+        </ClientAuthProvider>
         <Toaster />
       </body>
     </html>

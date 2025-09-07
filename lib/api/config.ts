@@ -13,8 +13,9 @@ declare module "axios" {
 
 // Base axios instance
 const createBaseInstance = (baseURL?: string): AxiosInstance => {
+
   return axios.create({
-    baseURL: baseURL || process.env.NEXT_PUBLIC_BACKEND_URL,
+    baseURL:  baseURL || process.env.NEXT_PUBLIC_BACKEND_URL,
     timeout: 10000, // 10 second timeout
     headers: {
       "Content-Type": "application/json",

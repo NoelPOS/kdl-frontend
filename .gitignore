@@ -32,6 +32,18 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+frontend.env
+
+# deployment scripts and configs
+deploy-ec2.sh
+debug-ec2.sh
+docker-compose.yml
+docker-compose.fixed.yml
+nginx/nginx.conf
+nginx/nginx.fixed.conf
+
+# debug and test files
+cookie-debug.js
 
 # vercel
 .vercel

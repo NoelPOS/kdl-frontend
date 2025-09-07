@@ -36,7 +36,7 @@ RUN apk add --no-cache dumb-init wget && \
 WORKDIR /app
 
 # Set environment variables
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create necessary directories with proper ownership
