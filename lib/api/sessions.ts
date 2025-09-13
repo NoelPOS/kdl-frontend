@@ -14,9 +14,10 @@ export interface SessionData {
 }
 
 export interface UpdateSessionData {
-  courseId: number;
-  teacherId: number;
-  classOptionId: number;
+  courseId?: number;
+  teacherId?: number;
+  classOptionId?: number;
+  comment?: string;
 }
 
 export interface StudentSessionFilter {
@@ -142,6 +143,8 @@ export async function getTeacherSessionsFiltered(
   };
   lastUpdated?: Date;
 }> {
+
+  console.log("Access Token is here: ", accessToken);
   const params = new URLSearchParams();
 
   if (filters.courseName) params.set("courseName", filters.courseName);

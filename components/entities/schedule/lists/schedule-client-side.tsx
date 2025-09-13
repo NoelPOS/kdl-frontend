@@ -8,6 +8,8 @@ import RoleAwareScheduleTable from "../tables/role-aware-schedule-table";
 import { formatDateLocal } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/ui/pagination";
+import { ScheduleDownloadButton } from "../buttons/schedule-download-button";
+import { SchedulePDFDownloadButton } from "../buttons/schedule-pdf-download-button";
 
 interface ScheduleClientSideProps {
   initialSchedules?: ClassSchedule[];
@@ -74,7 +76,19 @@ function ScheduleClientSide({
     <div>
       {params.size > 0 && (
         <>
-          <RoleAwareScheduleTable
+          {/* Download button section */}
+          {schedules.length > 0 && (
+            <div className="flex justify-end gap-2 mb-4">
+              <SchedulePDFDownloadButton
+                schedules={schedules}
+                currentPage={pagination.currentPage}
+              />
+              <ScheduleDownloadButton
+                schedules={schedules}
+                currentPage={pagination.currentPage}
+              />
+            </div>
+          )}          <RoleAwareScheduleTable
             schedules={schedules}
             userRole={userRole}
             showStudentHeader={false}

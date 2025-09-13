@@ -22,44 +22,43 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
     tempContainer.style.backgroundColor = "#ffffff";
 
     tempContainer.innerHTML = `
-      <div style="background: #ffffff; padding: 40px; max-width: 800px; font-family: 'Arial', sans-serif; font-size: 14px; line-height: 1.4; color: #000000;">
+      <div style="background: #ffffff; padding: 40px; max-width: 800px; font-family: 'TH Sarabun New', 'Tahoma', 'Arial Unicode MS', sans-serif; font-size: 14px; line-height: 1.4; color: #000000;">
         <!-- Header with Logo and Company Info -->
         <div style="display: flex; align-items: flex-start; margin-bottom: 30px;">
           <!-- Logo Section -->
           <div style="margin-right: 30px; flex-shrink: 0;">
-            <div style="width: 80px; height: 80px; border: 2px solid #333333; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #ffffff;">
-              <img src="/logo.png" alt="Logo" style="width: 60px; height: 60px; border-radius: 50%;" />
+            <div style="width: 100px; height: 100px; border: 2px solid #333333; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #ffffff;">
+              <img src="/receipt_logo.png" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%;" />
             </div>
           </div>
           
           <!-- Company Information -->
           <div style="flex: 1;">
-            <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 8px 0; text-align: center; color: #000000;">Kiddee Lab Education Center</h2>
+            <h2 style="font-size: 16px; font-weight: bold; margin: 0 0 8px 0; text-align: center; color: #000000;">โรงเรียนเสริมทักษะสตีมคิดดีแล็บ</h2>
             <div style="text-align: center; font-size: 12px; line-height: 2; margin-bottom: 20px; color: #000000;">
-              <p style="margin: 2px 0;">Lasalle's Avenue 2nd Floor Room No. H-209
-No. 549, 549/1 Lasalle-Baring Road</p>
-              <p style="margin: 2px 0;">Sub-District Bangnatai, District Bangna, Bangkok 10260</p>
-              <p style="margin: 2px 0;">Phone: 083 887 1899 Tax Number: 0105561131663</p>
+              <p style="margin: 2px 0;">อาคารโครงการลาซาล อเวนิว ชั้น 2 ห้องเลขที่ H-209</p>
+              <p style="margin: 2px 0;">549, 549/1 ถนนลาซาล-แบริ่ง แขวงบางนาใต้ เขตบางนา กรุงเทพฯ 10260</p>
+              <p style="margin: 2px 0;"> โทรศัพท์ 083 887 1199     เลขประจำตัวผู้เสียภาษี 0105561131663</p>
             </div>
           </div>
         </div>
 
         <!-- Receipt Title -->
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-size: 18px; font-weight: bold; margin: 0; text-decoration: underline; color: #000000;">RECEIPT</h1>
+          <h1 style="font-size: 18px; font-weight: bold; margin: 0; text-decoration: underline; color: #000000;">ใบเสร็จรับเงิน</h1>
         </div>
 
         <!-- Receipt Details -->
         <div style="margin-bottom: 25px;">
           <table style="width: 100%; font-size: 14px;">
             <tr>
-              <td style="width: 120px; padding: 4px 0; color: #000000;"><strong>Document No.</strong></td>
+              <td style="width: 120px; padding: 4px 0; color: #000000;"><strong>เอกสารเลขที่</strong></td>
               <td style="padding: 4px 0; color: #000000;">${
                 invoice.documentId
               }</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>Date</strong></td>
+              <td style="padding: 4px 0; color: #000000;"><strong>วันที่ </strong></td>
               <td style="padding: 4px 0; color: #000000;">${new Date(
                 invoice.date
               ).toLocaleDateString("en-US", {
@@ -69,13 +68,17 @@ No. 549, 549/1 Lasalle-Baring Road</p>
               })}</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>Customer Name</strong></td>
+              <td style="padding: 4px 0; color: #000000;"><strong>ชื่อลูกค้า</strong></td>
               <td style="padding: 4px 0; color: #000000;">${
                 invoice.studentName || "N/A"
               }</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>Address</strong></td>
+              <td style="padding: 4px 0; color: #000000;"><strong>ที่อยู่</strong></td>
+              <td style="padding: 4px 0; color: #000000;">-</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #000000;"><strong>เลขประจำตัวผู้เสียภาษีอากร  </strong></td>
               <td style="padding: 4px 0; color: #000000;">-</td>
             </tr>
           </table>
@@ -86,9 +89,9 @@ No. 549, 549/1 Lasalle-Baring Road</p>
           <table style="width: 100%; border-collapse: collapse; border: 2px solid #000000;">
             <thead>
               <tr>
-                <th style="border: 1px solid #000000; padding: 8px; text-align: center; background: #e9ecef; width: 60px; color: #000000;"><strong>No.</strong></th>
-                <th style="border: 1px solid #000000; padding: 8px; text-align: center; background: #e9ecef; color: #000000;"><strong>Description</strong></th>
-                <th style="border: 1px solid #000000; padding: 8px; text-align: center; background: #e9ecef; width: 120px; color: #000000;"><strong>Amount (USD)</strong></th>
+                <th style="border: 1px solid #000000; padding: 8px; text-align: center; background: #e9ecef; width: 60px; color: #000000;"><strong>ลำดับ</strong></th>
+                <th style="border: 1px solid #000000; padding: 8px; text-align: center; background: #e9ecef; color: #000000;"><strong>รายละเอียด</strong></th>
+                <th style="border: 1px solid #000000; padding: 8px; text-align: center; background: #e9ecef; width: 120px; color: #000000;"><strong>จำนวนเงิน (บาท)</strong></th>
               </tr>
             </thead>
             <tbody>
@@ -123,7 +126,7 @@ No. 549, 549/1 Lasalle-Baring Road</p>
               <!-- Subtotal row -->
               <tr>
                 <td style="border: 1px solid #000000; padding: 8px; background: #ffffff;"></td>
-                <td style="border: 1px solid #000000; padding: 8px; text-align: right; color: #000000; background: #ffffff;"><strong>Total Amount</strong></td>
+                <td style="border: 1px solid #000000; padding: 8px; text-align: right; color: #000000; background: #ffffff;"><strong>รวมจำนวนเงินทั้งสิ้น</strong></td>
                 <td style="border: 1px solid #000000; padding: 8px; text-align: right; background: #e9ecef; color: #000000;"><strong>${Number.parseFloat(
                   invoice.totalAmount
                 ).toLocaleString("en-US", {
@@ -133,7 +136,7 @@ No. 549, 549/1 Lasalle-Baring Road</p>
               <!-- Payment method -->
               <tr>
                 <td style="border: 1px solid #000000; padding: 8px; background: #ffffff;"></td>
-                <td style="border: 1px solid #000000; padding: 8px; color: #000000; background: #ffffff;"><strong>Payment Method (${
+                <td style="border: 1px solid #000000; padding: 8px; color: #000000; background: #ffffff;"><strong>วิธีการชำระเงิน (${
                   invoice.paymentMethod
                 })</strong></td>
                 <td style="border: 1px solid #000000; padding: 8px; background: #ffffff;"></td>
@@ -143,21 +146,21 @@ No. 549, 549/1 Lasalle-Baring Road</p>
         </div>
 
         <!-- Tax Info -->
-        <div style="text-align: center; font-size: 12px; margin-bottom: 30px;">
+        <div style="text-align: start; font-size: 12px; margin-bottom: 30px;">
           <p style="margin: 0; color: #000000;">Note: for bank transfer, please use SCB:4321254904.</p>
         </div>
 
         <!-- Signatures -->
         <div style="display: flex; justify-content: space-between; margin-top: 40px;">
           <div style="text-align: center; width: 200px;">
-            <p style="margin-bottom: 60px; color: #000000;"><strong>Customer</strong></p>
+            <p style="margin-bottom: 60px; color: #000000;"><strong>ผู้รับเงิน</strong></p>
             <div style="border-bottom: 1px solid #000000; margin-bottom: 8px;"></div>
-            <p style="margin: 0; font-size: 12px; color: #000000;">Signature _________________ Date _______</p>
+            <p style="margin: 0; font-size: 12px; color: #000000;">ลงชื่อ _________________ วันที่. _______</p>
           </div>
           <div style="text-align: center; width: 200px;">
-            <p style="margin-bottom: 60px; color: #000000;"><strong>Cashier</strong></p>
+            <p style="margin-bottom: 60px; color: #000000;"><strong>ผู้ปกครอง</strong></p>
             <div style="border-bottom: 1px solid #000000; margin-bottom: 8px;"></div>
-            <p style="margin: 0; font-size: 12px; color: #000000;">Signature _________________ Date _______</p>
+            <p style="margin: 0; font-size: 12px; color: #000000;">ลงชื่อ _________________ วันที่. _______</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Tablet, Plus, BookOpen } from "lucide-react";
+import { Info, Tablet, Plus, BookOpen, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { SessionOverview } from "@/app/types/session.type";
 import { Student } from "@/app/types/course.type";
 import { CoursePlusDialog } from "../dialogs/course-plus.dialog";
 import AssignCourseFlow from "../dialogs/assign-course-flow";
+import { CommentDialog } from "../dialogs/comment.dialog";
 
 interface StudentCourseProps {
   course: SessionOverview;
@@ -16,12 +17,17 @@ interface StudentCourseProps {
 
 export function StudentCourse({ course, student }: StudentCourseProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [currentComment, setCurrentComment] = useState(course.comment || "");
 
   const router = useRouter();
   const params = useParams();
 
   const handleClick = (sessionId: number) => {
     router.push(`/student/${params.id}/session/${sessionId}`);
+  };
+
+  const handleCommentUpdate = (newComment: string) => {
+    setCurrentComment(newComment);
   };
 
   // Check if this is a TBC (To Be Confirmed) course
@@ -53,13 +59,6 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
               >
                 Payment: {course.payment}
               </span>
-              {/* <span
-                className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(
-                  course.status
-                )}`}
-              >
-                Class Status: {getStatusDisplay(course.status)}
-              </span> */}
             </div>
 
             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -79,22 +78,36 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
               <Tablet className="h-4 w-4" />
               {course.medium}
             </div>
+            {/* Comment section - only show if comment exists */}
+            {currentComment && (
+              <div className="flex items-start gap-2 text-sm text-gray-600">
+                <MessageSquare className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span className="break-words">{currentComment}</span>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto pt-2 space-y-2">
             {/* Show different buttons based on whether it's a TBC course */}
             {isTBCCourse ? (
-              <AssignCourseFlow
-                session={course}
-                studentId={Number(params.id)}
-                studentData={student}
-                trigger={
-                  <Button className="bg-green-500 hover:bg-green-600 text-white w-full">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Assign Course
-                  </Button>
-                }
-              />
+              <>
+                <AssignCourseFlow
+                  session={course}
+                  studentId={Number(params.id)}
+                  studentData={student}
+                  trigger={
+                    <Button className="bg-green-500 hover:bg-green-600 text-white w-full">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Assign Course
+                    </Button>
+                  }
+                />
+                <CommentDialog
+                  sessionId={course.sessionId}
+                  currentComment={currentComment}
+                  onCommentUpdate={handleCommentUpdate}
+                />
+              </>
             ) : isFreeTrial ? (
                 <Button
                   className="bg-blue-400 hover:bg-blue-500 text-white w-full"

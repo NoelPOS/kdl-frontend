@@ -63,6 +63,8 @@ const CLASS_TYPE_OPTIONS = [
 const SORT_OPTIONS = [
   { value: "date_asc", label: "Date (Ascending)" },
   { value: "date_desc", label: "Date (Descending)" },
+  { value: "time_asc", label: "Time (Ascending)" },
+  { value: "time_desc", label: "Time (Descending)" },
   { value: "student_asc", label: "Student Name (A-Z)" },
   { value: "student_desc", label: "Student Name (Z-A)" },
   { value: "teacher_asc", label: "Teacher Name (A-Z)" },

@@ -72,5 +72,5 @@ export const ROUTE_PERMISSIONS = {
     "/feedbacks",
   ],
   // Teacher has most limited access
-  [UserRole.TEACHER]: ["/", "/today", "/courses", "/students", "/schedule"],
+  [UserRole.TEACHER]: ["/", "/today", "/courses", "/students", "/schedule", "/my-schedules"],
 } as const;

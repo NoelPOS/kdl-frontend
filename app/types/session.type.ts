@@ -9,9 +9,11 @@ export interface SessionOverview {
   payment: string;
   medium: string;
   status: string;
+  comment?: string;
 }
 
 export interface SessionStatusUpdate {
   payment?: string;
   invoiceDone?: boolean;
+  comment?: string;
 }
