@@ -145,7 +145,7 @@ server {
     }
 
     # API routes - backend
-    location /api/ {
+    location /api/vi/ {
         proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
