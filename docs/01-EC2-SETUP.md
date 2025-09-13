@@ -145,8 +145,8 @@ server {
     }
 
     # API routes - backend
-    location /api/vi/ {
-        proxy_pass http://localhost:4000;
+    location /api/v1/ {
+        proxy_pass http://localhost:4000/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -176,6 +176,119 @@ sudo nginx -t
 sudo systemctl restart nginx
 sudo systemctl enable nginx
 ```
+
+## Step 5.5: Configure SSL with Cloudflare Origin Certificates (Recommended)
+
+### 5.5.1 Generate Cloudflare Origin Certificate
+1. Go to your Cloudflare dashboard
+2. Navigate to SSL/TLS → Origin Server
+3. Click "Create Certificate"
+4. Select "Let Cloudflare generate a private key and CSR"
+5. Add your hostname: `registrar.kiddeelab.co.th` (or use `*.kiddeelab.co.th` for wildcard)
+6. Choose key type: RSA (2048)
+7. Certificate validity: 15 years
+8. Click "Create"
+
+### 5.5.2 Install Origin Certificate on Server
+```bash
+# Create SSL directory for Cloudflare certificates
+sudo mkdir -p /etc/ssl/cloudflare
+
+# Create certificate file
+sudo nano /etc/ssl/cloudflare/cert.pem
+```
+Paste the certificate content from Cloudflare dashboard.
+
+```bash
+# Create private key file
+sudo nano /etc/ssl/cloudflare/key.pem
+```
+Paste the private key content from Cloudflare dashboard.
+
+```bash
+# Set proper permissions
+sudo chmod 600 /etc/ssl/cloudflare/key.pem
+sudo chmod 644 /etc/ssl/cloudflare/cert.pem
+```
+
+### 5.5.3 Update Nginx Configuration for SSL
+```bash
+sudo nano /etc/nginx/sites-available/kdl-app
+```
+
+Replace the entire configuration with:
+```nginx
+server {
+    listen 80;
+    listen 443 ssl http2;
+    server_name registrar.kiddeelab.co.th;
+
+    # Cloudflare Origin Certificate
+    ssl_certificate /etc/ssl/cloudflare/cert.pem;
+    ssl_certificate_key /etc/ssl/cloudflare/key.pem;
+    
+    # SSL Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Increase client body size for file uploads
+    client_max_body_size 10M;
+
+    # Frontend routes
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Cookie $http_cookie;
+        proxy_pass_header Set-Cookie;
+        proxy_buffering off;
+        proxy_read_timeout 120s;
+    }
+
+    # API routes - backend
+    location /api/v1/ {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Cookie $http_cookie;
+        proxy_pass_header Set-Cookie;
+        proxy_set_header Authorization $http_authorization;
+        proxy_buffering off;
+        proxy_read_timeout 120s;
+    }
+}
+```
+
+### 5.5.4 Test and Restart Nginx
+```bash
+# Test configuration
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+
+### 5.5.5 Configure Cloudflare SSL Settings
+1. Go to Cloudflare dashboard → SSL/TLS → Overview
+2. Set encryption mode to **"Full (strict)"**
+3. Go to SSL/TLS → Edge Certificates
+4. Enable "Always Use HTTPS"
+5. Enable "Automatic HTTPS Rewrites"
 
 ## Step 6: Setup Application Directory
 
