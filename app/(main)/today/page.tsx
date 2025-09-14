@@ -14,7 +14,7 @@ export default async function TodayPage() {
 
   const { schedules: raw, lastUpdated } = await getTodaySchedules(accessToken || "");
   const grouped = raw.reduce((acc: Record<string, Course>, item) => {
-    const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}`;
+    const key = `${item.course_title} (${item.teacher_name})-${item.schedule_room}-${item.schedule_startTime}-${item.schedule_endTime}`;
 
     if (!acc[key]) {
       acc[key] = {
@@ -47,7 +47,7 @@ export default async function TodayPage() {
 
   return (
     <div className="p-6 bg-white h-screen">
-      <div className=" mx-auto">
+      <div className="max-w-full mx-auto">
         <PageHeader title={formattedDate} lastUpdated={lastUpdated} className="mb-6" />
         
         {hasCourses ? (

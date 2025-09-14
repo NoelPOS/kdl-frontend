@@ -41,7 +41,7 @@ export function CourseCard({
   };
 
   return (
-    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 h-55 w-64">
+    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 h-55 w-full max-w-xs min-w-[240px]">
       {!isHovered ? (
         <>
           <Info

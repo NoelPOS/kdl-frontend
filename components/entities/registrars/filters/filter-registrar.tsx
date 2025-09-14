@@ -101,14 +101,14 @@ export default function RegistrarFilter() {
         )}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 pt-0 ">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="mb-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="registrarName">Registrar Name</Label>
               <Input
                 id="registrarName"
                 {...register("query")}
                 placeholder="Enter registrar name"
-                className="border-gray-300"
+                className="border-gray-300 w-full"
               />
             </div>
           </div>

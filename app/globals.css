@@ -167,7 +167,7 @@ select {
 
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 /* scroll bar - hidden but still scrollable */

@@ -73,7 +73,7 @@ function ScheduleClientSide({
   const userRole = user?.role || UserRole.ADMIN;
 
   return (
-    <div>
+    <div className="w-full min-w-0">
       {params.size > 0 && (
         <>
           {/* Download button section */}

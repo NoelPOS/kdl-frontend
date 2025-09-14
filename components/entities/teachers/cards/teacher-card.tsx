@@ -11,7 +11,7 @@ export function TeacherCard({ teacher }: { teacher: Teacher }) {
   const router = useRouter();
   console.log(teacher.profilePicture);
   return (
-    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative max-w-[250px]">
+    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px]">
       <div className="flex flex-col items-center text-center mb-4">
         <Avatar className="h-16 w-16 mb-3">
           <AvatarImage src={teacher.profilePicture} alt={teacher.name} />

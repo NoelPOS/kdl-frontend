@@ -156,7 +156,7 @@ export function SidebarDetail() {
           >
             <Link href={item.url} className="flex items-center gap-3">
               <item.icon className="h-4 w-4" />
-              <span className="hidden sm:inline-block transition-all duration-200">
+              <span className="group-data-[collapsible=icon]:hidden transition-all duration-200">
                 {item.title.charAt(0).toUpperCase() + item.title.slice(1)}
               </span>
             </Link>

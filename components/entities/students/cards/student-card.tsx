@@ -41,7 +41,7 @@ export function StudentCard({ student }: StudentCardProps) {
       student.doNotEat.some((item) => item.trim() !== ""));
 
   return (
-    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative max-w-[250px]">
+    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px]">
       <>
         {/* Only show Pizza icon if student has allergies or dietary restrictions */}
         {hasAllergiesOrDietaryRestrictions && (

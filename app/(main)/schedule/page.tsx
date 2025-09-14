@@ -84,14 +84,14 @@ export default async function ClassSchedulePage({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 w-full min-w-0">
       <PageHeader title="Schedules" lastUpdated={lastUpdated} />
       
       <Suspense fallback={<div>Loading filters...</div>}>
         <ScheduleFilterForm />
       </Suspense>
 
-      <div className="rounded-lg ">
+      <div className="rounded-lg w-full min-w-0">
         {!hasFilters ? (
           <div className="text-center text-gray-500 mt-4">
             Please use the filter to search for schedules.

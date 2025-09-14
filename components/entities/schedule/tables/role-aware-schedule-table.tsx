@@ -176,9 +176,9 @@ export default function RoleAwareScheduleTable({
         <>
           {/* Student Info Header */}
           {showStudentHeader && (
-            <div className="bg-white rounded-lg p-6 mb-4 border shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center">
+            <div className="bg-white rounded-lg p-4 sm:p-6 mb-4 border shadow-sm w-full">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                <div className="flex items-center justify-center flex-shrink-0">
                   <Image
                     src={firstSchedule.student_profilePicture || "/student.png"}
                     alt="Student Profile"
@@ -187,11 +187,11 @@ export default function RoleAwareScheduleTable({
                     className="rounded-full border-2 border-gray-200"
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <h2 className="text-2xl font-bold text-gray-800">
+                <div className="flex flex-col gap-2 text-center sm:text-left min-w-0 flex-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">
                     {firstSchedule.student_name}
                   </h2>
-                  <p className="text-lg text-gray-600">
+                  <p className="text-base sm:text-lg text-gray-600 break-words">
                     {firstSchedule.course_title}
                   </p>
                 </div>
@@ -200,65 +200,67 @@ export default function RoleAwareScheduleTable({
           )}
 
           {/* Schedule Table */}
-          <Table className="bg-white table-fixed mb-10">
+          <div className="w-full overflow-x-auto bg-white rounded-lg shadow-sm border mb-10 relative" style={{ maxWidth: '100vw' }}>
+            <div className="overflow-x-auto">
+              <Table className="min-w-max w-full">
             <TableHeader>
               <TableRow className="">
-                <TableHead className="border h-30 text-center whitespace-normal w-16">
+                <TableHead className="border h-30 text-center whitespace-nowrap min-w-[50px]">
                   No.
                 </TableHead>
                 {!showStudentHeader && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold w-20">
+                  <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[80px]">
                     Profile
                   </TableHead>
                 )}
                 {!showStudentHeader && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+                  <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                     Student
                   </TableHead>
                 )}
                 {!showStudentHeader && !hideCourseInfo && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+                  <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                     Course
                   </TableHead>
                 )}
                 {!hideCourseInfo && (
-                  <TableHead className="border h-30 text-center whitespace-normal">
+                  <TableHead className="border h-30 text-center whitespace-nowrap min-w-[100px]">
                     Date
                   </TableHead>
                 )}
                 {!hideCourseInfo && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold">
+                  <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                     Time
                   </TableHead>
                 )}
 
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
                   Teacher
                 </TableHead>
 
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden md:table-cell">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[80px]">
                   Room
                 </TableHead>
 
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden sm:table-cell">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
                   Attendance
                 </TableHead>
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                   Remark
                 </TableHead>
                 {/* Show Feedback column for teachers */}
                 {userRole === UserRole.TEACHER && (
-                  <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
+                  <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
                     Feedback
                   </TableHead>
                 )}
                 {/* Show Feedback column for student session detail pages */}
                 {/* {showStudentHeader && ( */}
-                <TableHead className="border h-30 text-center whitespace-normal font-semibold hidden lg:table-cell">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                   Feedback
                 </TableHead>
                 {/* )} */}
-                <TableHead className="border h-30 text-center font-semibold w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[150px]">
                   Warning
                 </TableHead>
               </TableRow>
@@ -275,11 +277,11 @@ export default function RoleAwareScheduleTable({
                       : "Double-click to edit"
                   }
                 >
-                  <TableCell className="border h-30 text-center whitespace-normal">
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[50px]">
                     {index + 1}
                   </TableCell>
                   {!showStudentHeader && (
-                    <TableCell className="border h-30 text-center whitespace-normal">
+                    <TableCell className="border h-30 text-center px-2 min-w-[80px]">
                       <div className="flex items-center justify-center">
                         <Image
                           src={session.student_profilePicture || "/student.png"}
@@ -292,17 +294,17 @@ export default function RoleAwareScheduleTable({
                     </TableCell>
                   )}
                   {!showStudentHeader && (
-                    <TableCell className="border h-30 text-center whitespace-normal">
+                    <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
                       {session.student_name}
                     </TableCell>
                   )}
                   {!showStudentHeader && !hideCourseInfo && (
-                    <TableCell className="border h-30 text-center whitespace-normal">
+                    <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
                       {session.course_title}
                     </TableCell>
                   )}
                   {!hideCourseInfo && (
-                    <TableCell className="border h-30 text-center whitespace-normal">
+                    <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
                       {session.schedule_date
                         ? new Date(session.schedule_date).toLocaleDateString(
                             "en-GB"
@@ -311,28 +313,30 @@ export default function RoleAwareScheduleTable({
                     </TableCell>
                   )}
                   {!hideCourseInfo && (
-                    <TableCell className="border h-30 text-center whitespace-normal">
+                    <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
                       {`${session.schedule_startTime} - ${session.schedule_endTime}`}
                     </TableCell>
                   )}
 
-                  <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
                     {session.teacher_name || "TBD"}
                   </TableCell>
 
-                  <TableCell className="border h-30 text-center whitespace-normal hidden md:table-cell">
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[80px]">
                     {session.schedule_room}
                   </TableCell>
 
-                  <TableCell className="border h-30 text-center whitespace-normal hidden sm:table-cell">
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
                     {getAttendanceBadge(session.schedule_attendance)}
                   </TableCell>
-                  <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
-                    {session.schedule_remark || ""}
+                  <TableCell className="border h-30 text-center px-2 min-w-[120px] max-w-[200px]">
+                    <div className="truncate" title={session.schedule_remark || ""}>
+                      {session.schedule_remark || ""}
+                    </div>
                   </TableCell>
                   {/* Show Feedback column for teachers */}
                   {userRole === UserRole.TEACHER && (
-                    <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
+                    <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
                       {session.schedule_feedback ? (
                         <Badge
                           variant="default"
@@ -352,29 +356,33 @@ export default function RoleAwareScheduleTable({
                   )}
                   {/* Show Feedback column for student session detail pages */}
                   {/* {showStudentHeader && ( */}
-                  <TableCell className="border h-30 text-center whitespace-normal hidden lg:table-cell">
+                  <TableCell className="border h-30 text-center px-2 min-w-[120px]">
                     {session.schedule_feedback ? (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleViewFeedback(session);
                         }}
-                        className="text-blue-600 hover:text-blue-800 underline text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-800 underline text-sm font-medium whitespace-nowrap"
                       >
                         View Feedback
                       </button>
                     ) : (
-                      <span className="text-gray-400 text-sm">No feedback</span>
+                      <span className="text-gray-400 text-sm whitespace-nowrap">No feedback</span>
                     )}
                   </TableCell>
                   {/* )} */}
-                  <TableCell className="border h-30 text-center text-red-500 w-42 max-w-xs break-words whitespace-normal hidden xl:table-cell">
-                    {session.schedule_warning}
+                  <TableCell className="border h-30 text-center text-red-500 px-2 min-w-[150px] max-w-[250px]">
+                    <div className="break-words whitespace-normal" title={session.schedule_warning || ""}>
+                      {session.schedule_warning}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+              </Table>
+            </div>
+          </div>
 
           {/* Role-based Edit Dialog */}
           {userRole === UserRole.TEACHER ? (

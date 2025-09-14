@@ -37,7 +37,7 @@ export default async function ParentList({
   );
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 justify-items-center">
         {parents.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 py-8">
             No parents found

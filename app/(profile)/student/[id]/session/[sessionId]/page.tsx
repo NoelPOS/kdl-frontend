@@ -22,29 +22,31 @@ export default async function StudentSession({
   );
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <nav className="flex items-center font-medium">
-          <Link
-            href="/students"
-            className="text-gray-900 hover:underline text-3xl font-bold cursor-pointer"
-          >
-            Students
-          </Link>
-          <span className="mx-1 text-3xl">&gt;</span>
-          <Link
-            href={`/student/${id}`}
-            className="text-gray-900 text-3xl font-bold hover:underline cursor-pointer"
-          >
-            {schedules[0].student_name}
-          </Link>
-          <span className="mx-1 text-3xl">&gt;</span>
-          <span className="text-gray-900 text-3xl font-bold">
-            {schedules[0].course_title}
-          </span>
+    <div className="p-4 sm:p-6 w-full min-w-0 max-w-full overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <nav className="flex flex-col sm:flex-row sm:items-center font-medium">
+          <div className="flex items-center flex-wrap gap-1 sm:gap-2">
+            <Link
+              href="/students"
+              className="text-gray-900 hover:underline text-xl sm:text-2xl lg:text-3xl font-bold cursor-pointer"
+            >
+              Students
+            </Link>
+            <span className="mx-1 text-xl sm:text-2xl lg:text-3xl">&gt;</span>
+            <Link
+              href={`/student/${id}`}
+              className="text-gray-900 text-xl sm:text-2xl lg:text-3xl font-bold hover:underline cursor-pointer break-words"
+            >
+              {schedules[0].student_name}
+            </Link>
+            <span className="mx-1 text-xl sm:text-2xl lg:text-3xl">&gt;</span>
+            <span className="text-gray-900 text-xl sm:text-2xl lg:text-3xl font-bold break-words">
+              {schedules[0].course_title}
+            </span>
+          </div>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 justify-end">
           <CancelSessionDialog
             sessionId={sessionId}
             sessionTitle={schedules[0].course_title}
@@ -56,7 +58,9 @@ export default async function StudentSession({
         </div>
       </div>
 
-      <RoleAwareScheduleTable schedules={schedules} userRole={UserRole.ADMIN} />
+      <div className="w-full min-w-0 overflow-x-auto">
+        <RoleAwareScheduleTable schedules={schedules} userRole={UserRole.ADMIN} />
+      </div>
     </div>
   );
 }

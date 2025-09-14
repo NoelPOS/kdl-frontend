@@ -104,25 +104,26 @@ export function EnrollmentTableWithSelection({
         </div>
       )}
 
-      <Table className="bg-white table-fixed rounded-2xl">
+      <div className="w-full overflow-x-auto bg-white rounded-2xl shadow-sm border" style={{ maxWidth: '100vw' }}>
+        <Table className="min-w-max w-full">
         <TableHeader>
           <TableRow>
-            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-16">
+            <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[50px]">
               No.
             </TableHead>
-            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-32">
+            <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[100px]">
               Date
             </TableHead>
-            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold">
+            <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[150px]">
               Student Name
             </TableHead>
-            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold">
+            <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[200px]">
               Description
             </TableHead>
-            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-32">
+            <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[100px]">
               Amount
             </TableHead>
-            <TableHead className="border-2 h-20  border-gray-300  text-center font-semibold w-20">
+            <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[80px]">
               Select
             </TableHead>
           </TableRow>
@@ -144,24 +145,26 @@ export function EnrollmentTableWithSelection({
                   isDimmed ? "opacity-30" : ""
                 } transition-opacity duration-200`}
               >
-                <TableCell className="border-2 h-20 border-gray-300 text-center">
+                <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[50px]">
                   {index + 1}
                 </TableCell>
-                <TableCell className="border-2 h-20 border-gray-300 text-center">
+                <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[100px]">
                   {new Date(enrollment.session_createdat).toLocaleDateString(
                     "en-GB"
                   )}
                 </TableCell>
-                <TableCell className="border-2 h-20 border-gray-300 text-center">
+                <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[150px]">
                   {enrollment.student_name}
                 </TableCell>
-                <TableCell className="border-2 h-20 border-gray-300 text-center">
-                  {enrollment.course_title}
+                <TableCell className="border-2 h-20 border-gray-300 text-center px-2 min-w-[200px] max-w-[250px]">
+                  <div className="truncate" title={enrollment.course_title}>
+                    {enrollment.course_title}
+                  </div>
                 </TableCell>
-                <TableCell className="border-2 h-20 border-gray-300 text-center">
+                <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[100px]">
                   {enrollment.classoption_tuitionfee}
                 </TableCell>
-                <TableCell className="border-2 h-20 border-gray-300 text-center">
+                <TableCell className="border-2 h-20 border-gray-300 text-center px-2 min-w-[80px]">
                   <div className="flex justify-center">
                     <Checkbox
                       checked={isSelected}
@@ -180,7 +183,8 @@ export function EnrollmentTableWithSelection({
             );
           })}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   );
 }
