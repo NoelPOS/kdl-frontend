@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KDL",
+  title: "Kiddee Lab - Learning Management System",
   description: "Learning Management System ",
 };
 
