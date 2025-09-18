@@ -29,18 +29,22 @@ export class ClientCookies {
         .filter(Boolean)
         .join("; ");
 
-      console.log("Setting cookie with options:", cookieOptions);
-      console.log("isSecure:", isSecure);
-      console.log("Protocol:", typeof window !== "undefined" ? window.location.protocol : "server");
-      console.log("FORCE_INSECURE_COOKIES:", process.env.NEXT_PUBLIC_FORCE_INSECURE_COOKIES);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Setting cookie with options:", cookieOptions);
+        console.log("isSecure:", isSecure);
+        console.log("Protocol:", typeof window !== "undefined" ? window.location.protocol : "server");
+        console.log("FORCE_INSECURE_COOKIES:", process.env.NEXT_PUBLIC_FORCE_INSECURE_COOKIES);
+      }
       
       document.cookie = cookieOptions;
       
       // Verify cookie was set
-      setTimeout(() => {
-        const verification = ClientCookies.get();
-        console.log("Cookie verification after setting:", verification ? "SUCCESS" : "FAILED");
-      }, 100);
+      if (process.env.NODE_ENV !== "production") {
+        setTimeout(() => {
+          const verification = ClientCookies.get();
+          console.log("Cookie verification after setting:", verification ? "SUCCESS" : "FAILED");
+        }, 100);
+      }
     } catch (error) {
       console.error("Error setting cookie:", error);
     }
@@ -50,13 +54,14 @@ export class ClientCookies {
     if (typeof document === "undefined" || typeof window === "undefined") return null;
     
     try {
-      const cookies = document.cookie.split(";");
-      const tokenCookie = cookies.find((cookie) =>
-        cookie.trim().startsWith(`${COOKIE_NAME}=`)
-      );
-
-      const result = tokenCookie ? tokenCookie.split("=")[1] : null;
-      console.log("Cookie value:", result);
+      const name = `${COOKIE_NAME}=`;
+      const cookies = document.cookie.split(';').map(c => c.trim());
+      const found = cookies.find(c => c.startsWith(name));
+      
+      const result = found ? decodeURIComponent(found.substring(name.length)) : null;
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Cookie value:", result ? "[TOKEN PRESENT]" : "null");
+      }
       return result;
     } catch (error) {
       console.error("Error reading cookie:", error);

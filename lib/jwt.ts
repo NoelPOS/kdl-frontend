@@ -21,7 +21,9 @@ export function decodeJWT(token: string): DecodedToken | null {
 
     return decoded as DecodedToken;
   } catch (error) {
-    console.error("Error decoding JWT:", error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error decoding JWT:", error);
+    }
     return null;
   }
 }
@@ -100,7 +102,9 @@ export async function getServerSideUser(): Promise<AuthUser | null> {
 
     return getUserFromToken(token);
   } catch (error) {
-    console.error("Error getting server-side user:", error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error getting server-side user:", error);
+    }
     return null;
   }
 }

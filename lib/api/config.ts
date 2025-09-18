@@ -34,7 +34,9 @@ clientApi.interceptors.request.use(
 
     // Skip auth header for login endpoint
     if (config.url?.includes("/auth/login")) {
-      console.log("Login request - skipping auth header");
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Login request - skipping auth header");
+      }
       return config;
     }
 
@@ -42,9 +44,13 @@ clientApi.interceptors.request.use(
     const token = ClientCookies.get();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("Added auth header with token");
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Added auth header with token");
+      }
     } else {
-      console.log("No token available - request without auth header");
+      if (process.env.NODE_ENV !== "production") {
+        console.log("No token available - request without auth header");
+      }
     }
 
     return config;
@@ -71,12 +77,14 @@ clientApi.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error("API Error:", {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      message: error.message,
-    });
+    if (process.env.NODE_ENV !== "production") {
+      console.error("API Error:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        message: error.message,
+      });
+    }
 
     // Handle authentication errors
     if (error.response?.status === 401) {
@@ -156,12 +164,14 @@ export const createServerApi = async (
       return response;
     },
     (error) => {
-      console.error("Server API Error:", {
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        message: error.message,
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Server API Error:", {
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,  
+          message: error.message,
+        });
+      }
       return Promise.reject(error);
     }
   );

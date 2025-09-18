@@ -99,12 +99,15 @@ export default function ScheduleConfirmationDialog({
         });
 
         const updatedRows = rows.map((row) => {
-          // console.log("Checking row for conflicts:", row);
+          if (process.env.NODE_ENV !== "production") {
+            console.log("Checking row for conflicts:", row);
+          }
 
           const [rowStartTime, rowEndTime] = row.time.split(" - ");
 
           const conflictCourse = conflicts.find((c) => {
-            if (c.date !== row.date || c.room !== row.room) {
+            // Must be same date
+            if (c.date !== row.date) {
               return false;
             }
 
@@ -121,7 +124,20 @@ export default function ScheduleConfirmationDialog({
             const hasTimeOverlap =
               rowStart < conflictEnd && conflictStart < rowEnd;
 
-            return hasTimeOverlap;
+            // Check different conflict types
+            if (c.conflictType === "room_student") {
+              // Room AND student conflict - check room match AND time overlap
+              return c.room === row.room && hasTimeOverlap;
+            } else if (c.conflictType === "student") {
+              // Student conflict only - check time overlap (room can be different)
+              return hasTimeOverlap;
+            } else if (c.conflictType === "room") {
+              // Room conflict only - check room match AND time overlap
+              return c.room === row.room && hasTimeOverlap;
+            } else {
+              // Fallback - any time overlap
+              return hasTimeOverlap;
+            }
           });
 
           return {
@@ -159,7 +175,9 @@ export default function ScheduleConfirmationDialog({
     const student = students.find(
       (s) => s.nickname === row.student || s.name === row.student
     );
-    console.log("Row data:", row);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Row data:", row);
+    }
     const [startTime, endTime] = row.time.split(" - ");
 
     setSelectedRowData({
@@ -196,32 +214,73 @@ export default function ScheduleConfirmationDialog({
       (s) => s.studentId === editedData.studentId || s.id === editedData.studentId
     );
 
-    const conflictCourse = await checkScheduleConflict({
-      date,
-      startTime,
-      endTime,
-      room: editedData.room,
-      teacherId: editedData.teacherId,
-      studentId: Number(student?.id || editedData.studentId),
-    });
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Checking conflict for edited data:", {
+        date,
+        startTime,
+        endTime,
+        room: editedData.room,
+        teacherId: editedData.teacherId,
+        studentId: Number(student?.id || editedData.studentId),
+      });
+    }
 
-    updatedRows[originalIndex] = {
-      ...updatedRows[originalIndex],
-      date,
-      time: `${startTime} - ${endTime}`,
-      student: editedData.nickname || editedData.student,
-      teacher: editedData.teacher,
-      teacherId: editedData.teacherId,
-      room: editedData.room,
-      remark: editedData.remark,
-      attendance: editedData.status,
-      warning: conflictCourse ? generateConflictWarning(conflictCourse) : "",
-    };
+    try {
+      const conflictCourse = await checkScheduleConflict({
+        date,
+        startTime,
+        endTime,
+        room: editedData.room,
+        teacherId: editedData.teacherId ? Number(editedData.teacherId) : undefined,
+        studentId: Number(student?.id || editedData.studentId),
+      });
 
-    setScheduleRows(updatedRows);
-    setEditDialogOpen(false);
-    setSelectedRowData(null);
-    setSelectedRowIndex(-1);
+      updatedRows[originalIndex] = {
+        ...updatedRows[originalIndex],
+        date,
+        time: `${startTime} - ${endTime}`,
+        student: editedData.nickname || editedData.student,
+        teacher: editedData.teacher,
+        teacherId: editedData.teacherId ? Number(editedData.teacherId) : updatedRows[originalIndex].teacherId,
+        room: editedData.room,
+        remark: editedData.remark,
+        attendance: editedData.status,
+        warning: conflictCourse ? generateConflictWarning(conflictCourse) : "",
+      };
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Updated row data:", updatedRows[originalIndex]);
+      }
+
+      setScheduleRows(updatedRows);
+      setEditDialogOpen(false);
+      setSelectedRowData(null);
+      setSelectedRowIndex(-1);
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Error checking conflict for edited schedule:", error);
+      }
+      // Still update the row even if conflict check fails
+      updatedRows[originalIndex] = {
+        ...updatedRows[originalIndex],
+        date,
+        time: `${startTime} - ${endTime}`,
+        student: editedData.nickname || editedData.student,
+        teacher: editedData.teacher,
+        teacherId: editedData.teacherId ? Number(editedData.teacherId) : updatedRows[originalIndex].teacherId,
+        room: editedData.room,
+        remark: editedData.remark,
+        attendance: editedData.status,
+        warning: "Unable to check conflicts",
+      };
+
+      setScheduleRows(updatedRows);
+      setEditDialogOpen(false);
+      setSelectedRowData(null);
+      setSelectedRowIndex(-1);
+      
+      showToast.error("Failed to check schedule conflicts, but changes were saved.");
+    }
   };
 
   const handleConfirmSubmit = async () => {
@@ -251,10 +310,14 @@ export default function ScheduleConfirmationDialog({
           sessionsMap[student.id] = session.sessionId;
         });
 
-        console.log("Session updated successfully");
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Session updated successfully");
+        }
       } else {
         // Mode: create - Create new sessions
-        console.log("=== Creating New Sessions and Schedules ===");
+        if (process.env.NODE_ENV !== "production") {
+          console.log("=== Creating New Sessions and Schedules ===");
+        }
 
         // Create a session for each student
         for (const student of students) {
@@ -376,67 +439,71 @@ export default function ScheduleConfirmationDialog({
         </div>
       </div>
 
-      <div className="border rounded-lg bg-white shadow-sm">
-        <Table className="bg-white table-fixed">
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Date
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Time
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Student
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Teacher
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Room
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Remark
-              </TableHead>
-              <TableHead className="border h-30 text-center whitespace-normal font-semibold">
-                Warning
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {scheduleRows.map((row, index) => (
-              <TableRow
-                key={index}
-                className="hover:bg-gray-50 cursor-pointer"
-                onDoubleClick={() => handleRowDoubleClick(row, index)}
-              >
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.date
-                    ? new Date(row.date).toLocaleDateString("en-GB")
-                    : "TBD"}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.time}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.student}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.teacher}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.room}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal">
-                  {row.remark}
-                </TableCell>
-                <TableCell className="border h-30 text-center whitespace-normal text-red-500 text-sm">
-                  {row.warning}
-                </TableCell>
+      <div className="w-full overflow-x-auto bg-white rounded-lg shadow-sm border relative" style={{ maxWidth: '100vw' }}>
+        <div className="overflow-x-auto">
+          <Table className="min-w-max w-full">
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
+                  Date
+                </TableHead>
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                  Time
+                </TableHead>
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                  Student
+                </TableHead>
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
+                  Teacher
+                </TableHead>
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[80px]">
+                  Room
+                </TableHead>
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                  Remark
+                </TableHead>
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[150px]">
+                  Warning
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {scheduleRows.map((row, index) => (
+                <TableRow
+                  key={index}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onDoubleClick={() => handleRowDoubleClick(row, index)}
+                >
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
+                    {row.date
+                      ? new Date(row.date).toLocaleDateString("en-GB")
+                      : "TBD"}
+                  </TableCell>
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
+                    {row.time}
+                  </TableCell>
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
+                    {row.student}
+                  </TableCell>
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
+                    {row.teacher}
+                  </TableCell>
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[80px]">
+                    {row.room}
+                  </TableCell>
+                  <TableCell className="border h-30 text-center px-2 min-w-[120px] max-w-[200px]">
+                    <div className="break-words whitespace-normal">{row.remark}</div>
+                  </TableCell>
+                  <TableCell className="border h-30 text-center text-red-500 px-2 min-w-[150px] max-w-[250px]">
+                    <div className="break-words whitespace-normal" title={row.warning || ""}>
+                      {row.warning}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <EditScheduleDialog

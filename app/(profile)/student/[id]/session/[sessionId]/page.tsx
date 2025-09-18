@@ -21,6 +21,17 @@ export default async function StudentSession({
     accessToken
   );
 
+  // Check if session is already cancelled or completed
+  const allCancelled = schedules.length > 0 && schedules.every(schedule => 
+    schedule.schedule_attendance === 'cancelled'
+  );
+  const allCompleted = schedules.length > 0 && schedules.every(schedule => 
+    schedule.schedule_attendance === 'completed'
+  );
+  
+  // Don't show action buttons if session is already cancelled or completed
+  const showActionButtons = !allCancelled && !allCompleted;
+
   return (
     <div className="p-4 sm:p-6 w-full min-w-0 max-w-full overflow-x-hidden">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
@@ -46,16 +57,33 @@ export default async function StudentSession({
           </div>
         </nav>
 
-        <div className="flex items-center gap-2 flex-shrink-0 justify-end">
-          <CancelSessionDialog
-            sessionId={sessionId}
-            sessionTitle={schedules[0].course_title}
-          />
-          <CompleteSessionDialog
-            sessionId={sessionId}
-            sessionTitle={schedules[0].course_title}
-          />
-        </div>
+        {showActionButtons ? (
+          <div className="flex items-center gap-2 flex-shrink-0 justify-end">
+            <CancelSessionDialog
+              sessionId={sessionId}
+              sessionTitle={schedules[0].course_title}
+            />
+            <CompleteSessionDialog
+              sessionId={sessionId}
+              sessionTitle={schedules[0].course_title}
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 flex-shrink-0 justify-end">
+            <div className="px-4 py-2 rounded-full text-sm font-medium">
+              {allCancelled && (
+                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full">
+                  Session Cancelled
+                </span>
+              )}
+              {allCompleted && (
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                  Session Completed
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="w-full min-w-0 overflow-x-auto">

@@ -7,8 +7,10 @@ export async function login(info: LoginFormData): Promise<AuthResponse> {
   const response = await clientApi.post<AuthResponse>("/auth/login", info);
   const { user, accessToken } = response.data;
 
-  console.log("user", user);
-  console.log("token", accessToken);
+  if (process.env.NODE_ENV !== "production") {
+    console.log("user", user);
+    console.log("token", "[TOKEN RECEIVED]");
+  }
 
   // Store token in regular cookie with synchronized expiration
   storeToken(accessToken);

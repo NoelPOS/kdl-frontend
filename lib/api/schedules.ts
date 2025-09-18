@@ -79,11 +79,20 @@ export async function checkScheduleConflict(
 export async function checkScheduleConflicts(
   batch: BatchScheduleCheck
 ): Promise<ConflictDetail[]> {
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Batch conflict check input:", batch);
+  }
+
   const res = await clientApi.post<ConflictDetail[]>(
     "/schedules/conflicts",
     batch
   );
-  // console.log("Batch conflict check result:", res.data);
+  
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Batch conflict check result:", res.data);
+  }
+  
   return res.data;
 }
 
@@ -104,7 +113,11 @@ export async function getSchedulesByStudentAndSession(
   const res = await api.get<ClassSchedule[]>(
     `/schedules/session/${sessionId}/student/${studentId}`
   );
-  console.log("API response:", res.data);
+  
+  if (process.env.NODE_ENV !== "production") {
+    console.log("API response:", res.data);
+  }
+  
   return res.data;
 }
 

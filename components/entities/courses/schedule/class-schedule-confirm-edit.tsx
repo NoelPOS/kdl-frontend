@@ -172,7 +172,9 @@ export function EditScheduleDialog({
           }
         }
       } catch (error) {
-        console.error("Failed to fetch teachers:", error);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to fetch teachers:", error);
+        }
         showToast.error("Failed to load teachers. Please try again.");
       }
     };
@@ -187,7 +189,9 @@ export function EditScheduleDialog({
         const roomList = await getAllRooms();
         setRooms(roomList);
       } catch (error) {
-        console.error("Failed to fetch rooms:", error);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to fetch rooms:", error);
+        }
         showToast.error("Failed to load rooms. Please try again.");
       }
     };
@@ -199,7 +203,9 @@ export function EditScheduleDialog({
   const endtimeRef = useRef<HTMLInputElement>(null);
 
   const onSubmit = async (data: EditScheduleFormData) => {
-    console.log("Submitting schedule data:", data);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Submitting schedule data:", data);
+    }
 
     // Enable validation error display
     setShowValidationErrors(true);
@@ -218,7 +224,9 @@ export function EditScheduleDialog({
       showToast.success("Schedule updated successfully!");
       setShowValidationErrors(false);
     } catch (error) {
-      console.error("Error updating schedule:", error);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Error updating schedule:", error);
+      }
       showToast.error("Failed to update schedule. Please try again.");
     }
   };
