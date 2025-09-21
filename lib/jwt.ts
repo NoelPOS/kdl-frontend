@@ -162,11 +162,23 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
     ],
   };
 
-  return (
+  console.log("hasRoutePermission debug:", {
+    userRole,
+    route,
+    availablePermissions: permissions[userRole],
+    userRoleType: typeof userRole,
+    UserRoleTeacher: UserRole.TEACHER,
+    matchesTeacher: userRole === UserRole.TEACHER
+  });
+
+  const result = (
     permissions[userRole]?.some((allowedRoute) =>
       route.startsWith(allowedRoute)
     ) || false
   );
+  
+  console.log("Permission result:", result);
+  return result;
 }
 
 /**

@@ -60,6 +60,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } else {
             // Valid token, extract user
             const userData = getUserFromToken(token);
+            console.log("userData from token:", userData);
             if (userData) {
               setUser(userData);
             } else {
@@ -99,19 +100,35 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check route permissions on pathname change
   useEffect(() => {
     if (!isLoading && user && pathname && isMounted) {
+      console.log("Route permission check:", {
+        pathname,
+        userRole: user.role,
+        isLoading,
+        isMounted
+      });
+      
       // Allow auth pages and profile pages for all authenticated users
       if (
-        pathname.startsWith("/") ||
+        pathname === "/" ||
         pathname.startsWith("/login") ||
         pathname.startsWith("/forgot-password") ||
         pathname.startsWith("/unauthorized") ||
         pathname.startsWith("/not-found")
       ) {
+        console.log("Skipping permission check for public route:", pathname);
         return;
       }
 
       // Check if user has permission for current route
-      if (!hasRoutePermission(user.role, pathname)) {
+      const hasPermission = hasRoutePermission(user.role, pathname);
+      console.log("Permission check result:", {
+        userRole: user.role,
+        pathname,
+        hasPermission
+      });
+      
+      if (!hasPermission) {
+        console.log("Redirecting to unauthorized page");
         router.push("/unauthorized");
       }
     }

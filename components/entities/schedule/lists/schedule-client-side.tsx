@@ -61,7 +61,7 @@ function ScheduleClientSide({
               schedule_endTime: updatedFormData.endtime,
               schedule_room: updatedFormData.room || "",
               schedule_remark: updatedFormData.remark || "",
-              schedule_feedback: updatedFormData.feedback || "", // Update feedback
+              schedule_feedback: updatedFormData.feedback || "", 
               schedule_attendance: updatedFormData.status || "",
             }
           : s
@@ -88,7 +88,8 @@ function ScheduleClientSide({
                 currentPage={pagination.currentPage}
               />
             </div>
-          )}          <RoleAwareScheduleTable
+          )}          
+          <RoleAwareScheduleTable
             schedules={schedules}
             userRole={userRole}
             showStudentHeader={false}
