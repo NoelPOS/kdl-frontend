@@ -1,5 +1,6 @@
 import ParentDetail from "@/components/entities/parents/details/parent.detail.left";
 import ParentDetailRight from "@/components/entities/parents/details/parent-detail-right";
+import ResponsiveDetailLayout from "@/components/shared/responsive-detail-layout";
 import { getParentById } from "@/lib/api";
 import { cookies } from "next/headers";
 
@@ -19,17 +20,18 @@ export default async function ParentDetailPage({
   const resolvedSearchParams = (await searchParams) || {};
   const parent = await getParentById(Number(id), accessToken);
 
-  console.log("ParentDetailPage", parent);
-
   return (
-    <div className="relative">
-      <div className="flex min-h-screen">
-        <ParentDetail parent={parent} />
+    <ResponsiveDetailLayout
+      detailTitle={`Parent Details - ${parent.name}`}
+      detailDescription="Parent information and details"
+      rightContent={
         <ParentDetailRight
           parentId={Number(id)}
           searchParams={resolvedSearchParams}
         />
-      </div>
-    </div>
+      }
+    >
+      <ParentDetail parent={parent} />
+    </ResponsiveDetailLayout>
   );
 }

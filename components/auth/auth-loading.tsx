@@ -3,9 +3,9 @@ import React from "react";
 import Image from "next/image";
 import logo from "@/public/logo.png";
 
-const AuthLoadingPage = () => {
+const AuthLoadingPage = ({ home }: { home?: boolean }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className={`${home ? "min-h-screen" : ""} flex items-center justify-center`}>
       <div className="text-center">
         <Image
           src={logo}

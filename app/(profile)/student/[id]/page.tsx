@@ -1,5 +1,6 @@
 import StudentDetail from "@/components/entities/students/details/student.detail.left";
 import StudentDetailRight from "@/components/entities/students/details/student.detail.right";
+import ResponsiveDetailLayout from "@/components/shared/responsive-detail-layout";
 import { getStudentById } from "@/lib/api";
 import { cookies } from "next/headers";
 
@@ -22,14 +23,12 @@ export default async function StudentDetailPage({
   const { id } = (await params) || -1;
   const resolvedSearchParams = (await searchParams) || {};
   const student = await getStudentById(Number(id), accessToken);
-  // console.log("StudentDetailPage", student);
+  
   return (
-    <div className="relative">
-      <div className="flex min-h-screen ">
-        {/* Left Side - Student Information */}
-        <StudentDetail student={student} />
-
-        {/* Right Side - Courses */}
+    <ResponsiveDetailLayout
+      detailTitle={`Student Details - ${student.nickname || student.name}`}
+      detailDescription="Student information and details"
+      rightContent={
         <StudentDetailRight
           student={{
             id: student.id ?? "",
@@ -38,7 +37,9 @@ export default async function StudentDetailPage({
           }}
           searchParams={resolvedSearchParams}
         />
-      </div>
-    </div>
+      }
+    >
+      <StudentDetail student={student} />
+    </ResponsiveDetailLayout>
   );
 }

@@ -4,6 +4,7 @@ import PageHeader from "@/components/shared/page-header";
 import { fetchEnrollments } from "@/lib/api";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 export default async function EnrollmentPage({
   searchParams,
@@ -67,7 +68,7 @@ export default async function EnrollmentPage({
           }${teacher || ""}${student || ""}${
             transactionType || ""
           }${currentPage}`}
-          fallback={<div>Loading...</div>}
+          fallback={<AuthLoadingPage />}
         >
           <EnrollmentList
             startDate={startDate || ""}

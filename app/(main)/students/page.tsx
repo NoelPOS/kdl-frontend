@@ -1,3 +1,4 @@
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import AddNewStudent from "@/components/entities/students/dialogs/add-new-student/add-new-student.dialog";
 import StudentFilter from "@/components/entities/students/filters/filter-student";
 import StudentList from "@/components/entities/students/lists/student.list";
@@ -58,7 +59,7 @@ export default async function StudentsPage({
           key={`${query || ""}${active || ""}${course || ""}${
             courseType || ""
           }${currentPage}`}
-          fallback={<div>Loading...</div>}
+          fallback={<AuthLoadingPage />}
         >
           <StudentList
             query={query || ""}

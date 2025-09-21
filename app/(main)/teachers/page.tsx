@@ -1,3 +1,4 @@
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import AddNewTeacher from "@/components/entities/teachers/dialogs/add-new-teacher/add-new-teacher.dialog";
 import TeacherFilter from "@/components/entities/teachers/filters/filter-teacher";
 import TeacherList from "@/components/entities/teachers/lists/teacher.list";
@@ -53,7 +54,7 @@ export default async function TeachersPage({
       ) : (
         <Suspense
           key={`${query || ""}${status || ""}${course || ""}`}
-          fallback={<div>Loading...</div>}
+          fallback={<AuthLoadingPage />}
         >
           <TeacherList
             query={query || ""}

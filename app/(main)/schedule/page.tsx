@@ -4,6 +4,7 @@ import { ScheduleFilterForm } from "@/components/entities/schedule/filters/sched
 import PageHeader from "@/components/shared/page-header";
 import { getFilteredSchedules, ScheduleFilter } from "@/lib/api";
 import { cookies } from "next/headers";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 async function ScheduleData({
   searchParams,
@@ -87,7 +88,7 @@ export default async function ClassSchedulePage({
     <div className="p-6 w-full min-w-0">
       <PageHeader title="Schedules" lastUpdated={lastUpdated} />
       
-      <Suspense fallback={<div>Loading filters...</div>}>
+      <Suspense fallback={<AuthLoadingPage />}>
         <ScheduleFilterForm />
       </Suspense>
 
@@ -99,7 +100,7 @@ export default async function ClassSchedulePage({
         ) : (
           <Suspense
             key={JSON.stringify(resolvedSearchParams)}
-            fallback={<div>Loading...</div>}
+            fallback={<AuthLoadingPage />}
           >
             <ScheduleData searchParams={resolvedSearchParams} />
           </Suspense>

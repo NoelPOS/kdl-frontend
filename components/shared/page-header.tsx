@@ -14,22 +14,20 @@ export default function PageHeader({
   className = "" 
 }: PageHeaderProps) {
   return (
-    <div className={`flex items-center justify-center mb-6 ${className}`}>
-      <div className="flex items-center justify-around w-full gap-4">
-        <div className="flex-1/4">
-          <div className="text-3xl font-medium">{title}</div>
-          <LastUpdated 
-            timestamp={lastUpdated} 
-            className="mt-1" 
-            label="Data last updated"
-          />
-        </div>
-        {children && (
-          <div className="flex gap-2">
-            {children}
-          </div>
-        )}
+    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 ${className}`}>
+      <div className="min-w-0 flex-1">
+        <div className="text-2xl sm:text-3xl font-medium truncate">{title}</div>
+        <LastUpdated 
+          timestamp={lastUpdated} 
+          className="mt-1" 
+          label="Data last updated"
+        />
       </div>
+      {children && (
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

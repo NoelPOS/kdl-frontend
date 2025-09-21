@@ -7,6 +7,7 @@ import { fetchFilteredCourses } from "@/lib/api";
 import { getServerSideUser } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 export default async function CoursesPage({
   searchParams,
@@ -44,7 +45,7 @@ export default async function CoursesPage({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 w-full min-w-0">
       <PageHeader title="Courses" lastUpdated={lastUpdated}>
         <AddBlankCoursesDialog />
         {canAddCourses && (
@@ -56,7 +57,7 @@ export default async function CoursesPage({
       </PageHeader>
       
       <FilterCourse />
-      <div className="rounded-lg">
+      <div className="rounded-lg w-full min-w-0">
         {!query && !ageRange && !medium ? (
           <div className="text-center text-gray-500 mt-4">
             Please use the filter to search for courses.
@@ -64,7 +65,7 @@ export default async function CoursesPage({
         ) : (
           <Suspense
             key={`${query || ""}${ageRange || ""}${medium || ""}${currentPage}`}
-            fallback={<div>Loading...</div>}
+            fallback={<AuthLoadingPage />}
           >
             <CourseList
               query={query || ""}

@@ -1,4 +1,5 @@
 import RegistrarDetail from "@/components/entities/registrars/details/registrar.detail.left";
+import ResponsiveDetailLayout from "@/components/shared/responsive-detail-layout";
 import { getRegistrarById } from "@/lib/api";
 import { cookies } from "next/headers";
 
@@ -12,12 +13,11 @@ export default async function RegistrarDetailPage({
   const { id } = await params;
   const registrar = await getRegistrarById(Number(id), accessToken);
 
-  console.log("RegistrarDetailPage", registrar);
-
   return (
-    <div className="relative">
-      <div className="flex min-h-screen">
-        <RegistrarDetail registrar={registrar} />
+    <ResponsiveDetailLayout
+      detailTitle={`Registrar Details - ${registrar.name}`}
+      detailDescription="Registrar information and details"
+      rightContent={
         <div className="flex-1 p-8 bg-gray-50">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
@@ -29,7 +29,9 @@ export default async function RegistrarDetailPage({
             </p>
           </div>
         </div>
-      </div>
-    </div>
+      }
+    >
+      <RegistrarDetail registrar={registrar} />
+    </ResponsiveDetailLayout>
   );
 }

@@ -139,10 +139,10 @@ const FilterCourse = () => {
                     Select age range
                   </option>
                   <option value="all">All</option>
-                  <option value="5-6">5-6 years</option>
-                  <option value="7-8">7-8 years</option>
-                  <option value="9-12">9-12 years</option>
-                  <option value="13-18">13-18 years</option>
+                  <option value="5-6 yrs">5-6 years</option>
+                  <option value="7-8 yrs">7-8 years</option>
+                  <option value="9-12 yrs">9-12 years</option>
+                  <option value="13-18 yrs">13-18 years</option>
                 </select>
 
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />

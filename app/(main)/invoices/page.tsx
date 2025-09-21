@@ -1,3 +1,4 @@
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import InvoiceFilterNew from "@/components/entities/invoices/filters/invoice-filter";
 import InvoiceList from "@/components/entities/invoices/lists/invoice.list";
 import PageHeader from "@/components/shared/page-header";
@@ -52,7 +53,7 @@ export default async function InvoicePage({
           key={`${documentId || ""}${student || ""}${course || ""}${
             receiptDone || ""
           }${currentPage}`}
-          fallback={<div>Loading...</div>}
+          fallback={<AuthLoadingPage />}
         >
           <InvoiceList
             documentId={documentId || ""}

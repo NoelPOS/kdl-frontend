@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import ChildrenListContent from "./children-list-content";
 import ChildrenListLoading from "./children-list-loading";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 interface ChildrenListProps {
   parentId: number;
@@ -18,7 +19,7 @@ export default function ChildrenList({
   const suspenseKey = `${searchParams.query || ""}${searchParams.page || ""}`;
 
   return (
-    <Suspense key={suspenseKey} fallback={<ChildrenListLoading />}>
+    <Suspense key={suspenseKey} fallback={<AuthLoadingPage />}>
       <ChildrenListContent parentId={parentId} searchParams={searchParams} />
     </Suspense>
   );

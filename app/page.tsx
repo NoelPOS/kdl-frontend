@@ -20,7 +20,7 @@ const RootePage = () => {
     }
   }, [user, isLoading, router]);
 
-  return <AuthLoadingPage />;
+  return <AuthLoadingPage home={true} />;
 };
 
 export default RootePage;

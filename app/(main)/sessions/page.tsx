@@ -1,3 +1,4 @@
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import { TeacherSessionFilter } from "@/components/entities/sessions";
 import TeacherSessionList from "@/components/entities/sessions/lists/teacher-session-list";
 import PageHeader from "@/components/shared/page-header";
@@ -59,7 +60,7 @@ export default async function SessionPage({
         ) : (
           <Suspense
             key={`${courseName || ""}${status || ""}${currentPage}`}
-            fallback={<div>Loading...</div>}
+            fallback={<AuthLoadingPage />}
           >
             <TeacherSessionList
               courseName={courseName || ""}

@@ -1,3 +1,4 @@
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import AddNewParent from "@/components/entities/parents/dialogs/add-new-parent.dialog";
 import ParentFilter from "@/components/entities/parents/filters/filter-parent";
 import ParentList from "@/components/entities/parents/lists/parent.list";
@@ -54,7 +55,7 @@ export default async function ParentsPage({
         ) : (
           <Suspense
             key={`${query || ""}${child || ""}${address || ""}${currentPage}`}
-            fallback={<div>Loading...</div>}
+            fallback={<AuthLoadingPage />}
           >
             <ParentList
               query={query || ""}

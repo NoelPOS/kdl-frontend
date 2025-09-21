@@ -18,7 +18,7 @@ const CourseDetails: React.FC<CourseDetailsProps> = ({ selectedCourse }) => {
   return (
     <div className="space-y-6 max-w-full">
       <div className="bg-gray-50 p-3 sm:p-4 lg:p-6 rounded-lg max-w-full">
-        <div className="flex flex-col gap-2 sm:gap-3 mb-4">d
+        <div className="flex flex-col gap-2 sm:gap-3 mb-4">
           <div className="text-sm sm:text-base lg:text-lg">
             <span className="font-medium text-gray-700">Class:</span> 
             <span className="ml-2 break-words">{selectedCourse.title.split(" (")[0]}</span>

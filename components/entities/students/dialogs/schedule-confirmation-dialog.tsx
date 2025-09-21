@@ -395,25 +395,25 @@ export default function ScheduleConfirmationDialog({
   }
 
   return (
-    <div className="py-6 px-10">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-orange-500 mb-1">
+    <div className="py-6 px-4 sm:px-6 lg:px-10 pt-20 md:pt-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-orange-500 mb-1">
             {mode === "assign"
               ? "Confirming Course Assignment & Schedule"
               : "Confirming Class Schedule"}
           </h1>
-          <p className="text-lg text-gray-700">{course.title}</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-base sm:text-lg text-gray-700 truncate">{course.title}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Double-click any row to edit the schedule
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3 lg:flex-nowrap">
           <Button
             variant="outline"
             onClick={onBack}
             disabled={isSubmitting}
-            className="text-gray-500 border-gray-500 hover:bg-gray-50 hover:text-gray-600 rounded-full px-6"
+            className="text-gray-500 border-gray-500 hover:bg-gray-50 hover:text-gray-600 rounded-full px-4 sm:px-6 text-sm sm:text-base"
           >
             Back
           </Button>
@@ -427,7 +427,7 @@ export default function ScheduleConfirmationDialog({
           </Button> */}
           <Button
             onClick={handleConfirmSubmit}
-            className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-6"
+            className="bg-yellow-500 text-white hover:bg-yellow-600 rounded-full px-4 sm:px-6 text-sm sm:text-base"
             disabled={isSubmitting || scheduleRows.length === 0}
           >
             {isSubmitting

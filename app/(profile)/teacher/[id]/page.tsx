@@ -1,5 +1,6 @@
 import TeacherDetail from "@/components/entities/teachers/details/teacher.detail.left";
 import { TeacherDetailRight } from "@/components/entities/teachers/details/teacher-detail-right";
+import ResponsiveDetailLayout from "@/components/shared/responsive-detail-layout";
 import { getTeacherById } from "@/lib/api";
 import { cookies } from "next/headers";
 
@@ -20,17 +21,19 @@ export default async function TeacherDetailPage({
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const teacher = await getTeacherById(Number(id), accessToken);
-  console.log("TeacherDetailPage", teacher);
-
+  
   return (
-    <div className="relative">
-      <div className="flex min-h-screen">
-        <TeacherDetail teacher={teacher} />
+    <ResponsiveDetailLayout
+      detailTitle={`Teacher Details - ${teacher.name}`}
+      detailDescription="Teacher information and details"
+      rightContent={
         <TeacherDetailRight
           teacherId={Number(id)}
           searchParams={resolvedSearchParams}
         />
-      </div>
-    </div>
+      }
+    >
+      <TeacherDetail teacher={teacher} />
+    </ResponsiveDetailLayout>
   );
 }

@@ -70,6 +70,11 @@ export function EditSchedule({
   const startTime = watch("starttime");
   const endTime = watch("endtime");
   const selectedDate = watch("date");
+  const courseName = watch("course");
+  const selectedStatus = watch("status");
+
+  // Check if current course is TBD
+  const isTBDCourse = courseName === "TBD";
 
   const { ref: dateRHFRef } = register("date", {
     required: "Date is required",
@@ -107,6 +112,7 @@ export function EditSchedule({
   const onSubmit = useCallback(
     async (data: FormData) => {
       console.log("Submitting data:", data.scheduleId);
+      
       try {
         let warningMessage = "none";
         try {
@@ -182,8 +188,9 @@ export function EditSchedule({
         }
         onOpenChange(false);
       } catch (error) {
+        // Error is automatically handled by global error handler
+        // No need for custom error handling logic here
         console.error("Failed to update schedule", error);
-        showToast.error("Failed to update schedule. Please try again.");
       }
     },
     [
@@ -225,11 +232,25 @@ export function EditSchedule({
     }
   }, [initialData, reset]);
 
+  // Auto-select first teacher if current teacher is empty/TBD and teachers are loaded
+  useEffect(() => {
+    if (teachers.length > 0 && (!watch("teacher") || watch("teacher") === "TBD")) {
+      console.log("Auto-selecting first teacher:", teachers[0].name);
+      setValue("teacher", teachers[0].name);
+    }
+  }, [teachers, setValue, watch]);
+
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const roomList = await getAllRooms();
         setRooms(roomList);
+        
+        // Auto-select first room if current room is empty/TBD and rooms are loaded
+        if (roomList.length > 0 && (!watch("room") || watch("room") === "TBD")) {
+          console.log("Auto-selecting first room:", roomList[0].name);
+          setValue("room", roomList[0].name);
+        }
       } catch (error) {
         console.error("Failed to fetch rooms:", error);
       }
@@ -238,7 +259,7 @@ export function EditSchedule({
     if (open) {
       fetchRooms();
     }
-  }, [open]);
+  }, [open, setValue, watch]);
 
   // Memoize the teacher options to prevent unnecessary re-renders
   const teacherOptions = useMemo(
@@ -411,18 +432,41 @@ export function EditSchedule({
                   {...register("status")}
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
+                  onChange={(e) => {
+                    // Prevent selecting cancelled for TBD courses
+                    if (e.target.value === "cancelled" && isTBDCourse) {
+                      showToast.error("Cannot cancel TBD schedules. TBD schedules cannot be cancelled.");
+                      e.target.value = selectedStatus || ""; // Reset to previous value
+                      return;
+                    }
+                    setValue("status", e.target.value);
+                  }}
                 >
                   <option value="" disabled hidden>
                     Select status
                   </option>
                   <option value="confirmed">Confirmed</option>
                   <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option 
+                    value="cancelled" 
+                    disabled={isTBDCourse}
+                    style={{ 
+                      color: isTBDCourse ? '#9ca3af' : 'inherit',
+                      cursor: isTBDCourse ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    Cancelled {isTBDCourse ? '(Not available for TBD)' : ''}
+                  </option>
                   <option value="pending">Pending</option>
                   <option value="absent">Absent</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
               </div>
+              {isTBDCourse && (
+                <span className="text-amber-600 text-sm">
+                  ⚠️ TBD schedules cannot be cancelled
+                </span>
+              )}
             </div>
           </div>
 

@@ -29,7 +29,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* SidebarTrigger rendered separately so it's not hidden when sidebar is closed */}
       <div className="fixed top-4 left-4 z-50 md:hidden">
         <SidebarTrigger className="h-12 w-12 bg-yellow-500 hover:bg-yellow-600 shadow-lg hover:shadow-xl transition-all duration-200">
-          <MenuIcon className="h-12 w-12 " />
+          <MenuIcon className="h-12 w-12 " /> 
         </SidebarTrigger>
       </div>
 

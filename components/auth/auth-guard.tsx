@@ -36,7 +36,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   // If no user and not loading, the auth context should have already redirected
   // But just in case, show loading briefly to allow redirect to complete
   if (!user) {
-    return <AuthLoadingPage />;
+    return <AuthLoadingPage home={true} />;
   }
 
   return <>{children}</>;

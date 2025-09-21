@@ -5,6 +5,7 @@ import DiscountList from "@/components/entities/discounts/lists/discount.list";
 import PageHeader from "@/components/shared/page-header";
 import { fetchDiscounts } from "@/lib/api";
 import { cookies } from "next/headers";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 export default async function DiscountsPage({
   searchParams,
@@ -34,7 +35,7 @@ export default async function DiscountsPage({
 
       <DiscountFilter />
 
-      <Suspense key={`${query || ""}`} fallback={<div>Loading...</div>}>
+      <Suspense key={`${query || ""}`} fallback={<AuthLoadingPage />}>
         <DiscountList query={query || ""} />
       </Suspense>
     </div>

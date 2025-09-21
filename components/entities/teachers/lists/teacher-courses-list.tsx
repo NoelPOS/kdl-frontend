@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import TeacherCoursesListContent from "./teacher-courses-list-content";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 interface TeacherCoursesListProps {
   teacherId: number;
@@ -29,7 +30,7 @@ export default function TeacherCoursesList({
   const suspenseKey = `${searchParams.query || ""}${searchParams.page || ""}`;
 
   return (
-    <Suspense key={suspenseKey} fallback={<TeacherCoursesListLoading />}>
+    <Suspense key={suspenseKey} fallback={<AuthLoadingPage />}>
       <TeacherCoursesListContent
         teacherId={teacherId}
         searchParams={searchParams}

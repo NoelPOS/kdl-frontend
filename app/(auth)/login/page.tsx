@@ -36,6 +36,8 @@ const Login = () => {
   const selectedRole = watch("role");
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log("Form submitted with data:", data);
+    
     try {
       const response = await login(data);
 
@@ -71,7 +73,11 @@ const Login = () => {
         errorMessage = error.message;
       }
 
+      console.log("Showing error toast:", errorMessage);
       showToast.error(errorMessage);
+      
+      // Prevent any navigation on error
+      return false;
     }
   };
 
@@ -90,7 +96,14 @@ const Login = () => {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form 
+          className="mt-8 space-y-6" 
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(onSubmit)();
+          }}
+          noValidate
+        >
           <div className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>

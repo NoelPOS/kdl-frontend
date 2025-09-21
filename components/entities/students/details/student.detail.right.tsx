@@ -4,6 +4,7 @@ import { Student } from "@/app/types/course.type";
 import StudentSessionsContent from "../sessions/student-sessions-content";
 import StudentSessionsLoading from "../sessions/student-sessions-loading";
 import StudentSessionFilterComponent from "../sessions/student-session-filter";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 export default async function StudentDetailRight({
   student,
@@ -29,7 +30,7 @@ export default async function StudentDetailRight({
         <StudentDetailRightClient studentData={[student]} />
       </div>
       <StudentSessionFilterComponent />
-      <Suspense key={suspenseKey} fallback={<StudentSessionsLoading />}>
+      <Suspense key={suspenseKey} fallback={<AuthLoadingPage />}>
         <StudentSessionsContent student={student} searchParams={searchParams} />
       </Suspense>
     </div>

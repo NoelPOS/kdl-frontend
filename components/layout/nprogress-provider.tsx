@@ -10,7 +10,7 @@ export default function NProgressProvider() {
   useEffect(() => {
     // Configure nprogress options
     NProgress.configure({
-      showSpinner: true, // Hide spinner
+      showSpinner: false, // Hide spinner
       minimum: 0.15, // Start at 15%
       trickleSpeed: 100, // Faster trickle
       easing: "ease",

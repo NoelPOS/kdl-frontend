@@ -14,11 +14,14 @@ import { Student } from "@/app/types/student.type";
 import { Parent } from "@/app/types/parent.type";
 import { updateStudentById, searchParents } from "@/lib/api";
 import { useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
 interface StudentFormData {
   id: string;
   name: string;
   nickname: string;
+  dob: string;
   gender: string;
   school: string;
   allergic: string;
@@ -28,12 +31,18 @@ interface StudentFormData {
   adConcent: boolean;
 }
 
+interface StudentDetailClientProps {
+  student: Partial<Student>;
+  onStudentUpdate?: (updatedStudent: Partial<Student>) => void;
+}
+
 export default function StudentDetailClient({
   student,
-}: {
-  student: Partial<Student>;
-}) {
+  onStudentUpdate,
+}: StudentDetailClientProps) {
   console.log("Student is here", student)
+  const router = useRouter();
+  const [localStudent, setLocalStudent] = useState<Partial<Student>>(student);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -46,22 +55,51 @@ export default function StudentDetailClient({
   // Parent search states
   const [parentSearchResults, setParentSearchResults] = useState<Parent[]>([]);
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
-  const [parentQuery, setParentQuery] = useState(student.parent || "");
+  const [parentQuery, setParentQuery] = useState(localStudent.parent || "");
   const [showParentResults, setShowParentResults] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false); // Track user interaction
   const [debouncedParentQuery] = useDebounce(parentQuery, 300);
+
+  // Update parent query when localStudent changes
+  useEffect(() => {
+    setParentQuery(localStudent.parent || "");
+  }, [localStudent.parent]);
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<StudentFormData>({
     defaultValues: {
+      id: localStudent.id,
+      name: localStudent.name || "",
+      nickname: localStudent.nickname || "",
+      dob: localStudent.dob || "",
+      gender: localStudent.gender || "",
+      school: localStudent.school || "",
+      allergic: Array.isArray(localStudent.allergic)
+        ? localStudent.allergic.join(", ")
+        : "",
+      doNotEat: Array.isArray(localStudent.doNotEat)
+        ? localStudent.doNotEat.join(", ")
+        : "",
+      parent: localStudent.parent || "",
+      nationalId: localStudent.nationalId || "",
+      adConcent: localStudent.adConcent || false,
+    },
+  });
+
+  // Update local state when student prop changes
+  useEffect(() => {
+    setLocalStudent(student);
+    reset({
       id: student.id,
       name: student.name || "",
       nickname: student.nickname || "",
+      dob: student.dob || "",
       gender: student.gender || "",
       school: student.school || "",
       allergic: Array.isArray(student.allergic)
@@ -73,8 +111,8 @@ export default function StudentDetailClient({
       parent: student.parent || "",
       nationalId: student.nationalId || "",
       adConcent: student.adConcent || false,
-    },
-  });
+    });
+  }, [student, reset]);
 
   const adConcentValue = watch("adConcent");
 
@@ -144,7 +182,7 @@ export default function StudentDetailClient({
   };
 
   const onSubmit = async (data: StudentFormData) => {
-    if (!student.id) {
+    if (!localStudent.id) {
       setMessage({ type: "error", text: "Student ID is required" });
       return;
     }
@@ -152,17 +190,17 @@ export default function StudentDetailClient({
     setIsLoading(true);
     setMessage(null);
 
-    let newImageUrl = student.profilePicture;
-    let newProfileKey = student.profileKey;
+    let newImageUrl = localStudent.profilePicture;
+    let newProfileKey = localStudent.profileKey;
 
     // If a new image is selected, delete the old one and upload the new one
     if (imageFile) {
       // 1. Delete old image from S3 if key exists
-      if (student.profileKey) {
+      if (localStudent.profileKey) {
         await fetch("/api/s3-delete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: student.profileKey }),
+          body: JSON.stringify({ key: localStudent.profileKey }),
         });
       }
       // 2. Upload new image to S3
@@ -205,10 +243,35 @@ export default function StudentDetailClient({
       };
       console.log("Update Data is here", updateData);
 
-      await updateStudentById(Number(student.id), updateData);
+      await updateStudentById(Number(localStudent.id), updateData);
+      
+      // Create optimistic update data
+      const optimisticUpdate: Partial<Student> = {
+        ...localStudent,
+        ...updateData,
+        // Ensure proper parent name display
+        parent: selectedParent ? selectedParent.name : data.parent,
+      };
+
+      // Update local state immediately (optimistic update)
+      setLocalStudent(optimisticUpdate);
+      
+      // Clear image file and preview since it's now uploaded
+      setImageFile(null);
+      setImagePreview("");
+      
+      // Notify parent component of the update
+      if (onStudentUpdate) {
+        onStudentUpdate(optimisticUpdate);
+      }
+      
+      // Refresh the page to get updated data from server
+      router.refresh();
+      
       setMessage({ type: "success", text: "Student updated successfully!" });
     } catch (error) {
       console.error("Error updating student:", error);
+      // Error is handled by global error handler, but we can still show local feedback
       setMessage({
         type: "error",
         text: "Failed to update student. Please try again.",
@@ -230,7 +293,7 @@ export default function StudentDetailClient({
           </Link>
           <span className="mx-2">&gt;</span>
           <span className="text-gray-900 text-2xl font-bold">
-            {student.nickname}
+            {localStudent.nickname}
           </span>
         </nav>
       </div>
@@ -241,7 +304,7 @@ export default function StudentDetailClient({
           onClick={handleImageClick}
         >
           <Image
-            src={imagePreview || student.profilePicture || "/student.png"}
+            src={imagePreview || localStudent.profilePicture || "/student.png"}
             alt="student profile"
             width={90}
             height={90}
@@ -256,7 +319,7 @@ export default function StudentDetailClient({
           />
         </div>
         <h2 className="text-amber-500 font-medium text-lg">
-          {student.nickname}
+          {localStudent.nickname}
         </h2>
       </div>
 
@@ -264,7 +327,7 @@ export default function StudentDetailClient({
         <div className="">
           <Label className="text-xs text-black block">Student ID</Label>
           <Input
-            value={student.studentId}
+            value={localStudent.studentId}
             readOnly
             className="bg-gray-100 border border-black"
           />
@@ -296,11 +359,32 @@ export default function StudentDetailClient({
 
         <div>
           <Label className="text-xs text-black block">Date of Birth</Label>
-          <Input
-            value="12 March 2008"
-            readOnly
-            className="bg-gray-100 border border-black"
-          />
+          <div {...register("dob", { 
+            required: "Date of birth is required",
+            validate: (value) => {
+              if (!value) return "Date of birth is required";
+              const birthDate = new Date(value);
+              const today = new Date();
+              const age = today.getFullYear() - birthDate.getFullYear();
+              if (age < 0 || age > 100) {
+                return "Please enter a valid date of birth";
+              }
+              if (birthDate > today) {
+                return "Date of birth cannot be in the future";
+              }
+              return true;
+            }
+          })}>
+            <Calendar22
+              date={watch("dob") ? new Date(watch("dob")) : undefined}
+              onChange={(date) => {
+                setValue("dob", date ? date.toLocaleDateString("en-CA") : "");
+              }}
+            />
+          </div>
+          {errors.dob && (
+            <p className="text-red-500 text-xs mt-1">{errors.dob.message}</p>
+          )}
         </div>
 
         <div>
@@ -327,8 +411,8 @@ export default function StudentDetailClient({
           <Input
             {...register("nationalId", {
               pattern: {
-                value: /^\d$/,
-                message: "National ID must be exactly digits",
+                value: /^\d{13}$/,
+                message: "National ID must be exactly 13 digits",
               },
             })}
             className="bg-white border border-black"

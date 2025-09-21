@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { UserRole } from "@/app/types/auth.type";
+import { showToast } from "@/lib/toast";
 import Image from "next/image";
 import EditSchedule from "../dialogs/edit-schedule-dialog";
 import FreeTrialEditDialog from "../dialogs/free-trial-edit-dialog";
@@ -81,25 +82,12 @@ export default function RoleAwareScheduleTable({
   const firstSchedule = localSchedules[0];
 
   const handleRowDoubleClick = (schedule: ClassSchedule) => {
-    // Convert ClassSchedule to FormData format
-    // const formData: FormData = {
-    //   scheduleId: parseInt(schedule.schedule_id),
-    //   date: schedule.schedule_date,
-    //   starttime: schedule.schedule_startTime,
-    //   endtime: schedule.schedule_endTime,
-    //   course: schedule.course_title,
-    //   teacher: schedule.teacher_name,
-    //   student: schedule.student_name,
-    //   room: schedule.schedule_room,
-    //   nickname: schedule.student_nickname,
-    //   remark: schedule.schedule_remark,
-    //   feedback: schedule.schedule_feedback || "",
-    //   feedbackDate: schedule.schedule_feedbackDate || "",
-    //   status: schedule.schedule_attendance,
-    //   courseId: parseInt(schedule.schedule_courseId),
-    //   studentId: parseInt(schedule.student_id),
-    //   warning: schedule.schedule_warning,
-    // };
+    // Prevent editing if schedule is already cancelled
+    console.log("handleRowDoubleClick debug:", { schedule });
+    if (schedule.schedule_attendance == "cancelled") {
+      showToast.error("Cannot edit cancelled schedules. Cancelled schedules are not editable.");
+      return;
+    }
 
     if (schedule.course_title?.toLowerCase() === "free trial") {
       setSelectedSchedule(schedule);
@@ -270,9 +258,15 @@ export default function RoleAwareScheduleTable({
                 <TableRow
                   key={session.schedule_id}
                   onDoubleClick={() => handleRowDoubleClick(session)}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  className={`transition-colors ${
+                    session.schedule_attendance === "cancelled"
+                      ? "bg-gray-100 opacity-75 cursor-not-allowed hover:bg-gray-100"
+                      : "hover:bg-gray-50 cursor-pointer"
+                  }`}
                   title={
-                    userRole === UserRole.TEACHER
+                    session.schedule_attendance === "cancelled"
+                      ? "Cancelled schedules cannot be edited"
+                      : userRole === UserRole.TEACHER
                       ? "Double-click to update attendance and feedback"
                       : "Double-click to edit"
                   }

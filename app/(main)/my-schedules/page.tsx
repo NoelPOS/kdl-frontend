@@ -5,6 +5,7 @@ import PageHeader from "@/components/shared/page-header";
 import { getFilteredSchedules, ScheduleFilter } from "@/lib/api";
 import { cookies } from "next/headers";
 import { getUserFromToken } from "@/lib/jwt";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 async function SessionScheduleData({
   searchParams,
@@ -104,7 +105,7 @@ export default async function SessionPage({
     <div className="p-6">
       <PageHeader title="My Sessions" lastUpdated={lastUpdated} />
 
-      <Suspense fallback={<div>Loading filters...</div>}>
+      <Suspense fallback={<AuthLoadingPage />}>
         <ScheduleFilterForm
           hideTeacherField={true}
           defaultTeacherName={teacherName}
@@ -119,7 +120,7 @@ export default async function SessionPage({
         ) : (
           <Suspense
             key={JSON.stringify(resolvedSearchParams)}
-            fallback={<div>Loading...</div>}
+            fallback={<AuthLoadingPage />}
           >
             <SessionScheduleData
               searchParams={resolvedSearchParams}

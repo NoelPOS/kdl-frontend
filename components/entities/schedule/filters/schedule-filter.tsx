@@ -24,8 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
-import { searchStudents, searchCourses, getAllRooms } from "@/lib/api";
+import { searchStudents, searchTeachers, searchCourses, getAllRooms } from "@/lib/api";
 import { Student } from "@/app/types/student.type";
+import { Teacher } from "@/app/types/teacher.type";
 import { Course } from "@/app/types/course.type";
 import { Room } from "@/app/types/room.type";
 import { showToast } from "@/lib/toast";
@@ -100,6 +101,14 @@ export function ScheduleFilterForm({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [studentQuery, setStudentQuery] = useState("");
 
+  // Teacher search state
+  const [teacherSearchResults, setTeacherSearchResults] = useState<Teacher[]>(
+    []
+  );
+  const [showTeacherResults, setShowTeacherResults] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [teacherQuery, setTeacherQuery] = useState("");
+
   // Course search state
   const [courseSearchResults, setCourseSearchResults] = useState<Course[]>([]);
   const [showCourseResults, setShowCourseResults] = useState(false);
@@ -112,6 +121,7 @@ export function ScheduleFilterForm({
 
   // Debounce the search queries
   const [debouncedStudentQuery] = useDebounce(studentQuery, 300);
+  const [debouncedTeacherQuery] = useDebounce(teacherQuery, 300);
   const [debouncedCourseQuery] = useDebounce(courseQuery, 300);
 
   const { register, handleSubmit, setValue, watch, reset } = useForm({
@@ -128,6 +138,17 @@ export function ScheduleFilterForm({
       classOption: searchParams.get("classOption") || "",
     },
   });
+
+  // Initialize search queries from form values
+  useEffect(() => {
+    const studentName = searchParams.get("studentName") || "";
+    const teacherName = searchParams.get("teacherName") || defaultTeacherName;
+    const courseName = searchParams.get("courseName") || "";
+    
+    setStudentQuery(studentName);
+    setTeacherQuery(teacherName);
+    setCourseQuery(courseName);
+  }, [searchParams, defaultTeacherName]);
 
   // Watch values for controlled Selects
   const attendanceStatus = watch("attendanceStatus");
@@ -167,6 +188,31 @@ export function ScheduleFilterForm({
 
     performStudentSearch();
   }, [debouncedStudentQuery]);
+
+  // Effect to handle debounced teacher search
+  useEffect(() => {
+    const performTeacherSearch = async () => {
+      if (debouncedTeacherQuery.length >= 2) {
+        try {
+          const results = await searchTeachers(debouncedTeacherQuery);
+          setTeacherSearchResults(results || []);
+          setShowTeacherResults(true);
+        } catch (error) {
+          console.error("Teacher search failed:", error);
+          setTeacherSearchResults([]);
+          setShowTeacherResults(false);
+        }
+      } else {
+        setTeacherSearchResults([]);
+        setShowTeacherResults(false);
+        if (debouncedTeacherQuery.length === 0) {
+          setSelectedTeacher(null);
+        }
+      }
+    };
+
+    performTeacherSearch();
+  }, [debouncedTeacherQuery]);
 
   // Effect to handle debounced course search
   useEffect(() => {
@@ -233,6 +279,26 @@ export function ScheduleFilterForm({
   const handleStudentInputBlur = () => {
     setTimeout(() => {
       setShowStudentResults(false);
+    }, 200);
+  };
+
+  // Teacher search handlers
+  const handleTeacherSearch = (query: string) => {
+    setTeacherQuery(query);
+    setValue("teacherName", query);
+  };
+
+  const handleSelectTeacher = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setValue("teacherName", teacher.name);
+    setTeacherQuery(teacher.name);
+    setShowTeacherResults(false);
+    setTeacherSearchResults([]);
+  };
+
+  const handleTeacherInputBlur = () => {
+    setTimeout(() => {
+      setShowTeacherResults(false);
     }, 200);
   };
 
@@ -313,12 +379,16 @@ export function ScheduleFilterForm({
     });
     // Clear search states
     setStudentQuery("");
+    setTeacherQuery(defaultTeacherName);
     setCourseQuery("");
     setSelectedStudent(null);
+    setSelectedTeacher(null);
     setSelectedCourse(null);
     setStudentSearchResults([]);
+    setTeacherSearchResults([]);
     setCourseSearchResults([]);
     setShowStudentResults(false);
+    setShowTeacherResults(false);
     setShowCourseResults(false);
     router.replace(pathname);
   }, [reset, router, pathname, defaultTeacherName]);
@@ -373,10 +443,11 @@ export function ScheduleFilterForm({
           isExpanded ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="p-4 pt-0 border-t border-gray-100"
-        >
+        <div className="max-h-[70vh] overflow-y-auto sm:max-h-none sm:overflow-visible">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-4 pt-0 border-t border-gray-100"
+          >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* Start Date */}
             <div className="flex flex-col gap-2">
@@ -444,14 +515,37 @@ export function ScheduleFilterForm({
 
             {/* Teacher Name - conditionally rendered */}
             {!hideTeacherField && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 relative">
                 <Label htmlFor="teacherName">Teacher</Label>
-                <Input
-                  id="teacherName"
-                  {...register("teacherName")}
-                  placeholder="Enter teacher's name"
-                  className="border-gray-300"
-                />
+                <div className="relative">
+                  <Input
+                    id="teacherName"
+                    value={teacherQuery}
+                    onChange={(e) => handleTeacherSearch(e.target.value)}
+                    onBlur={handleTeacherInputBlur}
+                    placeholder="Search for a teacher"
+                    className="border-gray-300 pr-10"
+                    autoComplete="off"
+                  />
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+                  {showTeacherResults && teacherSearchResults.length > 0 && (
+                    <ul className="absolute z-10 bg-white border border-gray-200 shadow w-full rounded mt-1 max-h-48 overflow-y-auto">
+                      {teacherSearchResults.map((teacher) => (
+                        <li
+                          key={teacher.id}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectTeacher(teacher);
+                          }}
+                          className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                        >
+                          {teacher.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
 
@@ -581,7 +675,8 @@ export function ScheduleFilterForm({
               {loading ? "Filtering..." : "Apply Filters"}
             </Button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

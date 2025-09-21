@@ -1,3 +1,4 @@
+import AuthLoadingPage from "@/components/auth/auth-loading";
 import AddNewRegistrar from "@/components/entities/registrars/dialogs/add-new-registrar.dialog";
 import RegistrarFilter from "@/components/entities/registrars/filters/filter-registrar";
 import RegistrarList from "@/components/entities/registrars/lists/registrar.list";
@@ -50,7 +51,7 @@ export default async function RegistrarsPage({
         ) : (
           <Suspense
             key={`${query || ""}${currentPage}`}
-            fallback={<div>Loading...</div>}
+            fallback={<AuthLoadingPage />}
           >
             <RegistrarList
               query={query || ""}

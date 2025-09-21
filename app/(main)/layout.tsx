@@ -9,9 +9,9 @@ export default function MainLayout({
 }>) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gray-100 relative">
+      <div className="flex min-h-screen w-full  relative">
         <AppSidebar />
-        <main className="flex-1 min-w-0 bg-my-yellow overflow-x-auto">{children}</main>
+        <main className="flex-1 min-w-0 bg-my-yellow overflow-x-auto pt-10 md:pt-0">{children}</main>
       </div>
     </SidebarProvider>
   );

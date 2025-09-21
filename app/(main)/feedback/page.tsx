@@ -5,6 +5,7 @@ import PageHeader from "@/components/shared/page-header";
 import { getFilteredFeedbacks } from "@/lib/api";
 import { cookies } from "next/headers";
 import { MessageSquare } from "lucide-react";
+import AuthLoadingPage from "@/components/auth/auth-loading";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -81,9 +82,7 @@ export default async function FeedbackPage({
           fallback={
             <div className="animate-pulse">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
-                ))}
+                {<AuthLoadingPage />}
               </div>
             </div>
           }
