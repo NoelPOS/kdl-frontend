@@ -22,6 +22,7 @@ export default function FeedbackCard({
   const [currentFeedback, setCurrentFeedback] = useState(feedback);
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown';
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       day: "2-digit",
@@ -46,8 +47,6 @@ export default function FeedbackCard({
     }
   };
 
-  // Check if feedback is verified
-  const isVerified = currentFeedback.verifyFb === true;
 
   return (
     <>
@@ -80,12 +79,17 @@ export default function FeedbackCard({
               </div>
             </div>
 
-            {/* Date and teacher info - now on the right */}
+            {/* Date and author info - now on the right */}
             <div className="text-right text-xs text-gray-600">
               <div className="mb-1">
-                Written on {formatDate(currentFeedback.feedbackDate)}
+                {currentFeedback.feedbackModifiedAt ? 
+                  `Modified on ${formatDate(currentFeedback.feedbackModifiedAt)}` :
+                  `Written on ${formatDate(currentFeedback.feedbackDate)}`
+                }
               </div>
-              <div>by {currentFeedback.teacherName}</div>
+              <div>
+                by {currentFeedback.feedbackModifiedByName || currentFeedback.teacherName}
+              </div>
             </div>
           </div>
           <div className="text-sm font-medium text-gray-800 mt-1">

@@ -61,15 +61,21 @@ export default function EditFeedbackDialog({
       const { updateSchedule } = await import("@/lib/api/schedules");
 
       // Call the API to update only the feedback field
-      await updateSchedule(parseInt(feedback.scheduleId), {
+      const updatedSchedule = await updateSchedule(parseInt(feedback.scheduleId), {
         feedback: feedbackText.trim(),
-      });
+      }) as any;
 
-      // Update the feedback locally without verifying
+      // Debug: Log the response to see what fields are returned
+      console.log('Updated schedule response:', updatedSchedule);
+
+      // Update the feedback locally with the response from backend
       const updatedFeedback: FeedbackItem = {
         ...feedback,
         feedback: feedbackText.trim(),
         verifyFb: false, // Keep it unverified
+        // Update modification tracking fields if they exist in the response
+        feedbackModifiedByName: updatedSchedule.feedbackModifiedByName || feedback.feedbackModifiedByName,
+        feedbackModifiedAt: updatedSchedule.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
       };
 
       onFeedbackUpdate(updatedFeedback);
@@ -209,6 +215,21 @@ export default function EditFeedbackDialog({
                 <Calendar className="h-4 w-4" />
                 <span>{formatDate(feedback.sessionDate)}</span>
               </div>
+            </div>
+
+            {/* Feedback Modification Info */}
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+              {feedback.feedbackModifiedAt ? (
+                <div>
+                  <span className="font-medium">Last modified:</span> {formatDate(feedback.feedbackModifiedAt)} by{' '}
+                  <span className="font-medium">{feedback.feedbackModifiedByName}</span>
+                </div>
+              ) : (
+                <div>
+                  <span className="font-medium">Originally written:</span> {formatDate(feedback.feedbackDate)} by{' '}
+                  <span className="font-medium">{feedback.teacherName}</span>
+                </div>
+              )}
             </div>
           </div>
 

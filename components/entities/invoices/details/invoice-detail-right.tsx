@@ -90,7 +90,7 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
         showToast.dismiss(toastId);
         showToast.success("Invoice cancelled successfully!");
         setIsCancelOpen(false);
-        router.push("/enrollments");
+        router.push("/create-invoice");
       }
     } catch (error) {
       console.error("Error cancelling invoice:", error);

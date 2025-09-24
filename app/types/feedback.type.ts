@@ -14,6 +14,8 @@ export interface FeedbackItem {
   sessionDate: string;
   sessionTime: string;
   verifyFb?: boolean; // Whether feedback has been verified by admin/registrar
+  feedbackModifiedByName?: string; // Name of user who last modified feedback
+  feedbackModifiedAt?: string; // When feedback was last modified
 }
 
 export interface FeedbackFilter {

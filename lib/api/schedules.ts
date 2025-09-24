@@ -10,6 +10,8 @@ export interface Schedule {
   teacherId?: number;
   courseId: number;
   studentId: number;
+  feedbackModifiedByName?: string;
+  feedbackModifiedAt?: string;
 }
 
 export interface ScheduleConflictCheck {

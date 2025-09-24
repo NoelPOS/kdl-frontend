@@ -424,7 +424,7 @@ const EnrollmentDetailRightMultiple = ({
                   {index + 1}
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-                  {session.course_title} - {session.student_name}
+                  {session.course_title} 
                 </TableCell>
                 <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
                   {Number(session.classoption_tuitionfee).toFixed(2)}

@@ -15,6 +15,8 @@ export interface ClassSchedule {
   schedule_feedback?: string; // Teacher feedback field
   schedule_feedbackDate?: string; // When feedback was submitted
   schedule_verifyFb?: boolean; // Whether feedback is verified
+  schedule_feedbackModifiedByName?: string; // Who last modified feedback
+  schedule_feedbackModifiedAt?: string; // When feedback was last modified
   schedule_classNumber: number;
   schedule_warning: string;
   schedule_courseId: string;
