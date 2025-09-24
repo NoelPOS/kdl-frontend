@@ -30,9 +30,17 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "kiddee-lab-lms.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
     formats: ["image/webp", "image/avif"], // Modern formats for better performance
     minimumCacheTTL: 60 * 60 * 24 * 7, // Cache for 1 week
+    
+
   },
 
   // Production optimizations
