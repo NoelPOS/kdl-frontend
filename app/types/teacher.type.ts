@@ -8,4 +8,5 @@ export type Teacher = {
   profilePicture: string;
   profileKey: string;
   password: string;
+  role?: string;
 };

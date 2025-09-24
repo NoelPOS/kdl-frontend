@@ -134,7 +134,8 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
       "/invoice",
       "/enrollment",
       "/statistics",
-      "/registrars"
+      "/registrars", 
+      "/registrar"
     ],
     [UserRole.REGISTRAR]: [
       "/today",

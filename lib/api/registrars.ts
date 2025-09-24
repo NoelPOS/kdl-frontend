@@ -21,6 +21,10 @@ export async function updateRegistrarById(id: number, data: Partial<Registrar>) 
   return clientApi.put(`/registrars/${id}`, data).then((res) => res.data);
 }
 
+export async function deleteRegistrarById(id: number): Promise<void> {
+  return clientApi.patch(`/registrars/${id}/role`, { role: "none" }).then((res) => res.data);
+}
+
 type NewRegistrarData = Omit<Registrar, "id"> & { password: string };
 
 export async function addNewRegistrar(registrar: NewRegistrarData): Promise<Registrar> {

@@ -5,10 +5,20 @@ import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Teacher } from "@/app/types/teacher.type";
-import { updateTeacherById } from "@/lib/api";
+import { updateTeacherById, deleteTeacherById } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 interface TeacherFormData {
   name: string;
@@ -23,11 +33,10 @@ export default function TeacherDetailClient({
 }: {
   teacher: Partial<Teacher>;
 }) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,12 +73,11 @@ export default function TeacherDetailClient({
 
   const onSubmit = async (data: TeacherFormData) => {
     if (!teacher.id) {
-      setMessage({ type: "error", text: "Teacher ID is required" });
+      showToast.error("Teacher ID is required");
       return;
     }
 
     setIsLoading(true);
-    setMessage(null);
 
     let newImageUrl = teacher.profilePicture;
     let newProfileKey = teacher.profileKey;
@@ -111,15 +119,36 @@ export default function TeacherDetailClient({
       };
 
       await updateTeacherById(Number(teacher.id), updateData);
-      setMessage({ type: "success", text: "Teacher updated successfully!" });
+      showToast.success("Teacher updated successfully!");
     } catch (error) {
       console.error("Error updating teacher:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to update teacher. Please try again.",
-      });
+      showToast.error("Failed to update teacher. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!teacher.id) {
+      showToast.error("Teacher ID is required");
+      return;
+    }
+
+    setIsDeleting(true);
+    setIsDeleteDialogOpen(false);
+
+    try {
+      await deleteTeacherById(Number(teacher.id));
+      showToast.success("Teacher deleted successfully!");
+      // Navigate back to teachers list page
+      setTimeout(() => {
+        router.push("/teachers");
+      }, 1500);
+    } catch (error) {
+      console.error("Error deleting teacher:", error);
+      showToast.error("Failed to delete teacher. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -161,6 +190,11 @@ export default function TeacherDetailClient({
           />
         </div>
         <h2 className="text-blue-600 font-medium text-lg">{teacher.name}</h2>
+        {teacher.role === "none" && (
+          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded mt-2">
+            Deleted
+          </span>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 flex-1">
@@ -247,28 +281,56 @@ export default function TeacherDetailClient({
           )}
         </div>
 
-        {message && (
-          <div
-            className={`p-2 text-xs rounded ${
-              message.type === "success"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+            disabled={isLoading || teacher.role === "none"}
+            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white mb-3"
           >
             {isLoading ? "Updating..." : "Update Teacher"}
           </Button>
+          
+          {teacher.role !== "none" && (
+            <Button
+              type="button"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isDeleting || isLoading}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete Teacher"}
+            </Button>
+          )}
         </div>
       </form>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Teacher</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{teacher.name}</strong>? 
+              This action will set their role to &apos;none&apos; and they will be marked as deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete Teacher"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

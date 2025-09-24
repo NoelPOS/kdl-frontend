@@ -5,10 +5,20 @@ import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Registrar } from "@/app/types/registrar.type";
-import { updateRegistrarById } from "@/lib/api";
+import { updateRegistrarById, deleteRegistrarById } from "@/lib/api";
+import { showToast } from "@/lib/toast";
 
 interface RegistrarFormData {
   name: string;
@@ -20,11 +30,10 @@ export default function RegistrarDetailClient({
 }: {
   registrar: Partial<Registrar>;
 }) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,12 +67,11 @@ export default function RegistrarDetailClient({
 
   const onSubmit = async (data: RegistrarFormData) => {
     if (!registrar.id) {
-      setMessage({ type: "error", text: "Registrar ID is required" });
+      showToast.error("Registrar ID is required");
       return;
     }
 
     setIsLoading(true);
-    setMessage(null);
 
     let newImageUrl = registrar.profilePicture;
     let newProfileKey = registrar.profileKey;
@@ -105,15 +113,37 @@ export default function RegistrarDetailClient({
       };
 
       await updateRegistrarById(Number(registrar.id), updateData);
-      setMessage({ type: "success", text: "Registrar updated successfully!" });
+      showToast.success("Registrar updated successfully!");
     } catch (error) {
       console.error("Error updating registrar:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to update registrar. Please try again.",
-      });
+      showToast.error("Failed to update registrar. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!registrar.id) {
+      showToast.error("Registrar ID is required");
+      return;
+    }
+
+    setIsDeleting(true);
+    setIsDeleteDialogOpen(false);
+
+    try {
+      const result = await deleteRegistrarById(Number(registrar.id));
+      console.log("Delete result:", result);
+      showToast.success("Registrar deleted successfully!");
+      // Navigate back to registrars list page
+      setTimeout(() => {
+        router.push("/registrars");
+      }, 1500);
+    } catch (error) {
+      console.error("Error deleting registrar:", error);
+      showToast.error("Failed to delete registrar. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -155,6 +185,11 @@ export default function RegistrarDetailClient({
           />
         </div>
         <h2 className="text-blue-600 font-medium text-lg">{registrar.name}</h2>
+        {registrar.role === "none" && (
+          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded mt-2">
+            Deleted
+          </span>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 flex-1">
@@ -194,28 +229,56 @@ export default function RegistrarDetailClient({
           )}
         </div>
 
-        {message && (
-          <div
-            className={`p-2 text-xs rounded ${
-              message.type === "success"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+            disabled={isLoading || registrar.role === "none"}
+            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white mb-3"
           >
             {isLoading ? "Updating..." : "Update Registrar"}
           </Button>
+          
+          {registrar.role !== "none" && (
+            <Button
+              type="button"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isDeleting || isLoading}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete Registrar"}
+            </Button>
+          )}
         </div>
       </form>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Registrar</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{registrar.name}</strong>? 
+              This action will set their role to &apos;none&apos; and they will be marked as deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete Registrar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

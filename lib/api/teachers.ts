@@ -22,6 +22,10 @@ export async function updateTeacherById(id: number, data: Partial<Teacher>) {
   return clientApi.put(`/teachers/${id}`, data).then((res) => res.data);
 }
 
+export async function deleteTeacherById(id: number): Promise<void> {
+  return clientApi.patch(`/teachers/${id}/role`, { role: "none" }).then((res) => res.data);
+}
+
 export async function getTeacherByName(
   name: string
 ): Promise<Pick<Teacher, "id" | "name">> {

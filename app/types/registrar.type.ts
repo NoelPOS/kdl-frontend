@@ -4,4 +4,5 @@ export type Registrar = {
   email: string;
   profilePicture: string;
   profileKey: string;
+  role?: string;
 };
