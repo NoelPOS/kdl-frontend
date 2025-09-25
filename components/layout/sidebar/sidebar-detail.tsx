@@ -92,12 +92,12 @@ const menuItems: MenuItem[] = [
     url: "/management-fee",
     roles: [UserRole.ADMIN],
   },
-  {
-    title: "statistics",
-    icon: BarChart3,
-    url: "/statistics",
-    roles: [UserRole.ADMIN],
-  },
+  // {
+  //   title: "statistics",
+  //   icon: BarChart3,
+  //   url: "/statistics",
+  //   roles: [UserRole.ADMIN],
+  // },
   // {
   //   title: "notifications",
   //   icon: Bell,
