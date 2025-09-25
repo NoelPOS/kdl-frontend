@@ -9,7 +9,6 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
-  // Add any other user properties that come from your JWT payload
 }
 
 export interface AuthResponse {

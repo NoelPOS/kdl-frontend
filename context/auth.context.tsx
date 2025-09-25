@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AuthUser, AuthResponse, UserRole } from "@/app/types/auth.type";
+import { AuthUser, AuthResponse} from "@/app/types/auth.type";
 import {
   getStoredToken,
   removeStoredToken,
@@ -34,14 +34,13 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Ensure component is mounted before accessing browser APIs
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   // Initialize auth state from stored token
   useEffect(() => {
-    if (!isMounted) return; // Wait for client-side mounting
+    if (!isMounted) return; 
 
     const initializeAuth = () => {
       try {
@@ -100,12 +99,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check route permissions on pathname change
   useEffect(() => {
     if (!isLoading && user && pathname && isMounted) {
-      console.log("Route permission check:", {
-        pathname,
-        userRole: user.role,
-        isLoading,
-        isMounted
-      });
+      // console.log("Route permission check:", {
+      //   pathname,
+      //   userRole: user.role,
+      //   isLoading,
+      //   isMounted
+      // });
       
       // Allow auth pages and profile pages for all authenticated users
       if (
@@ -115,20 +114,20 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         pathname.startsWith("/unauthorized") ||
         pathname.startsWith("/not-found")
       ) {
-        console.log("Skipping permission check for public route:", pathname);
+        // console.log("Skipping permission check for public route:", pathname);
         return;
       }
 
       // Check if user has permission for current route
       const hasPermission = hasRoutePermission(user.role, pathname);
-      console.log("Permission check result:", {
-        userRole: user.role,
-        pathname,
-        hasPermission
-      });
+      // console.log("Permission check result:", {
+      //   userRole: user.role,
+      //   pathname,
+      //   hasPermission
+      // });
       
       if (!hasPermission) {
-        console.log("Redirecting to unauthorized page");
+        // console.log("Redirecting to unauthorized page");
         router.push("/unauthorized");
       }
     }
@@ -154,13 +153,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      // Clear cookie and state
       removeStoredToken();
       setUser(null);
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-      // Always clear state and redirect even on error
       setUser(null);
       router.push("/login");
     }

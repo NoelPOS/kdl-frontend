@@ -34,8 +34,8 @@ export default async function CoursesPage({
       const accessToken = cookieStore.get("accessToken")?.value;
       const { lastUpdated: timestamp } = await fetchFilteredCourses(
         { query, ageRange, medium },
-        1, // Just get first page for timestamp
-        1, // Minimal limit
+        1, 
+        1, 
         accessToken
       );
       lastUpdated = timestamp;

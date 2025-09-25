@@ -22,24 +22,14 @@ import {
   checkScheduleConflict,
   getAllRooms,
 } from "@/lib/api";
-import { ClassSchedule, FormData } from "@/app/types/schedule.type";
+import {  FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
 import { TimeInput } from "@/components/shared/schedule";
 import { isWithinBusinessHours } from "@/lib/validation-utils";
-import { formatDateLocal, generateConflictWarning } from "@/lib/utils";
+import {  generateConflictWarning } from "@/lib/utils";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
-interface ConflictDetail {
-  conflictType: string;
-  courseTitle: string;
-  teacherName: string;
-  studentName: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  room: string;
-}
 
 interface EditScheduleProps {
   open: boolean;
@@ -69,18 +59,12 @@ export function EditSchedule({
   // Watch form values for validation
   const startTime = watch("starttime");
   const endTime = watch("endtime");
-  const selectedDate = watch("date");
   const courseName = watch("course");
   const selectedStatus = watch("status");
 
   // Check if current course is TBD
   const isTBDCourse = courseName === "TBD";
 
-  const { ref: dateRHFRef } = register("date", {
-    required: "Date is required",
-  });
-
-  const dateRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<HTMLInputElement>(null);
   const endTimeRef = useRef<HTMLInputElement>(null);
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
@@ -111,8 +95,6 @@ export function EditSchedule({
 
   const onSubmit = useCallback(
     async (data: FormData) => {
-      console.log("Submitting data:", data.scheduleId);
-      
       try {
         let warningMessage = "none";
         try {
@@ -128,9 +110,6 @@ export function EditSchedule({
               0,
             excludeId: initialData?.scheduleId || 0,
           });
-
-          console.log("Conflict result:", conflictResult);
-
           if (conflictResult) {
             warningMessage = generateConflictWarning(conflictResult);
           }
@@ -155,7 +134,6 @@ export function EditSchedule({
           courseName: data.course,
           warning: warningMessage,
         };
-        console.log("Update data:", updateData);
         await updateSchedule(Number(data.scheduleId), updateData);
 
         // Construct updated FormData for direct state update
@@ -172,8 +150,7 @@ export function EditSchedule({
           nickname: data.nickname || "",
           remark: data.remark || "",
           status: data.status || "",
-          warning: warningMessage || "hello world",
-          // Add any other required FormData fields here
+          warning: warningMessage || "",
         };
         if (onScheduleUpdate) {
           onScheduleUpdate(updatedFormData);
@@ -188,8 +165,6 @@ export function EditSchedule({
         }
         onOpenChange(false);
       } catch (error) {
-        // Error is automatically handled by global error handler
-        // No need for custom error handling logic here
         console.error("Failed to update schedule", error);
       }
     },
@@ -206,7 +181,6 @@ export function EditSchedule({
 
   // Memoized teacher fetching to prevent unnecessary API calls
   const fetchTeachers = useCallback(async () => {
-    console.log("Fetching teachers for course ID:", initialData?.courseId);
     try {
       if (typeof initialData?.courseId === "number") {
         const result = await getTeacherByCourseId(initialData.courseId);
@@ -235,7 +209,6 @@ export function EditSchedule({
   // Auto-select first teacher if current teacher is empty/TBD and teachers are loaded
   useEffect(() => {
     if (teachers.length > 0 && (!watch("teacher") || watch("teacher") === "TBD")) {
-      console.log("Auto-selecting first teacher:", teachers[0].name);
       setValue("teacher", teachers[0].name);
     }
   }, [teachers, setValue, watch]);
@@ -248,7 +221,6 @@ export function EditSchedule({
         
         // Auto-select first room if current room is empty/TBD and rooms are loaded
         if (roomList.length > 0 && (!watch("room") || watch("room") === "TBD")) {
-          console.log("Auto-selecting first room:", roomList[0].name);
           setValue("room", roomList[0].name);
         }
       } catch (error) {
@@ -385,7 +357,7 @@ export function EditSchedule({
               <div className="relative">
                 <select
                   id="room"
-                  {...register("room")}
+                  {...register("room", { required: "Room is required" })}
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
                 >
@@ -429,7 +401,7 @@ export function EditSchedule({
               <div className="relative">
                 <select
                   id="status"
-                  {...register("status")}
+                  {...register("status", { required: "Status is required" })}
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
                   onChange={(e) => {

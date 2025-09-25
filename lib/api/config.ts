@@ -203,76 +203,84 @@ clientApi.interceptors.response.use(
   }
 );
 
-// Server-side axios instance factory
-export const createServerApi = async (
-  accessToken?: string
-): Promise<AxiosInstance> => {
-  const serverApi = createBaseInstance();
+// Single global server-side axios instance
+export const serverApi = createBaseInstance();
 
-  // Get token from parameter or cookies
-  let token = accessToken;
-  if (!token && typeof window === "undefined") {
-    try {
-      // Dynamic import for server-side only
-      const { cookies } = await import("next/headers");
-      const cookieStore = await cookies();
-      token = cookieStore.get("accessToken")?.value;
-    } catch {
-      // cookies() might not be available in all contexts
-    }
-  }
+// Smart request interceptor that gets token dynamically
+serverApi.interceptors.request.use(
+  async (config) => {
+    config.metadata = { startTime: new Date() };
 
-  // Add request interceptor for server-side requests
-  serverApi.interceptors.request.use(
-    (config) => {
-      config.metadata = { startTime: new Date() };
-
-      // Skip auth header for login endpoint
-      if (config.url?.includes("/auth/login")) {
-        return config;
-      }
-
-      // Add auth token if available
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-
+    // Skip auth header for login endpoint
+    if (config.url?.includes("/auth/login")) {
       return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
-  // Add response interceptor for performance monitoring
-  serverApi.interceptors.response.use(
-    (response) => {
-      const endTime = new Date();
-      const startTime = response.config.metadata?.startTime;
-      const duration = startTime ? endTime.getTime() - startTime.getTime() : 0;
-
-      // Add last fetched timestamp to response
-      response.lastFetched = endTime;
-
-      if (duration > 2000) {
-        console.warn(
-          `Slow API call: ${response.config.url} took ${duration}ms`
-        );
-      }
-
-      return response;
-    },
-    (error) => {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Server API Error:", {
-          url: error.config?.url,
-          method: error.config?.method,
-          status: error.response?.status,  
-          message: error.message,
-        });
-      }
-      return Promise.reject(error);
     }
-  );
 
+    // Get token from multiple sources
+    let token = config.headers['X-Access-Token'];
+    
+    // Safely handle header value (could be string, string[], or undefined)
+    if (Array.isArray(token)) {
+      token = token[0]; // Take first value if array
+    } else if (typeof token !== 'string') {
+      token = undefined; // Ensure it's either string or undefined
+    }
+    
+    if (!token && typeof window === "undefined") {
+      try {
+        // Server-side: get from cookies
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        token = cookieStore.get("accessToken")?.value || undefined;
+      } catch {
+        // cookies() might not be available in all contexts
+      }
+    }
+
+    // Add auth token if available
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add response interceptor for performance monitoring
+serverApi.interceptors.response.use(
+  (response) => {
+    const endTime = new Date();
+    const startTime = response.config.metadata?.startTime;
+    const duration = startTime ? endTime.getTime() - startTime.getTime() : 0;
+
+    // Add last fetched timestamp to response
+    response.lastFetched = endTime;
+
+    if (duration > 2000) {
+      console.warn(
+        `Slow API call: ${response.config.url} took ${duration}ms`
+      );
+    }
+
+    return response;
+  },
+  (error) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Server API Error:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,  
+        message: error.message,
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Legacy support - keep createServerApi for backward compatibility during migration
+export const createServerApi = async (accessToken?: string): Promise<AxiosInstance> => {
+  console.warn("createServerApi is deprecated, use serverApi directly");
   return serverApi;
 };
 

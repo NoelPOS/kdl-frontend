@@ -59,9 +59,6 @@ export class ClientCookies {
       const found = cookies.find(c => c.startsWith(name));
       
       const result = found ? decodeURIComponent(found.substring(name.length)) : null;
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Cookie value:", result ? "[TOKEN PRESENT]" : "null");
-      }
       return result;
     } catch (error) {
       console.error("Error reading cookie:", error);

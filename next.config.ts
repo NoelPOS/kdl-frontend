@@ -43,6 +43,43 @@ const nextConfig: NextConfig = {
 
   },
 
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy-Report-Only',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
+              "img-src 'self' data: https: https://kdl-image.s3.amazonaws.com https://kiddee-lab-lms.s3.amazonaws.com https://avatars.githubusercontent.com https://cdn.jsdelivr.net",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https://kdl-image.s3.amazonaws.com https://kiddee-lab-lms.s3.amazonaws.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join('; '),
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+    ];
+  },
+
   // Production optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

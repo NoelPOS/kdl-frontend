@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import { MessageSquare, User, BookOpen, Calendar } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { set } from "nprogress";
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
   if (!attendance) return null;
@@ -78,12 +77,9 @@ export default function RoleAwareScheduleTable({
     setLocalSchedules(schedules);
   }, [schedules]);
 
-  // Get student and course info from first schedule (assuming all schedules are for same student/course)
   const firstSchedule = localSchedules[0];
 
   const handleRowDoubleClick = (schedule: ClassSchedule) => {
-    // Prevent editing if schedule is already cancelled
-    console.log("handleRowDoubleClick debug:", { schedule });
     if (schedule.schedule_attendance == "cancelled") {
       showToast.error("Cannot edit cancelled schedules. Cancelled schedules are not editable.");
       return;

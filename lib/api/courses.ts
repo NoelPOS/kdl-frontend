@@ -1,5 +1,5 @@
 import { Course } from "@/app/types/course.type";
-import { clientApi, createServerApi } from "./config";
+import { clientApi, serverApi } from "./config";
 
 export interface CourseFilter {
   query?: string;
@@ -49,7 +49,6 @@ export async function fetchFilteredCourses(
   };
   lastUpdated?: Date;
 }> {
-  const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
   if (filter.query) params.set("query", filter.query);
   if (filter.ageRange) params.set("ageRange", filter.ageRange);
@@ -59,7 +58,7 @@ export async function fetchFilteredCourses(
   params.set("page", page.toString());
   params.set("limit", limit.toString());
 
-  const response = await api.get<{
+  const response = await serverApi.get<{
     courses: Course[];
     pagination: {
       currentPage: number;
@@ -68,7 +67,9 @@ export async function fetchFilteredCourses(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/courses/filter?${params.toString()}`);
+  }>(`/courses/filter?${params.toString()}`, {
+    headers: accessToken ? { 'X-Access-Token': accessToken } : {}
+  });
   return {
     ...response.data,
     lastUpdated: response.lastFetched
@@ -89,12 +90,11 @@ export async function fetchCourses(
     hasPrev: boolean;
   };
 }> {
-  const api = await createServerApi(accessToken);
   const params = new URLSearchParams();
   params.set("page", page.toString());
   params.set("limit", limit.toString());
 
-  const response = await api.get<{
+  const response = await serverApi.get<{
     courses: Course[];
     pagination: {
       currentPage: number;
@@ -103,12 +103,15 @@ export async function fetchCourses(
       hasNext: boolean;
       hasPrev: boolean;
     };
-  }>(`/courses?${params.toString()}`);
+  }>(`/courses?${params.toString()}`, {
+    headers: accessToken ? { 'X-Access-Token': accessToken } : {}
+  });
   return response.data;
 }
 
 export async function fetchAllCourses(accessToken?: string): Promise<Course[]> {
-  const api = await createServerApi(accessToken);
-  const response = await api.get<Course[]>("/courses/all");
+  const response = await serverApi.get<Course[]>("/courses/all", {
+    headers: accessToken ? { 'X-Access-Token': accessToken } : {}
+  });
   return response.data;
 }

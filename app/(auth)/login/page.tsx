@@ -21,7 +21,7 @@ import {
   USER_ROLE_LABELS,
 } from "@/app/types/auth.type";
 
-import logo from "@/public/logo.png"; // Adjust the path as necessary
+import logo from "@/public/logo.png"; 
 
 const Login = () => {
   const auth = useAuth();
@@ -35,27 +35,17 @@ const Login = () => {
 
   const selectedRole = watch("role");
 
-  const onSubmit = async (data: LoginFormData) => {
-    console.log("Form submitted with data:", data);
-    
+  const onSubmit = async (data: LoginFormData) => {    
     try {
       const response = await login(data);
-
-      console.log("response", response);
-
       if (!response.accessToken || !response.user) {
         throw new Error("Invalid response from server");
       }
-
-      // Pass the full response (token is already stored by axios login function)
       auth.login(response);
       showToast.success("Login successful!");
     } catch (error) {
       console.error("Login failed:", error);
-
-      // Extract error message from API response
       let errorMessage = "Login failed. Please try again.";
-
       if (error && typeof error === "object" && "response" in error) {
         const apiError = error as any;
         if (apiError.response?.data?.message) {
@@ -72,11 +62,7 @@ const Login = () => {
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-
-      console.log("Showing error toast:", errorMessage);
       showToast.error(errorMessage);
-      
-      // Prevent any navigation on error
       return false;
     }
   };
