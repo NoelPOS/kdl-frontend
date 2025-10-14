@@ -96,8 +96,8 @@ function ScheduleClientSide({
                     <SelectValue placeholder="Select view" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="view1">Default</SelectItem>
-                    <SelectItem value="view2">Confirm</SelectItem>
+                    <SelectItem value="Default">Default</SelectItem>
+                    <SelectItem value="Confirm">Confirm</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
