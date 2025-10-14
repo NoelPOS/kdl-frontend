@@ -18,7 +18,7 @@ interface AttendanceConfirmationDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   schedule: ClassSchedule | null;
-  action: "present" | "absent";
+  action: "confirmed" | "cancelled";
   isLoading: boolean;
 }
 
@@ -32,11 +32,11 @@ export default function AttendanceConfirmationDialog({
 }: AttendanceConfirmationDialogProps) {
   if (!schedule) return null;
 
-  const actionIcon = action === "present" ? CheckCircle : XCircle;
-  const actionColor = action === "present" ? "text-green-600" : "text-red-600";
-  const actionBgColor = action === "present" ? "bg-green-50" : "bg-red-50";
-  const actionText = action === "present" ? "Mark as Present" : "Mark as Absent";
-  const confirmButtonColor = action === "present" ? "bg-yellow-500 hover:bg-yellow-600" : "bg-red-600 hover:bg-red-700";
+  const actionIcon = action === "confirmed" ? CheckCircle : XCircle;
+  const actionColor = action === "confirmed" ? "text-green-600" : "text-red-600";
+  const actionBgColor = action === "confirmed" ? "bg-green-50" : "bg-red-50";
+  const actionText = action === "confirmed" ? "Confirmed" : "Cancelled";
+  const confirmButtonColor = action === "confirmed" ? "bg-yellow-500 hover:bg-yellow-600" : "bg-red-600 hover:bg-red-700";
 
   const ActionIcon = actionIcon;
 
@@ -115,7 +115,7 @@ export default function AttendanceConfirmationDialog({
             ) : (
               <>
                 <ActionIcon className="h-4 w-4 mr-2" />
-                Confirm {actionText}
+                Mark as {actionText}
               </>
             )}
           </Button>

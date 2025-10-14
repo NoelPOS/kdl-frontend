@@ -47,7 +47,7 @@ const getAttendanceBadge = (attendance: string | null | undefined) => {
   return <Badge className={badgeClass}>{attendance}</Badge>;
 };
 
-type ViewMode = "view1" | "view2";
+type ViewMode = "Default" | "Confirm";
 
 interface RoleAwareScheduleTableProps {
   schedules: ClassSchedule[];
@@ -66,7 +66,7 @@ export default function RoleAwareScheduleTable({
   onScheduleUpdate,
   hideCourseInfo = false,
   shouldRefreshOnUpdate = false,
-  viewMode = "view1",
+  viewMode = "Default",
 }: RoleAwareScheduleTableProps) {
   const [selectedSchedule, setSelectedSchedule] =
     useState<ClassSchedule | null>(null);
@@ -79,7 +79,7 @@ export default function RoleAwareScheduleTable({
   // Attendance confirmation dialog state
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
   const [attendanceSchedule, setAttendanceSchedule] = useState<ClassSchedule | null>(null);
-  const [attendanceAction, setAttendanceAction] = useState<"present" | "absent">("present");
+  const [attendanceAction, setAttendanceAction] = useState<"confirmed" | "cancelled">("confirmed");
   const [isUpdatingAttendance, setIsUpdatingAttendance] = useState(false);
 
   const router = useRouter();
@@ -91,12 +91,10 @@ export default function RoleAwareScheduleTable({
     setLocalSchedules(schedules);
   }, [schedules]);
 
-  // Get student and course info from first schedule (assuming all schedules are for same student/course)
   const firstSchedule = localSchedules[0];
 
   const handleRowDoubleClick = (schedule: ClassSchedule) => {
-    // Prevent editing if schedule is already cancelled
-    console.log("handleRowDoubleClick debug:", { schedule });
+    // console.log("handleRowDoubleClick debug:", { schedule });
     if (schedule.schedule_attendance == "cancelled") {
       showToast.error("Cannot edit cancelled schedules. Cancelled schedules are not editable.");
       return;
@@ -150,7 +148,7 @@ export default function RoleAwareScheduleTable({
 
   const handleQuickAttendanceUpdate = async (
     scheduleId: string, 
-    attendanceStatus: "present" | "absent"
+    attendanceStatus: "confirmed" | "cancelled"
   ) => {
     // Find the schedule to check current status
     const schedule = localSchedules.find(s => s.schedule_id === scheduleId);
@@ -167,13 +165,48 @@ export default function RoleAwareScheduleTable({
       return;
     }
 
-    // Validation: Cannot mark as cancelled if already cancelled 
-    if (currentAttendance === "cancelled" && attendanceStatus === "absent") {
+    // Validation: Cannot mark as cancelled if already cancelled
+    if (currentAttendance === "cancelled") {
       showToast.error("This session is already marked as cancelled.");
       return;
     }
 
-    // Show confirmation dialog instead of alert
+    // For "confirmed" action, update immediately without dialog
+    if (attendanceStatus === "confirmed") {
+      setIsUpdatingAttendance(true);
+      try {
+        await updateSchedule(parseInt(scheduleId), {
+          attendance: attendanceStatus
+        });
+        
+        // Update local state
+        setLocalSchedules((prevSchedules) =>
+          prevSchedules.map((s) => {
+            if (s.schedule_id === scheduleId) {
+              return {
+                ...s,
+                schedule_attendance: attendanceStatus,
+              };
+            }
+            return s;
+          })
+        );
+
+        showToast.success(`Attendance updated successfully to ${attendanceStatus}.`);
+        
+        if (shouldRefreshOnUpdate) {
+          router.refresh();
+        }
+      } catch (error) {
+        console.error("Error updating attendance:", error);
+        showToast.error("Failed to update attendance. Please try again.");
+      } finally {
+        setIsUpdatingAttendance(false);
+      }
+      return;
+    }
+
+    // For "cancelled" action, show confirmation dialog
     setAttendanceSchedule(schedule);
     setAttendanceAction(attendanceStatus);
     setIsAttendanceDialogOpen(true);
@@ -183,7 +216,7 @@ export default function RoleAwareScheduleTable({
     if (!attendanceSchedule) return;
 
     const scheduleId = attendanceSchedule.schedule_id;
-    const newAttendance = attendanceAction === "present" ? "completed" : "cancelled";
+    const newAttendance = attendanceAction;
 
     setIsUpdatingAttendance(true);
 
@@ -292,7 +325,7 @@ export default function RoleAwareScheduleTable({
                   </TableHead>
                 )}
                 {
-                  viewMode === "view2" && (
+                  viewMode === "Confirm" && (
                     <>
                       <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                       Contact Number
@@ -331,7 +364,7 @@ export default function RoleAwareScheduleTable({
                   Attendance
                 </TableHead>
 
-                {viewMode === "view1" ? (
+                {viewMode === "Default" ? (
                   <>
                     <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                       Remark
@@ -399,7 +432,7 @@ export default function RoleAwareScheduleTable({
                       {session.student_name}
                     </TableCell>
                   )}
-                  {viewMode === "view2" && (
+                  {viewMode === "Confirm" && (
                     <>
                       <TableCell className="border h-30 text-center px-2 min-w-[120px]">
                         {session.student_phone || "N/A"}
@@ -441,7 +474,7 @@ export default function RoleAwareScheduleTable({
                     {getAttendanceBadge(session.schedule_attendance)}
                   </TableCell>
 
-                  {viewMode === "view1" ? (
+                  {viewMode === "Default" ? (
                     <>
                       <TableCell className="border h-30 text-center px-2 min-w-[120px] max-w-[200px]">
                         <div className="truncate" title={session.schedule_remark || ""}>
@@ -494,7 +527,7 @@ export default function RoleAwareScheduleTable({
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleQuickAttendanceUpdate(session.schedule_id, "present");
+                              handleQuickAttendanceUpdate(session.schedule_id, "confirmed");
                             }}
                             className={`h-8 w-8 p-0 ${
                               session.schedule_attendance === "completed"
@@ -502,11 +535,11 @@ export default function RoleAwareScheduleTable({
                                 : "text-green-600 hover:text-green-700 hover:bg-green-50"
                             }`}
                             title={
-                              session.schedule_attendance === "completed"
-                                ? "Already completed"
-                                : "Mark Present (Completed)"
+                              session.schedule_attendance === "confirmed"
+                                ? "Already confirmed"
+                                : "Mark as Confirmed"
                             }
-                            disabled={session.schedule_attendance === "completed"}
+                            disabled={session.schedule_attendance === "confirmed"}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
@@ -515,7 +548,7 @@ export default function RoleAwareScheduleTable({
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleQuickAttendanceUpdate(session.schedule_id, "absent");
+                              handleQuickAttendanceUpdate(session.schedule_id, "cancelled");
                             }}
                             className={`h-8 w-8 p-0 ${
                               session.schedule_attendance === "completed" || session.schedule_attendance === "cancelled"
@@ -527,7 +560,7 @@ export default function RoleAwareScheduleTable({
                                 ? "Cannot cancel completed session"
                                 : session.schedule_attendance === "cancelled"
                                 ? "Already cancelled"
-                                : "Mark Absent (Cancelled)"
+                                : "Mark as Cancelled"
                             }
                             disabled={session.schedule_attendance === "completed" || session.schedule_attendance === "cancelled"}
                           >

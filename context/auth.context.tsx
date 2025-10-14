@@ -10,6 +10,7 @@ import {
   hasRoutePermission,
   getDefaultRouteForRole,
 } from "@/lib/jwt";
+import { getCurrentUser as apiGetCurrentUser } from "@/lib/api/auth";
 
 interface AuthContextProps {
   user: AuthUser | null;
@@ -33,106 +34,109 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Ensure component is mounted before accessing browser APIs
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Initialize auth state from stored token
+  // Initialize auth state from stored token or HttpOnly cookie - ONLY ONCE
   useEffect(() => {
-    if (!isMounted) return; // Wait for client-side mounting
+    if (!isMounted || authInitialized) return;
 
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
-        const token = getStoredToken();
-        if (token) {
-          if (isTokenExpired(token)) {
-            // Token expired, clear storage and redirect
-            removeStoredToken();
-            setUser(null);
-            if (
-              !pathname.startsWith("/login") &&
-              !pathname.startsWith("/unauthorized")
-            ) {
-              router.push("/login");
+        // Try new method first: Get user from backend using HttpOnly cookie
+        try {
+          const userData = await apiGetCurrentUser();
+          setUser(userData);
+          setAuthInitialized(true);
+          
+          // If logged in and on login page, redirect to dashboard
+          if (pathname === "/login") {
+            const defaultRoute = getDefaultRouteForRole(userData.role);
+            router.push(defaultRoute);
+          }
+          return;
+        } catch (apiError: any) {
+          // Fallback to old method: Check local token
+          const token = getStoredToken();
+          if (token) {
+            if (isTokenExpired(token)) {
+              removeStoredToken();
+              setUser(null);
+              setAuthInitialized(true);
+            } else {
+              const userData = getUserFromToken(token);
+              if (userData) {
+                setUser(userData);
+                setAuthInitialized(true);
+                if (pathname === "/login") {
+                  const defaultRoute = getDefaultRouteForRole(userData.role);
+                  router.push(defaultRoute);
+                }
+              } else {
+                removeStoredToken();
+                setUser(null);
+                setAuthInitialized(true);
+              }
             }
           } else {
-            // Valid token, extract user
-            const userData = getUserFromToken(token);
-            console.log("userData from token:", userData);
-            if (userData) {
-              setUser(userData);
-            } else {
-              removeStoredToken();
-            }
-          }
-        } else {
-          // No token found, redirect to login if not on a public page
-          if (
-            !pathname.startsWith("/login") &&
-            !pathname.startsWith("/forgot-password") &&
-            !pathname.startsWith("/unauthorized") &&
-            !pathname.startsWith("/not-found")
-          ) {
-            router.push("/login");
+            setUser(null);
+            setAuthInitialized(true);
           }
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
         removeStoredToken();
-        if (
-          !pathname.startsWith("/login") &&
-          !pathname.startsWith("/forgot-password") &&
-          !pathname.startsWith("/unauthorized") &&
-          !pathname.startsWith("/not-found")
-        ) {
-          router.push("/login");
-        }
+        setUser(null);
+        setAuthInitialized(true);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-  }, [router, pathname, isMounted]);
+  }, [isMounted, authInitialized]);
 
   // Check route permissions on pathname change
   useEffect(() => {
-    if (!isLoading && user && pathname && isMounted) {
-      console.log("Route permission check:", {
-        pathname,
-        userRole: user.role,
-        isLoading,
-        isMounted
-      });
-      
-      // Allow auth pages and profile pages for all authenticated users
-      if (
-        pathname === "/" ||
-        pathname.startsWith("/login") ||
-        pathname.startsWith("/forgot-password") ||
-        pathname.startsWith("/unauthorized") ||
-        pathname.startsWith("/not-found")
-      ) {
-        console.log("Skipping permission check for public route:", pathname);
-        return;
-      }
+    if (!authInitialized || isLoading) {
+      return;
+    }
+    
+    const publicRoutes = [
+      "/",
+      "/login",
+      "/forgot-password",
+      "/unauthorized",
+      "/not-found",
+    ];
 
-      // Check if user has permission for current route
+    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+
+    // If user exists and on login page, redirect to dashboard
+    if (user && pathname === "/login") {
+      const defaultRoute = getDefaultRouteForRole(user.role);
+      router.push(defaultRoute);
+      return;
+    }
+
+    // If user exists and on a protected route, check permissions
+    if (user && !isPublicRoute) {
       const hasPermission = hasRoutePermission(user.role, pathname);
-      console.log("Permission check result:", {
-        userRole: user.role,
-        pathname,
-        hasPermission
-      });
       
       if (!hasPermission) {
-        console.log("Redirecting to unauthorized page");
         router.push("/unauthorized");
       }
     }
-  }, [user, pathname, isLoading, router, isMounted]);
+
+    // If no user and not on public route, redirect to login
+    if (!user && !isPublicRoute && pathname !== "/login") {
+      router.push("/login");
+    }
+  }, [pathname, user, isLoading, authInitialized]);
 
   const login = (response: AuthResponse) => {
     try {

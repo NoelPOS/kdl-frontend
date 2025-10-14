@@ -119,6 +119,9 @@ const createBaseInstance = (baseURL?: string): AxiosInstance => {
 // Client-side axios instance
 export const clientApi = createBaseInstance();
 
+// Add withCredentials to automatically send cookies
+clientApi.defaults.withCredentials = true;
+
 // Request interceptor for client-side requests
 clientApi.interceptors.request.use(
   (config) => {
@@ -182,7 +185,13 @@ clientApi.interceptors.response.use(
 
     // Handle authentication errors first (before global error handler)
     if (error.response?.status === 401) {
-      // Token expired or invalid - redirect to login
+      // Skip redirect for /auth/me endpoint - let the auth context handle it
+      if (error.config?.url?.includes('/auth/me')) {
+        console.log("⚠️ Auth check failed - letting auth context handle it");
+        return Promise.reject(error);
+      }
+      
+      // Token expired or invalid - redirect to login for other endpoints
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }

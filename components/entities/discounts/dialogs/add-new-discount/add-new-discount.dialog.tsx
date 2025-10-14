@@ -32,6 +32,7 @@ export function AddNewDiscount() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { isSubmitting },
   } = useForm<FormData>({
     defaultValues: {
@@ -45,8 +46,9 @@ export function AddNewDiscount() {
     try {
       await addNewDiscount(data);
       showToast.success("Discount added successfully!");
-      closeRef.current?.click();
-      router.refresh();
+      reset(); // Reset form fields
+      closeRef.current?.click(); // Close dialog
+      router.refresh(); // Refresh data
     } catch (error) {
       console.error("Error adding discount:", error);
       showToast.error("Failed to add discount. Please try again.");

@@ -1,4 +1,4 @@
-import { AuthResponse, LoginFormData, UserRole } from "@/app/types/auth.type";
+import { AuthResponse, LoginFormData, UserRole, AuthUser } from "@/app/types/auth.type";
 import { clientApi } from "./config";
 import { storeToken } from "../jwt";
 import { ClientCookies } from "../cookies";
@@ -12,9 +12,16 @@ export async function login(info: LoginFormData): Promise<AuthResponse> {
     console.log("token", "[TOKEN RECEIVED]");
   }
 
-  // Store token in regular cookie with synchronized expiration
+  // Token is now also in HttpOnly cookie (set by backend)
+  // Still storing for backward compatibility during migration
   storeToken(accessToken);
 
+  return response.data;
+}
+
+// Get current user from backend (using HttpOnly cookie)
+export async function getCurrentUser(): Promise<AuthUser> {
+  const response = await clientApi.get<AuthUser>("/auth/me");
   return response.data;
 }
 

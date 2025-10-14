@@ -29,7 +29,7 @@ interface ScheduleClientSideProps {
   };
 }
 
-type ViewMode = "view1" | "view2";
+type ViewMode = "Default" | "Confirm";
 
 function ScheduleClientSide({
   initialSchedules = [],
@@ -47,7 +47,7 @@ function ScheduleClientSide({
       hasPrev: false,
     }
   );
-  const [viewMode, setViewMode] = useState<ViewMode>("view1");
+  const [viewMode, setViewMode] = useState<ViewMode>("Default");
 
   useEffect(() => {
     // Set initial data when component mounts
@@ -96,8 +96,8 @@ function ScheduleClientSide({
                     <SelectValue placeholder="Select view" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="view1">View 1</SelectItem>
-                    <SelectItem value="view2">View 2</SelectItem>
+                    <SelectItem value="view1">Default</SelectItem>
+                    <SelectItem value="view2">Confirm</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
