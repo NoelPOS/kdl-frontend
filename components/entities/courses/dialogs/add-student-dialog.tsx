@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,6 @@ import { Plus, Search, Trash2 } from "lucide-react";
 import { searchStudents, checkStudentHasWipSession } from "@/lib/api";
 
 import { Student } from "@/app/types/course.type";
-import { set } from "nprogress";
 
 type FormData = {
   students: Student[];
@@ -32,7 +30,7 @@ interface AddStudentProps {
   onOpenChange: (open: boolean) => void;
   onSubmit?: (students: Student[]) => void;
   onCancel?: () => void;
-  courseId?: number; // Add course ID
+  courseId?: number; 
 }
 
 export function AddStudent({
@@ -40,7 +38,7 @@ export function AddStudent({
   onOpenChange,
   onSubmit: afterStudent,
   onCancel,
-  courseId, // Add this
+  courseId, 
 }: AddStudentProps) {
   const {
     control,
@@ -180,7 +178,7 @@ export function AddStudent({
       }
     }
 
-    // ✅ Duplicates check
+    // Duplicates check
     const studentIds = data.students.map((s) => s.id).filter(Boolean);
     const duplicateIds = studentIds.filter(
       (id, index) => studentIds.indexOf(id) !== index

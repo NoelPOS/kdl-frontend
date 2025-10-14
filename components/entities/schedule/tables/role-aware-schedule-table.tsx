@@ -23,9 +23,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MessageSquare, User, BookOpen, Calendar } from "lucide-react";
+import { MessageSquare, User, BookOpen, Calendar, Check, X, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { set } from "nprogress";
+import { Button } from "@/components/ui/button";
+import { updateSchedule } from "@/lib/api";
+import AttendanceConfirmationDialog from "../dialogs/attendance-confirmation-dialog";
+import { vi } from "date-fns/locale";
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
   if (!attendance) return null;
@@ -44,6 +47,8 @@ const getAttendanceBadge = (attendance: string | null | undefined) => {
   return <Badge className={badgeClass}>{attendance}</Badge>;
 };
 
+type ViewMode = "view1" | "view2";
+
 interface RoleAwareScheduleTableProps {
   schedules: ClassSchedule[];
   userRole: UserRole;
@@ -51,6 +56,7 @@ interface RoleAwareScheduleTableProps {
   onScheduleUpdate?: (schedule: FormData) => void;
   hideCourseInfo?: boolean; // true for today page, false for other pages
   shouldRefreshOnUpdate?: boolean;
+  viewMode?: ViewMode; // New prop for view mode
 }
 
 export default function RoleAwareScheduleTable({
@@ -60,6 +66,7 @@ export default function RoleAwareScheduleTable({
   onScheduleUpdate,
   hideCourseInfo = false,
   shouldRefreshOnUpdate = false,
+  viewMode = "view1",
 }: RoleAwareScheduleTableProps) {
   const [selectedSchedule, setSelectedSchedule] =
     useState<ClassSchedule | null>(null);
@@ -68,6 +75,12 @@ export default function RoleAwareScheduleTable({
   const [isFreeTrialDialogOpen, setIsFreeTrialDialogOpen] = useState(false);
   const [feedbackSchedule, setFeedbackSchedule] =
     useState<ClassSchedule | null>(null);
+  
+  // Attendance confirmation dialog state
+  const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
+  const [attendanceSchedule, setAttendanceSchedule] = useState<ClassSchedule | null>(null);
+  const [attendanceAction, setAttendanceAction] = useState<"present" | "absent">("present");
+  const [isUpdatingAttendance, setIsUpdatingAttendance] = useState(false);
 
   const router = useRouter();
   const [localSchedules, setLocalSchedules] =
@@ -133,6 +146,78 @@ export default function RoleAwareScheduleTable({
     router.refresh();
     setIsEditDialogOpen(false);
     setSelectedSchedule(null);
+  };
+
+  const handleQuickAttendanceUpdate = async (
+    scheduleId: string, 
+    attendanceStatus: "present" | "absent"
+  ) => {
+    // Find the schedule to check current status
+    const schedule = localSchedules.find(s => s.schedule_id === scheduleId);
+    if (!schedule) {
+      showToast.error("Schedule not found.");
+      return;
+    }
+
+    const currentAttendance = schedule.schedule_attendance;
+    
+    // Validation: Cannot change if already completed
+    if (currentAttendance === "completed") {
+      showToast.error("Cannot change attendance. This session is already marked as completed.");
+      return;
+    }
+
+    // Validation: Cannot mark as cancelled if already cancelled 
+    if (currentAttendance === "cancelled" && attendanceStatus === "absent") {
+      showToast.error("This session is already marked as cancelled.");
+      return;
+    }
+
+    // Show confirmation dialog instead of alert
+    setAttendanceSchedule(schedule);
+    setAttendanceAction(attendanceStatus);
+    setIsAttendanceDialogOpen(true);
+  };
+
+  const handleConfirmAttendanceUpdate = async () => {
+    if (!attendanceSchedule) return;
+
+    const scheduleId = attendanceSchedule.schedule_id;
+    const newAttendance = attendanceAction === "present" ? "completed" : "cancelled";
+
+    setIsUpdatingAttendance(true);
+
+    try {
+      await updateSchedule(parseInt(scheduleId), {
+        attendance: newAttendance
+      });
+      
+      // Update local state
+      setLocalSchedules((prevSchedules) =>
+        prevSchedules.map((schedule) => {
+          if (schedule.schedule_id === scheduleId) {
+            return {
+              ...schedule,
+              schedule_attendance: newAttendance,
+            };
+          }
+          return schedule;
+        })
+      );
+
+      showToast.success(`Attendance updated successfully to ${newAttendance}.`);
+      
+      if (shouldRefreshOnUpdate) {
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      showToast.error("Failed to update attendance. Please try again.");
+    } finally {
+      setIsUpdatingAttendance(false);
+      setIsAttendanceDialogOpen(false);
+      setAttendanceSchedule(null);
+    }
   };
 
   const selectedFormData: FormData | undefined = selectedSchedule
@@ -206,6 +291,18 @@ export default function RoleAwareScheduleTable({
                     Student
                   </TableHead>
                 )}
+                {
+                  viewMode === "view2" && (
+                    <>
+                      <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                      Contact Number
+                      </TableHead>
+                      <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
+                        Nickname
+                      </TableHead>
+                    </>
+                  )
+                }
                 {!showStudentHeader && !hideCourseInfo && (
                   <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
                     Course
@@ -233,21 +330,31 @@ export default function RoleAwareScheduleTable({
                 <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
                   Attendance
                 </TableHead>
-                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
-                  Remark
-                </TableHead>
-                {/* Show Feedback column for teachers */}
-                {userRole === UserRole.TEACHER && (
-                  <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
-                    Feedback
-                  </TableHead>
+
+                {viewMode === "view1" ? (
+                  <>
+                    <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                      Remark
+                    </TableHead>
+                    {/* Show Feedback column for teachers */}
+                    {userRole === UserRole.TEACHER && (
+                      <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
+                        Feedback
+                      </TableHead>
+                    )}
+                    {/* Show Feedback column for student session detail pages */}
+                    <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                      Feedback
+                    </TableHead>
+                  </>
+                ) : (
+                  <>
+                      <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[150px]">
+                        Actions
+                      </TableHead>
+                  </>
                 )}
-                {/* Show Feedback column for student session detail pages */}
-                {/* {showStudentHeader && ( */}
-                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[120px]">
-                  Feedback
-                </TableHead>
-                {/* )} */}
+                
                 <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[150px]">
                   Warning
                 </TableHead>
@@ -292,6 +399,16 @@ export default function RoleAwareScheduleTable({
                       {session.student_name}
                     </TableCell>
                   )}
+                  {viewMode === "view2" && (
+                    <>
+                      <TableCell className="border h-30 text-center px-2 min-w-[120px]">
+                        {session.student_phone || "N/A"}
+                      </TableCell>
+                      <TableCell className="border h-30 text-center px-2 min-w-[100px]">
+                        {session.student_nickname || "N/A"}
+                      </TableCell>
+                    </>
+                  )}
                   {!showStudentHeader && !hideCourseInfo && (
                     <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
                       {session.course_title}
@@ -323,49 +440,117 @@ export default function RoleAwareScheduleTable({
                   <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
                     {getAttendanceBadge(session.schedule_attendance)}
                   </TableCell>
-                  <TableCell className="border h-30 text-center px-2 min-w-[120px] max-w-[200px]">
-                    <div className="truncate" title={session.schedule_remark || ""}>
-                      {session.schedule_remark || ""}
-                    </div>
-                  </TableCell>
-                  {/* Show Feedback column for teachers */}
-                  {userRole === UserRole.TEACHER && (
-                    <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
-                      {session.schedule_feedback ? (
-                        <Badge
-                          variant="default"
-                          className="bg-green-100 text-green-700 border-green-300"
-                        >
-                          Completed
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="secondary"
-                          className="bg-gray-100 text-gray-600"
-                        >
-                          Pending
-                        </Badge>
+
+                  {viewMode === "view1" ? (
+                    <>
+                      <TableCell className="border h-30 text-center px-2 min-w-[120px] max-w-[200px]">
+                        <div className="truncate" title={session.schedule_remark || ""}>
+                          {session.schedule_remark || ""}
+                        </div>
+                      </TableCell>
+                      {/* Show Feedback column for teachers */}
+                      {userRole === UserRole.TEACHER && (
+                        <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
+                          {session.schedule_feedback ? (
+                            <Badge
+                              variant="default"
+                              className="bg-green-100 text-green-700 border-green-300"
+                            >
+                              Completed
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="secondary"
+                              className="bg-gray-100 text-gray-600"
+                            >
+                              Pending
+                            </Badge>
+                          )}
+                        </TableCell>
                       )}
-                    </TableCell>
+                      {/* Show Feedback column for student session detail pages */}
+                      <TableCell className="border h-30 text-center px-2 min-w-[120px]">
+                        {session.schedule_feedback ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewFeedback(session);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 underline text-sm font-medium whitespace-nowrap"
+                          >
+                            View Feedback
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 text-sm whitespace-nowrap">No feedback</span>
+                        )}
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell className="border h-30 text-center px-2 min-w-[150px]">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickAttendanceUpdate(session.schedule_id, "present");
+                            }}
+                            className={`h-8 w-8 p-0 ${
+                              session.schedule_attendance === "completed"
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-green-600 hover:text-green-700 hover:bg-green-50"
+                            }`}
+                            title={
+                              session.schedule_attendance === "completed"
+                                ? "Already completed"
+                                : "Mark Present (Completed)"
+                            }
+                            disabled={session.schedule_attendance === "completed"}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuickAttendanceUpdate(session.schedule_id, "absent");
+                            }}
+                            className={`h-8 w-8 p-0 ${
+                              session.schedule_attendance === "completed" || session.schedule_attendance === "cancelled"
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                            }`}
+                            title={
+                              session.schedule_attendance === "completed"
+                                ? "Cannot cancel completed session"
+                                : session.schedule_attendance === "cancelled"
+                                ? "Already cancelled"
+                                : "Mark Absent (Cancelled)"
+                            }
+                            disabled={session.schedule_attendance === "completed" || session.schedule_attendance === "cancelled"}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowDoubleClick(session);
+                            }}
+                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title="Edit Schedule"
+                            disabled={session.schedule_attendance === "cancelled"}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </>
                   )}
-                  {/* Show Feedback column for student session detail pages */}
-                  {/* {showStudentHeader && ( */}
-                  <TableCell className="border h-30 text-center px-2 min-w-[120px]">
-                    {session.schedule_feedback ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewFeedback(session);
-                        }}
-                        className="text-blue-600 hover:text-blue-800 underline text-sm font-medium whitespace-nowrap"
-                      >
-                        View Feedback
-                      </button>
-                    ) : (
-                      <span className="text-gray-400 text-sm whitespace-nowrap">No feedback</span>
-                    )}
-                  </TableCell>
-                  {/* )} */}
+                  
                   <TableCell className="border h-30 text-center text-red-500 px-2 min-w-[150px] max-w-[250px]">
                     <div className="break-words whitespace-normal" title={session.schedule_warning || ""}>
                       {session.schedule_warning}
@@ -522,6 +707,16 @@ export default function RoleAwareScheduleTable({
           </h2>
         </div>
       )}
+
+      {/* Attendance Confirmation Dialog */}
+      <AttendanceConfirmationDialog
+        isOpen={isAttendanceDialogOpen}
+        onClose={() => setIsAttendanceDialogOpen(false)}
+        onConfirm={handleConfirmAttendanceUpdate}
+        schedule={attendanceSchedule}
+        action={attendanceAction}
+        isLoading={isUpdatingAttendance}
+      />
     </>
   );
 }

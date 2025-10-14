@@ -170,7 +170,7 @@ export default function RegistrarDetailClient({
           onClick={handleImageClick}
         >
           <Image
-            src={imagePreview || registrar.profilePicture || "/student.png"}
+            src={registrar.profilePicture || imagePreview}
             alt="registrar profile"
             width={90}
             height={90}

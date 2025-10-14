@@ -10,7 +10,7 @@ import ClassTypeSelectionDialog from "@/components/entities/students/dialogs/cla
 import ScheduleConfirmationDialog from "@/components/entities/students/dialogs/schedule-confirmation-dialog";
 import { CourseCard } from "../cards/course-card";
 import { Pagination } from "@/components/ui/pagination";
-import LastUpdated from "@/components/shared/last-updated";
+
 
 // type imports
 import {
@@ -118,7 +118,7 @@ function CourseClientSide({
   };
 
   const handleClassScheduleSubmit = (schedule: ComfirmClassScheduleData) => {
-    console.log("Class Schedule Data:", schedule);
+    // console.log("Class Schedule Data:", schedule);
     setClassScheduleData(schedule);
 
     if (schedule.classType.id === 2 || schedule.classType.id === 11) {
@@ -220,7 +220,6 @@ function CourseClientSide({
           itemName="courses"
         />
       )}
-
       {confirmOpen && (
         <div className="hide-scrollbar-y fixed inset-0 z-10 overflow-y-scroll bg-white ">
           <div className="bg-white rounded-lg h-full ">

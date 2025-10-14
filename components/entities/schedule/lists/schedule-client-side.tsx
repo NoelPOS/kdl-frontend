@@ -10,6 +10,13 @@ import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/ui/pagination";
 import { ScheduleDownloadButton } from "../buttons/schedule-download-button";
 import { SchedulePDFDownloadButton } from "../buttons/schedule-pdf-download-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ScheduleClientSideProps {
   initialSchedules?: ClassSchedule[];
@@ -21,6 +28,8 @@ interface ScheduleClientSideProps {
     hasPrev: boolean;
   };
 }
+
+type ViewMode = "view1" | "view2";
 
 function ScheduleClientSide({
   initialSchedules = [],
@@ -38,6 +47,7 @@ function ScheduleClientSide({
       hasPrev: false,
     }
   );
+  const [viewMode, setViewMode] = useState<ViewMode>("view1");
 
   useEffect(() => {
     // Set initial data when component mounts
@@ -76,17 +86,33 @@ function ScheduleClientSide({
     <div className="w-full min-w-0">
       {params.size > 0 && (
         <>
-          {/* Download button section */}
+          {/* Controls section */}
           {schedules.length > 0 && (
-            <div className="flex justify-end gap-2 mb-4">
-              <SchedulePDFDownloadButton
-                schedules={schedules}
-                currentPage={pagination.currentPage}
-              />
-              <ScheduleDownloadButton
-                schedules={schedules}
-                currentPage={pagination.currentPage}
-              />
+            <div className="flex justify-between items-center mb-4">
+              {/* View Mode Filter */}
+              <div className="flex items-center gap-2">
+                <Select value={viewMode} onValueChange={(value: ViewMode) => setViewMode(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Select view" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="view1">View 1</SelectItem>
+                    <SelectItem value="view2">View 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Download Buttons */}
+              <div className="flex gap-2">
+                <SchedulePDFDownloadButton
+                  schedules={schedules}
+                  currentPage={pagination.currentPage}
+                />
+                <ScheduleDownloadButton
+                  schedules={schedules}
+                  currentPage={pagination.currentPage}
+                />
+              </div>
             </div>
           )}          
           <RoleAwareScheduleTable
@@ -94,6 +120,7 @@ function ScheduleClientSide({
             userRole={userRole}
             showStudentHeader={false}
             onScheduleUpdate={handleScheduleUpdate}
+            viewMode={viewMode}
           />
           {schedules.length > 0 && (
             <Pagination

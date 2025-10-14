@@ -27,6 +27,7 @@ export interface ClassSchedule {
   student_name: string;
   student_nickname: string;
   student_profilePicture: string;
+  student_phone?: string; // New field for phone number
 }
 
 export interface FilterFormData {

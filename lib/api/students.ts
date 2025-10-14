@@ -9,7 +9,7 @@ export async function searchStudents(
   const response = await clientApi.get<Student[]>(
     `/students/search?${field}=${encodeURIComponent(query)}`
   );
-  console.log("search results", response.data);
+  // console.log("search results", response.data);
   return response.data;
 }
 
