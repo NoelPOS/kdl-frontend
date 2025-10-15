@@ -26,8 +26,16 @@ export async function getCurrentUser(): Promise<AuthUser> {
 }
 
 export async function logout(): Promise<void> {
-  // Clear the cookie
-  ClientCookies.remove();
+  try {
+    // Call backend to clear HttpOnly cookie
+    await clientApi.post("/auth/logout");
+  } catch (error) {
+    console.error("Backend logout failed:", error);
+    // Continue with client-side cleanup even if backend fails
+  } finally {
+    // Always clear client-side cookie
+    ClientCookies.remove();
+  }
 }
 
 // Password Reset Functions

@@ -10,7 +10,7 @@ import {
   hasRoutePermission,
   getDefaultRouteForRole,
 } from "@/lib/jwt";
-import { getCurrentUser as apiGetCurrentUser } from "@/lib/api/auth";
+import { getCurrentUser as apiGetCurrentUser, logout as apiLogout } from "@/lib/api/auth";
 
 interface AuthContextProps {
   user: AuthUser | null;
@@ -107,14 +107,16 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     const publicRoutes = [
-      "/",
       "/login",
       "/forgot-password",
       "/unauthorized",
       "/not-found",
     ];
 
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+    // Check if current path is public route (exact match or starts with the route)
+    const isPublicRoute = pathname === "/" || publicRoutes.some(route => 
+      pathname === route || pathname.startsWith(route + "/")
+    );
 
     // If user exists and on login page, redirect to dashboard
     if (user && pathname === "/login") {
@@ -123,20 +125,22 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // CRITICAL: If no user and not on public route, redirect to login immediately
+    if (!user && !isPublicRoute) {
+      router.replace("/login"); // Use replace instead of push to prevent back navigation
+      return;
+    }
+
     // If user exists and on a protected route, check permissions
     if (user && !isPublicRoute) {
       const hasPermission = hasRoutePermission(user.role, pathname);
       
       if (!hasPermission) {
-        router.push("/unauthorized");
+        router.replace("/unauthorized");
+        return;
       }
     }
-
-    // If no user and not on public route, redirect to login
-    if (!user && !isPublicRoute && pathname !== "/login") {
-      router.push("/login");
-    }
-  }, [pathname, user, isLoading, authInitialized]);
+  }, [pathname, user, authInitialized, isLoading, router]);
 
   const login = (response: AuthResponse) => {
     try {
@@ -158,13 +162,21 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      // Clear cookie and state
+      // Call API to clear HttpOnly cookie on backend
+      await apiLogout();
+      
+      // Clear local storage token
       removeStoredToken();
+      
+      // Clear user state
       setUser(null);
+      
+      // Redirect to login
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
       // Always clear state and redirect even on error
+      removeStoredToken();
       setUser(null);
       router.push("/login");
     }

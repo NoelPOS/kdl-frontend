@@ -14,14 +14,15 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   // Define public routes
   const publicRoutes = [
-    "/",
     "/login",
     "/forgot-password",
     "/unauthorized",
     "/not-found",
   ];
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
+  
+  // Check if current path is public route (exact match or starts with the route)
+  const isPublicRoute = pathname === "/" || publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + "/")
   );
 
   // Show loading while checking authentication ONLY for protected routes
@@ -29,16 +30,17 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     return <AuthLoadingPage />;
   }
 
-  // For public routes, always show content (don't check auth)
+  // For protected routes, block access if no user
+  if (!isPublicRoute && !user) {
+    return <AuthLoadingPage />;
+  }
+
+  // For public routes, always show content
   if (isPublicRoute) {
     return <>{children}</>;
   }
 
-  // For protected routes, show loading if no user (redirect is happening)
-  if (!user && !isLoading) {
-    return <AuthLoadingPage />;
-  }
-
+  // User is authenticated and on a protected route
   return <>{children}</>;
 };
 

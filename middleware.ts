@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { MiddlewareCookies } from "./lib/cookies";
+import { isTokenExpired } from "./lib/jwt";
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
-  "/",
   "/login",
   "/forgot-password",
   "/unauthorized",
@@ -14,8 +14,12 @@ const PUBLIC_ROUTES = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
+  // Allow public routes (exact match or starts with route/)
+  const isPublicRoute = pathname === "/" || PUBLIC_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(route + "/")
+  );
+  
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
@@ -27,8 +31,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // For now, let the client-side context handle detailed route permissions
-  // The middleware primarily handles authentication, not authorization
+  // Check if token is expired
+  if (isTokenExpired(token)) {
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    // Clear the expired cookie
+    MiddlewareCookies.remove(response);
+    return response;
+  }
+
+  // Token is valid, allow access
+  // The client-side context handles detailed route permissions
   return NextResponse.next();
 }
 
@@ -39,8 +51,8 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - favicon.ico, sitemap.xml, robots.txt (static files)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
