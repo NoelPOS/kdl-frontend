@@ -43,8 +43,8 @@ interface ScheduleUpdate {
   startTime?: string;
   endTime?: string;
   room?: string;
-  teacherId?: number;
-  courseId?: number;
+  teacherId?: number | null; // Allow null for free trials without teacher
+  courseId?: number | null;  // Allow null for free trials without course
   studentId?: number;
   attendance?: string;
   remark?: string;
