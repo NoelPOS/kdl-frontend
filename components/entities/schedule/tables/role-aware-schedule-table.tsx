@@ -28,7 +28,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { updateSchedule } from "@/lib/api";
 import AttendanceConfirmationDialog from "../dialogs/attendance-confirmation-dialog";
-import { vi } from "date-fns/locale";
+
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
   if (!attendance) return null;

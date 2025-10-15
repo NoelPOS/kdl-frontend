@@ -181,11 +181,10 @@ export function FreeTrialEditDialog({
           room: data.room,
           remark: data.remark,
           attendance: data.status,
-          teacherId:
-            teachers.find((t) => t.name === data.teacher)?.id ||
-            initialData?.courseId ||
-            0,
-          courseId: data.courseId || selectedCourse?.id || 0,
+          teacherId: data.courseId 
+            ? (teachers.find((t) => t.name === data.teacher)?.id || null)
+            : null, // For free trials without course, use null
+          courseId: data.courseId || selectedCourse?.id || null,
           teacherName: data.teacher,
           studentName: data.student,
           nickname: data.nickname,
