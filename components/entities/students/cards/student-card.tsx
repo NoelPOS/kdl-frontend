@@ -72,26 +72,32 @@ export function StudentCard({ student }: StudentCardProps) {
               msOverflowStyle: "none",
             }}
           >
-            {student.allergic.map((allergy: string) => (
-              <div key={allergy} className="flex items-start mb-2 gap-3">
-                <Pizza className="h-5 w-5 inline-block mr-1 text-red-500" />
-                <div className="flex flex-col items-start mb-2">
-                  <h1 className="font-bold text-lg text-red-500">
+            {student.allergic && student.allergic.length > 0 && student.allergic.some((item) => item.trim() !== "") && (
+              <div className="flex items-start mb-3 gap-2">
+                <Pizza className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
+                <div className="flex flex-col">
+                  <h1 className="font-bold text-sm text-red-500 mb-1">
                     Allergic To
                   </h1>
-                  <p className="whitespace-pre-line">{allergy}</p>
+                  <p className="text-gray-700">
+                    {student.allergic.filter((item) => item.trim() !== "").join(", ")}
+                  </p>
                 </div>
               </div>
-            ))}
-            {student.doNotEat.map((dne: string) => (
-              <div key={dne} className="flex items-start mb-2 gap-3">
-                <Pizza className="h-5 w-5 inline-block mr-1 text-red-500" />
-                <div className="flex flex-col items-start mb-2">
-                  <h1 className="font-bold text-lg text-red-500">Do not eat</h1>
-                  <p className="whitespace-pre-line">{dne}</p>
+            )}
+            {student.doNotEat && student.doNotEat.length > 0 && student.doNotEat.some((item) => item.trim() !== "") && (
+              <div className="flex items-start mb-2 gap-2">
+                <Pizza className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
+                <div className="flex flex-col">
+                  <h1 className="font-bold text-sm text-red-500 mb-1">
+                    Do Not Eat
+                  </h1>
+                  <p className="text-gray-700">
+                    {student.doNotEat.filter((item) => item.trim() !== "").join(", ")}
+                  </p>
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

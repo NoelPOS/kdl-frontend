@@ -186,8 +186,14 @@ export function AddNewStudent() {
       toastId = showToast.loading("Creating student...");
       const preparedData = {
         ...data,
-        allergic: data.allergic.split(" "),
-        doNotEat: data.doNotEat.split(" "),
+        allergic: data.allergic
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        doNotEat: data.doNotEat
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
         profilePicture: imageUrl,
         profileKey: key,
       };
@@ -373,7 +379,7 @@ export function AddNewStudent() {
                 <Input
                   id="allergic"
                   {...register("allergic")}
-                  placeholder="Enter allergies"
+                  placeholder="e.g., nuts, dairy, eggs"
                   className=" "
                 />
               </div>
@@ -407,7 +413,7 @@ export function AddNewStudent() {
                 <Input
                   id="doNotEat"
                   {...register("doNotEat")}
-                  placeholder="Enter do not eat"
+                  placeholder="e.g., spicy food, seafood"
                   className=""
                 />
               </div>
