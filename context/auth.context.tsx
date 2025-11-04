@@ -76,12 +76,18 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       "/forgot-password",
       "/unauthorized",
       "/not-found",
+      "/liff", // LIFF routes are public (authenticated via LINE)
     ];
 
     // Check if current path is public route (exact match or starts with the route)
     const isPublicRoute = pathname === "/" || publicRoutes.some(route => 
       pathname === route || pathname.startsWith(route + "/")
     );
+
+    // Skip auth checks for LIFF routes (they have their own auth via LINE)
+    if (pathname.startsWith("/liff")) {
+      return;
+    }
 
     // If user exists and on login page, redirect to dashboard
     if (user && pathname === "/login") {

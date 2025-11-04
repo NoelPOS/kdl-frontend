@@ -6,6 +6,7 @@ const PUBLIC_ROUTES = [
   "/forgot-password",
   "/unauthorized",
   "/not-found",
+  "/liff", // All LIFF routes are public (authenticated via LINE)
 ];
 
 export function middleware(request: NextRequest) {
