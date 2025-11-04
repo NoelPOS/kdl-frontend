@@ -52,7 +52,6 @@ export function generateScheduleRows(
       });
     }
   } else if (classSchedule.classType.classMode === "12 times fixed") {
-    console.log("fixedDays", classSchedule.fixedDays);
     // Generate 12 sessions based on selected days
     if (classSchedule.fixedDays && classSchedule.fixedDays.length > 0) {
       const selectedDays = classSchedule.fixedDays;
@@ -122,7 +121,7 @@ export function generateScheduleRows(
   else if (classSchedule.classType.classMode === "1 times check") {
     students.forEach((student) => {
       rows.push({
-        date: undefined, // Placeholder, will be set later  
+        date: undefined, 
         time: "TBD - TBD",
         student: student.nickname || student.name,
         teacher: "TBD",
@@ -139,7 +138,7 @@ export function generateScheduleRows(
   return rows;
 }
 
-// Generate calendar days
+
 export const generateCalendarDays = (currentDate: Date) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -188,7 +187,6 @@ export const generateConflictWarning = (conflict: ConflictDetail) => {
   }
 };
 
-// Format last updated timestamp
 export const formatLastUpdated = (timestamp: Date | undefined): string => {
   if (!timestamp) return "Unknown";
   

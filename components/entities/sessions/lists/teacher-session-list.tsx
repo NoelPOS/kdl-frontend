@@ -17,8 +17,8 @@ export default async function TeacherSessionList({
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  // Get current user info from token to get teacher ID
-  const user = accessToken ? getUserFromToken(accessToken) : null;
+  // Get current user info from backend (using HttpOnly cookie)
+  const user = accessToken ? await getUserFromToken(accessToken) : null;
   const teacherId = user ? parseInt(user.id) : null;
 
   if (!teacherId) {

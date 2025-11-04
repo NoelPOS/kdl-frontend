@@ -233,7 +233,6 @@ export function FreeTrialEditDialog({
       onScheduleUpdate,
       onOpenChange,
       teachers,
-      initialData?.courseId,
       initialData?.scheduleId,
       initialData?.student,
       selectedCourse?.id,

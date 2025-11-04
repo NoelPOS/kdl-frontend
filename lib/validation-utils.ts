@@ -23,7 +23,7 @@ export const isNotPastDate = (dateStr: string): boolean => {
   if (!dateStr) return false;
   const selectedDate = new Date(dateStr);
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Reset time to start of day
+  today.setHours(0, 0, 0, 0); 
   return selectedDate >= today;
 };
 
@@ -36,7 +36,7 @@ export const isCorrectCampDateCount = (
   } else if (classMode === "2 days camp") {
     return selectedDates.length === 2;
   }
-  return true; // For non-camp types, any number is valid
+  return true;
 };
 
 export const getRequiredCampDateCount = (classMode: string): number => {
@@ -81,7 +81,6 @@ export const getTimeValidationRules = (
     },
   };
 
-  // Add time range validation for end time
   if (fieldName === "end" && otherTimeValue) {
     rules.validate.validRange = (value: string) => {
       if (!isValidTimeRange(otherTimeValue, value)) {

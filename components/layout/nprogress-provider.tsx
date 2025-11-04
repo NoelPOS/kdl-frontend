@@ -8,16 +8,14 @@ export default function NProgressProvider() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Configure nprogress options
     NProgress.configure({
-      showSpinner: false, // Hide spinner
-      minimum: 0.15, // Start at 15%
-      trickleSpeed: 100, // Faster trickle
+      showSpinner: false, 
+      minimum: 0.15,
+      trickleSpeed: 100,
       easing: "ease",
-      speed: 200, // Animation speed
+      speed: 200,
     });
     NProgress.start();
-    // Complete the progress bar after a short delay to simulate loading
     const timer = setTimeout(() => {
       NProgress.done();
     }, 300);
@@ -31,4 +29,4 @@ export default function NProgressProvider() {
   return null;
 }
 
-// For custom nprogress color or height, add the CSS example (see documentation) to your globals.css file.
+

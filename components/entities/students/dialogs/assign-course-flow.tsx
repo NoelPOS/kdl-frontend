@@ -11,7 +11,7 @@ import {
   TeacherData,
 } from "@/app/types/course.type";
 
-// Import existing dialog components (we'll modify them)
+// Import existing dialog components 
 import CourseSelectionDialog from "./course-selection-dialog";
 import ClassTypeSelectionDialog from "./class-type-selection-dialog";
 import TeacherRoomSelectionDialog from "./teacher-room-selection-dialog";
@@ -73,7 +73,7 @@ export default function AssignCourseFlow({
     }));
 
     if (classSchedule.classType.id === 2 || classSchedule.classType.id === 11) {
-      // If class type is 12 times check or 12 times fixed, go directly to confirm step
+      // If class type is 12 times check or 1 times check, go directly to confirm step
       setCurrentStep("confirm");
     } else {
     setCurrentStep("teacher");
@@ -87,12 +87,6 @@ export default function AssignCourseFlow({
 
   const handleConfirmSchedule = async () => {
     try {
-      console.log("=== Updating TBC Session and Creating Schedules ===");
-      console.log("Session ID:", session.sessionId);
-      console.log("Flow Data:", flowData);
-
-      // This will be handled in the schedule confirmation dialog
-      // After successful update, close the flow
       setCurrentStep("closed");
       router.refresh();
     } catch (error) {

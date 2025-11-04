@@ -1,8 +1,4 @@
-/**
- * Error handling utilities for API requests
- */
 
-// Symbol to mark errors that should skip global error handling
 export const SKIP_GLOBAL_ERROR = Symbol.for('SKIP_GLOBAL_ERROR');
 
 /**
@@ -120,10 +116,6 @@ export function parseApiError(error: any): {
   return result;
 }
 
-/**
- * Wrapper for API calls that want to handle their own errors
- * This will prevent the global error handler from showing toasts
- */
 export async function handleApiCall<T>(
   apiCall: () => Promise<T>,
   customErrorHandler?: (error: any) => void

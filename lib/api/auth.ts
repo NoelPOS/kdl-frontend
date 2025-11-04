@@ -1,21 +1,16 @@
 import { AuthResponse, LoginFormData, UserRole, AuthUser } from "@/app/types/auth.type";
 import { clientApi } from "./config";
-import { storeToken } from "../jwt";
-import { ClientCookies } from "../cookies";
 
 export async function login(info: LoginFormData): Promise<AuthResponse> {
   const response = await clientApi.post<AuthResponse>("/auth/login", info);
-  const { user, accessToken } = response.data;
 
   if (process.env.NODE_ENV !== "production") {
-    console.log("user", user);
-    console.log("token", "[TOKEN RECEIVED]");
+    console.log("user", response.data.user);
+    console.log("token", "[TOKEN RECEIVED - stored in HttpOnly cookie by backend]");
   }
 
-  // Token is now also in HttpOnly cookie (set by backend)
-  // Still storing for backward compatibility during migration
-  storeToken(accessToken);
-
+  // Backend sets HttpOnly cookie automatically
+  // No client-side token storage needed
   return response.data;
 }
 
@@ -26,16 +21,8 @@ export async function getCurrentUser(): Promise<AuthUser> {
 }
 
 export async function logout(): Promise<void> {
-  try {
-    // Call backend to clear HttpOnly cookie
-    await clientApi.post("/auth/logout");
-  } catch (error) {
-    console.error("Backend logout failed:", error);
-    // Continue with client-side cleanup even if backend fails
-  } finally {
-    // Always clear client-side cookie
-    ClientCookies.remove();
-  }
+  // Call backend to clear HttpOnly cookie
+  await clientApi.post("/auth/logout");
 }
 
 // Password Reset Functions

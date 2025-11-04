@@ -55,7 +55,6 @@ export default function ClassTypeSelectionDialog({
   courseId,
   onClassTypeSelected,
   onBack,
-
   mode = "create",
 }: ClassTypeSelectionDialogProps) {
   const {
@@ -276,7 +275,6 @@ export default function ClassTypeSelectionDialog({
                 selectedDays={selectedDays}
                 onToggleDay={toggleDay}
                 label="Select Days"
-                // Remove error prop - only show on submit
               />
 
               {/* Time Selection */}
@@ -343,7 +341,6 @@ export default function ClassTypeSelectionDialog({
                     : undefined
                 }
                 classMode={selectedCourseOption?.classMode}
-                // Remove error prop - only show on submit
               />
 
               {/* Time Selection */}

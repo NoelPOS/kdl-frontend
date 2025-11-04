@@ -22,11 +22,10 @@ export default async function CoursesPage({
   const { query, ageRange, medium, page } = (await searchParams) || {};
   const currentPage = parseInt(page || "1", 10);
 
-  // Get user information from server-side
+  // Get user information from server-side (using HttpOnly cookie)
   const user = await getServerSideUser();
   const canAddCourses = user?.role === "admin";
 
-  // Get timestamp by making a lightweight API call when filters are active
   let lastUpdated: Date | undefined;
   if (query || ageRange || medium) {
     try {

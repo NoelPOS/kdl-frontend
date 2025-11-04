@@ -3,12 +3,9 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { AuthUser, AuthResponse, UserRole } from "@/app/types/auth.type";
 import {
-  getStoredToken,
-  removeStoredToken,
-  getUserFromToken,
-  isTokenExpired,
   hasRoutePermission,
   getDefaultRouteForRole,
+  isProtectedRoute,
 } from "@/lib/jwt";
 import { getCurrentUser as apiGetCurrentUser, logout as apiLogout } from "@/lib/api/auth";
 
@@ -41,58 +38,26 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsMounted(true);
   }, []);
 
-  // Initialize auth state from stored token or HttpOnly cookie - ONLY ONCE
+  // Initialize auth state from HttpOnly cookie via backend - ONLY ONCE
   useEffect(() => {
     if (!isMounted || authInitialized) return;
 
     const initializeAuth = async () => {
       try {
-        // Try new method first: Get user from backend using HttpOnly cookie
-        try {
-          const userData = await apiGetCurrentUser();
-          setUser(userData);
-          setAuthInitialized(true);
-          
-          // If logged in and on login page, redirect to dashboard
-          if (pathname === "/login") {
-            const defaultRoute = getDefaultRouteForRole(userData.role);
-            router.push(defaultRoute);
-          }
-          return;
-        } catch (apiError: any) {
-          // Fallback to old method: Check local token
-          const token = getStoredToken();
-          if (token) {
-            if (isTokenExpired(token)) {
-              removeStoredToken();
-              setUser(null);
-              setAuthInitialized(true);
-            } else {
-              const userData = getUserFromToken(token);
-              if (userData) {
-                setUser(userData);
-                setAuthInitialized(true);
-                if (pathname === "/login") {
-                  const defaultRoute = getDefaultRouteForRole(userData.role);
-                  router.push(defaultRoute);
-                }
-              } else {
-                removeStoredToken();
-                setUser(null);
-                setAuthInitialized(true);
-              }
-            }
-          } else {
-            setUser(null);
-            setAuthInitialized(true);
-          }
+        // Get user from backend using HttpOnly cookie
+        const userData = await apiGetCurrentUser();
+        setUser(userData);
+        
+        // If logged in and on login page, redirect to dashboard
+        if (pathname === "/login") {
+          const defaultRoute = getDefaultRouteForRole(userData.role);
+          router.push(defaultRoute);
         }
       } catch (error) {
-        console.error("Error initializing auth:", error);
-        removeStoredToken();
+        // No valid session - user will be redirected by route protection
         setUser(null);
-        setAuthInitialized(true);
       } finally {
+        setAuthInitialized(true);
         setIsLoading(false);
       }
     };
@@ -131,13 +96,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // If user exists and on a protected route, check permissions
     if (user && !isPublicRoute) {
-      const hasPermission = hasRoutePermission(user.role, pathname);
-      
-      if (!hasPermission) {
-        router.replace("/unauthorized");
-        return;
+      if (isProtectedRoute(pathname)) {
+        const hasPermission = hasRoutePermission(user.role, pathname);
+        
+        if (!hasPermission) {
+          router.replace("/unauthorized");
+          return;
+        }
       }
     }
   }, [pathname, user, authInitialized, isLoading, router]);
@@ -148,7 +114,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("Invalid authentication response");
       }
 
-      // Token is already stored in cookie by axios login function
+      // HttpOnly cookie is set by backend automatically
       setUser(response.user);
 
       // Redirect to appropriate dashboard
@@ -164,19 +130,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Call API to clear HttpOnly cookie on backend
       await apiLogout();
-      
-      // Clear local storage token
-      removeStoredToken();
-      
-      // Clear user state
-      setUser(null);
-      
-      // Redirect to login
-      router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-      // Always clear state and redirect even on error
-      removeStoredToken();
+      // Continue with logout even if backend call fails
+    } finally {
+      // Always clear user state and redirect
       setUser(null);
       router.push("/login");
     }

@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from "axios";
-import { ClientCookies } from "../cookies";
 
 // Global error handler function
 const handleGlobalError = (error: any) => {
@@ -128,27 +127,13 @@ clientApi.interceptors.request.use(
     // Add timestamp for debugging
     config.metadata = { startTime: new Date() };
 
-    // Skip auth header for login endpoint
-    if (config.url?.includes("/auth/login")) {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Login request - skipping auth header");
-      }
-      return config;
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log("withCredentials:", config.withCredentials);
     }
 
-    // Add auth token to requests (except login)
-    const token = ClientCookies.get();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Added auth header with token");
-      }
-    } else {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("No token available - request without auth header");
-      }
-    }
-
+    // HttpOnly cookies are automatically sent with withCredentials: true
+    // No manual Authorization header needed - backend validates the cookie
     return config;
   },
   (error) => {

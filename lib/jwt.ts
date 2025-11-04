@@ -1,112 +1,37 @@
-import { DecodedToken, AuthUser, UserRole } from "@/app/types/auth.type";
-import { ClientCookies } from "./cookies";
+import {  UserRole } from "@/app/types/auth.type";
 
 
-/**
- * Decode JWT token and extract payload
- * Note: This is for client-side extraction only.
- * Backend should still validate the token signature.
- */
-export function decodeJWT(token: string): DecodedToken | null {
-  try {
-    // JWT structure: header.payload.signature
-    const parts = token.split(".");
-    if (parts.length !== 3) {
-      throw new Error("Invalid JWT format");
-    }
+const PROTECTED_ROUTES = [
+  "/today",
+  "/courses",
+  "/students",
+  "/teachers",
+  "/parents",
+  "/create-invoice",
+  "/invoices",
+  "/receipts",
+  "/schedule",
+  "/my-schedules",
+  "/notifications",
+  "/management-fee",
+  "/feedback",
+  "/registrars",
+  "/sessions",
+  "/statistics",
+  "/student",
+  "/teacher",
+  "/parent",
+  "/invoice",
+  "/enrollment",
+  "/registrar",
+  "/session",
+];
 
-    // Decode the payload (middle part)
-    const payload = parts[1];
-    const decoded = JSON.parse(atob(payload));
 
-    return decoded as DecodedToken;
-  } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("Error decoding JWT:", error);
-    }
-    return null;
-  }
-}
-
-/**
- * Check if JWT token is expired
- */
-export function isTokenExpired(token: string): boolean {
-  const decoded = decodeJWT(token);
-  if (!decoded) return true;
-
-  const currentTime = Math.floor(Date.now() / 1000);
-  return decoded.exp < currentTime;
-}
-
-/**
- * Extract user information from JWT token
- */
-export function getUserFromToken(token: string): AuthUser | null {
-  const decoded = decodeJWT(token);
-  if (!decoded) return null;
-
-  return {
-    id: decoded.sub,
-    email: decoded.email,
-    name: decoded.name,
-    role: decoded.role,
-  };
-}
-
-/**
- * Store JWT token in regular cookie with synchronized expiration
- */
-export function storeToken(token: string): void {
-  // Extract JWT expiration to sync with cookie
-  const decoded = decodeJWT(token);
-  const jwtExpiresIn = decoded
-    ? decoded.exp - Math.floor(Date.now() / 1000)
-    : 86400;
-
-  ClientCookies.set(token, { maxAge: jwtExpiresIn });
-}
-
-/**
- * Retrieve JWT token from regular cookie
- */
-export function getStoredToken(): string | null {
-  return ClientCookies.get();
-}
-
-/**
- * Remove JWT token from regular cookie
- */
-export function removeStoredToken(): void {
-  ClientCookies.remove();
-}
-
-/**
- * Server-side function to get user from cookies
- * Use this in server components and API routes
- */
-export async function getServerSideUser(): Promise<AuthUser | null> {
-  try {
-    // Dynamic import to avoid issues in client-side
-    const { cookies } = await import("next/headers");
-    const cookieStore = await cookies();
-    const token = cookieStore.get("accessToken")?.value;
-
-    if (!token) {
-      return null;
-    }
-
-    if (isTokenExpired(token)) {
-      return null;
-    }
-
-    return getUserFromToken(token);
-  } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("Error getting server-side user:", error);
-    }
-    return null;
-  }
+export function isProtectedRoute(route: string): boolean {
+  return PROTECTED_ROUTES.some((protectedRoute) =>
+    route.startsWith(protectedRoute)
+  );
 }
 
 /**
@@ -121,21 +46,23 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
       "/teachers",
       "/parents",
       "/create-invoice",
-      "/packages",
       "/invoices",
       "/receipts",
       "/schedule",
+      "/my-schedules",
       "/notifications",
       "/management-fee",
       "/feedback",
+      "/registrars",
+      "/sessions",
+      "/statistics",
       "/student",
       "/teacher",
       "/parent",
       "/invoice",
       "/enrollment",
-      "/statistics",
-      "/registrars", 
-      "/registrar"
+      "/registrar",
+      "/session",
     ],
     [UserRole.REGISTRAR]: [
       "/today",
@@ -144,18 +71,20 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
       "/teachers",
       "/parents",
       "/create-invoice",
-      "/packages",
       "/invoices",
       "/receipts",
       "/schedule",
       "/notifications",
+      "/management-fee",
       "/feedback",
+      "/sessions",
+      "/statistics",
       "/student",
       "/teacher",
       "/parent",
       "/invoice",
       "/enrollment",
-      "/statistics"
+      "/session",
     ],
     [UserRole.TEACHER]: [
       "/today",
@@ -166,22 +95,12 @@ export function hasRoutePermission(userRole: UserRole, route: string): boolean {
     ],
   };
 
-  console.log("hasRoutePermission debug:", {
-    userRole,
-    route,
-    availablePermissions: permissions[userRole],
-    userRoleType: typeof userRole,
-    UserRoleTeacher: UserRole.TEACHER,
-    matchesTeacher: userRole === UserRole.TEACHER
-  });
-
   const result = (
     permissions[userRole]?.some((allowedRoute) =>
       route.startsWith(allowedRoute)
     ) || false
   );
   
-  console.log("Permission result:", result);
   return result;
 }
 
@@ -199,4 +118,28 @@ export function getDefaultRouteForRole(role: UserRole): string {
     default:
       return "/today";
   }
+}
+
+/**
+ * Get user from server-side using HttpOnly cookie
+ * This calls the backend /auth/me endpoint
+ */
+export async function getServerSideUser() {
+  try {
+    const { getCurrentUser } = await import('./api/auth');
+    const user = await getCurrentUser();
+    return user;
+  } catch (error) {
+    console.error('Failed to get server-side user:', error);
+    return null;
+  }
+}
+
+/**
+ * Get user from token by calling backend /auth/me
+ * Note: We don't decode tokens client-side, we use HttpOnly cookies
+ */
+export async function getUserFromToken(_token?: string) {
+  // Same as getServerSideUser - we rely on HttpOnly cookies
+  return getServerSideUser();
 }
