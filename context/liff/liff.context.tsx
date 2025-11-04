@@ -65,32 +65,49 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
 
+      console.log('🔧 Initializing LIFF...', { liffId });
+
       if (!liffId) {
         throw new Error('LIFF ID is not configured');
       }
 
       // Initialize LIFF
+      console.log('📱 Calling liff.init()...');
       await liff.init({ liffId });
+      console.log('✅ LIFF initialized successfully');
       setIsInitialized(true);
 
       // Check if user is logged in
-      if (liff.isLoggedIn()) {
+      const loggedIn = liff.isLoggedIn();
+      console.log('🔐 Login status:', loggedIn);
+      
+      if (loggedIn) {
         setIsLoggedIn(true);
         
         // Get LINE profile
+        console.log('👤 Getting LINE profile...');
         const userProfile = await liff.getProfile();
+        console.log('✅ LINE profile retrieved:', userProfile);
         setProfile(userProfile);
 
         // Fetch parent profile from backend
+        console.log('🔍 Fetching parent profile...');
         await fetchParentProfile(userProfile.userId);
       } else {
         // Not logged in - redirect to LINE login
+        console.log('⚠️ User not logged in to LINE');
         setIsLoggedIn(false);
       }
     } catch (err: any) {
-      console.error('LIFF initialization failed:', err);
+      console.error('❌ LIFF initialization failed:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
+      });
       setError(err.message || 'Failed to initialize LIFF');
     } finally {
+      console.log('🏁 LIFF initialization complete, setting isLoading to false');
       setIsLoading(false);
     }
   };

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { LiffProvider, useLiff } from '@/context/liff/liff.context';
 
 /**
@@ -78,8 +79,15 @@ export default function LiffLayout({
   children: React.ReactNode;
 }) {
   return (
-    <LiffProvider>
-      <LiffLayoutContent>{children}</LiffLayoutContent>
-    </LiffProvider>
+    <>
+      {/* Load LIFF SDK before anything else */}
+      <Script 
+        src="https://static.line-scdn.net/liff/edge/2/sdk.js" 
+        strategy="beforeInteractive"
+      />
+      <LiffProvider>
+        <LiffLayoutContent>{children}</LiffLayoutContent>
+      </LiffProvider>
+    </>
   );
 }
