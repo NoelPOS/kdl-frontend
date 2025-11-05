@@ -42,6 +42,13 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!isMounted || authInitialized) return;
 
+    // Skip auth initialization for LIFF routes (they use LINE auth)
+    if (pathname.startsWith("/liff")) {
+      setAuthInitialized(true);
+      setIsLoading(false);
+      return;
+    }
+
     const initializeAuth = async () => {
       try {
         // Get user from backend using HttpOnly cookie
@@ -63,7 +70,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     initializeAuth();
-  }, [isMounted, authInitialized]);
+  }, [isMounted, authInitialized, pathname]);
 
   // Check route permissions on pathname change
   useEffect(() => {
