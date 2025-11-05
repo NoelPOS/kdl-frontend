@@ -18,6 +18,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     "/forgot-password",
     "/unauthorized",
     "/not-found",
+    "/liff", // LIFF routes use LINE authentication, not admin auth
   ];
   
   // Check if current path is public route (exact match or starts with the route)
