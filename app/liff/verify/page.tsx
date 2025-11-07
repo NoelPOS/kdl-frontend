@@ -69,13 +69,14 @@ export default function LiffLoginPage() {
 
       setSuccess(true);
       
-      // Refresh parent profile
+      // Refresh parent profile and wait for it to complete
       await refreshParentProfile();
 
-      // Redirect to children page after 2 seconds
+      // Small delay to ensure state update, then redirect
       setTimeout(() => {
         router.push('/liff/children');
-      }, 2000);
+        router.refresh(); // Force refresh to pick up new state
+      }, 1500);
 
     } catch (err: any) {
       setError(err.message || 'Failed to verify account');

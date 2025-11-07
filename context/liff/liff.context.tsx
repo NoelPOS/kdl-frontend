@@ -117,6 +117,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const fetchParentProfile = async (lineUserId: string) => {
     try {
+      console.log('🔄 Fetching parent profile for LINE ID:', lineUserId);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/parents/profile?lineUserId=${lineUserId}`
       );
@@ -124,15 +125,19 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!response.ok) {
         if (response.status === 404) {
           // Parent not verified yet - this is okay, user will verify on login page
+          console.log('⚠️ Parent not verified yet (404)');
+          setParentProfile(null);
           return;
         }
         throw new Error('Failed to fetch parent profile');
       }
 
       const data = await response.json();
+      console.log('✅ Parent profile fetched:', data);
       setParentProfile(data);
     } catch (err: any) {
       console.error('Failed to fetch parent profile:', err);
+      setParentProfile(null);
       // Don't set error here - parent might not be verified yet
     }
   };
@@ -160,8 +165,13 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Refresh parent profile (call after verification)
    */
   const refreshParentProfile = async () => {
-    if (!profile) return;
+    if (!profile) {
+      console.log('⚠️ No profile available to refresh');
+      return;
+    }
+    console.log('🔄 Refreshing parent profile...');
     await fetchParentProfile(profile.userId);
+    console.log('✅ Parent profile refresh complete');
   };
 
   const value: LiffContextType = {
