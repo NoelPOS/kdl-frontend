@@ -21,6 +21,9 @@ interface Session {
   status: string;
   payment: string;
   classCancel: number;
+  completedCount: number;
+  totalScheduledCount: number;
+  canceledCount: number;
   course: {
     id: number;
     title: string;
@@ -67,6 +70,7 @@ export default function CoursesPage() {
       const data = await response.json();
       setSessions(data);
       
+      // Get student info from the first session if available
       if (data.length > 0 && data[0].student) {
         setStudent(data[0].student);
       }
@@ -95,9 +99,18 @@ export default function CoursesPage() {
   };
 
   const getCompletedClasses = (session: Session) => {
-    // TODO: Fetch actual schedule count from backend
-    // For now, return placeholder
-    return 1;
+    // Return the completed count from backend
+    return session.completedCount || 0;
+  };
+
+  const getTotalClasses = (session: Session) => {
+    // Return the class count from class option
+    return session.classOption?.classCount || 0;
+  };
+
+  const getCanceledClasses = (session: Session) => {
+    // Return the canceled count from backend
+    return session.canceledCount || 0;
   };
 
   const getStatusColor = (status: string) => {
@@ -176,7 +189,8 @@ export default function CoursesPage() {
           <div className="grid grid-cols-2 gap-3">
             {sessions.map((session) => {
               const completed = getCompletedClasses(session);
-              const total = session.classOption.classCount;
+              const total = getTotalClasses(session);
+              const canceled = getCanceledClasses(session);
 
               return (
                 <button
@@ -210,7 +224,7 @@ export default function CoursesPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>{session.classCancel} class cancel</span>
+                    <span>{canceled} class cancel</span>
                   </div>
                 </button>
               );
@@ -222,13 +236,19 @@ export default function CoursesPage() {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="flex justify-around items-center py-3">
-          <button className="flex flex-col items-center gap-1 text-yellow-500">
+          <button 
+            onClick={() => router.push(`/liff/my-courses?studentId=${studentId}`)}
+            className="flex flex-col items-center gap-1 text-yellow-500"
+          >
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
             <span className="text-xs font-medium">Courses</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-gray-400">
+          <button 
+            onClick={() => router.push(`/liff/schedules?studentId=${studentId}`)}
+            className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

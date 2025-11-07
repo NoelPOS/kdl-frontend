@@ -22,28 +22,27 @@ interface ScheduleDetail {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'upcoming' | 'completed' | 'cancelled';
-  attendance?: 'present' | 'absent' | 'pending';
+  room: string;
+  attendance: string;
   feedback?: string;
-  homework?: string;
+  remark?: string;
   session: {
     id: number;
-    courseName: string;
-    student: {
-      id: number;
-      firstName: string;
-      lastName: string;
-      profilePicture?: string;
-    };
+  };
+  student: {
+    id: number;
+    name: string;
+    nickname: string;
+    profilePicture?: string;
   };
   teacher: {
     id: number;
     name: string;
     profilePicture?: string;
-  };
-  room?: {
+  } | null;
+  course: {
     id: number;
-    name: string;
+    title: string;
   };
 }
 
@@ -64,12 +63,7 @@ export default function ScheduleDetailPage() {
       setLoading(true);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${profile?.userId}`,
-          },
-        }
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}`
       );
 
       if (!response.ok) throw new Error('Failed to fetch schedule');
@@ -97,11 +91,13 @@ export default function ScheduleDetailPage() {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}/confirm`,
         {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${profile?.userId}`,
           },
+          body: JSON.stringify({
+            attendance: 'confirmed',
+          }),
         }
       );
 
@@ -125,29 +121,29 @@ export default function ScheduleDetailPage() {
   const handleReschedule = async () => {
     if (!schedule) return;
 
-    // In a real implementation, this would open a modal or navigate to a reschedule page
-    // For now, we'll send a message to the bot
     try {
       setSubmitting(true);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}/reschedule`,
         {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${profile?.userId}`,
           },
+          body: JSON.stringify({
+            attendance: 'cancelled',
+          }),
         }
       );
 
       if (!response.ok) throw new Error('Failed to request reschedule');
 
-      alert('Reschedule request sent! Our team will contact you shortly.');
+      alert('Schedule has been cancelled. Please contact us to reschedule.');
       router.back();
     } catch (error) {
       console.error('Error requesting reschedule:', error);
-      alert('Failed to send reschedule request. Please try again.');
+      alert('Failed to cancel schedule. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -155,7 +151,7 @@ export default function ScheduleDetailPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', {
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -164,7 +160,21 @@ export default function ScheduleDetailPage() {
   };
 
   const formatTime = (time: string) => {
+    if (!time) return 'TBD';
     return time.substring(0, 5); // "HH:MM"
+  };
+
+  // Determine schedule status based on date and attendance
+  const getScheduleStatus = () => {
+    if (!schedule) return { isUpcoming: false, isCompleted: false, isCancelled: false };
+    
+    const scheduleDate = new Date(schedule.date);
+    const now = new Date();
+    const isCancelled = schedule.attendance === 'cancelled';
+    const isCompleted = schedule.attendance === 'completed' || scheduleDate < now;
+    const isUpcoming = !isCompleted && !isCancelled;
+
+    return { isUpcoming, isCompleted, isCancelled };
   };
 
   if (loading) {
@@ -211,9 +221,7 @@ export default function ScheduleDetailPage() {
     );
   }
 
-  const isUpcoming = schedule.status === 'upcoming';
-  const isCompleted = schedule.status === 'completed';
-  const isCancelled = schedule.status === 'cancelled';
+  const { isUpcoming, isCompleted, isCancelled } = getScheduleStatus();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -229,7 +237,7 @@ export default function ScheduleDetailPage() {
             </button>
             <div className="flex-1">
               <h1 className="text-lg font-semibold">Schedule Details</h1>
-              <p className="text-sm text-gray-600">{schedule.session.courseName}</p>
+              <p className="text-sm text-gray-600">{schedule.course?.title}</p>
             </div>
           </div>
         </div>
@@ -240,10 +248,10 @@ export default function ScheduleDetailPage() {
         {/* Student Card */}
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
-            {schedule.session.student.profilePicture ? (
+            {schedule.student?.profilePicture ? (
               <Image
-                src={schedule.session.student.profilePicture}
-                alt={schedule.session.student.firstName}
+                src={schedule.student.profilePicture}
+                alt={schedule.student.name}
                 width={48}
                 height={48}
                 className="w-12 h-12 rounded-full object-cover"
@@ -255,9 +263,9 @@ export default function ScheduleDetailPage() {
             )}
             <div>
               <p className="font-semibold text-gray-900">
-                {schedule.session.student.firstName} {schedule.session.student.lastName}
+                {schedule.student?.name}
               </p>
-              <p className="text-sm text-gray-600">{schedule.session.courseName}</p>
+              <p className="text-sm text-gray-600">{schedule.course?.title}</p>
             </div>
           </div>
         </div>
@@ -278,11 +286,8 @@ export default function ScheduleDetailPage() {
             <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
             <div>
               <p className="font-semibold text-green-900">Class completed</p>
-              {schedule.attendance === 'present' && (
+              {schedule.attendance === 'completed' && (
                 <p className="text-sm text-green-700">Student attended</p>
-              )}
-              {schedule.attendance === 'absent' && (
-                <p className="text-sm text-red-700">Student was absent</p>
               )}
             </div>
           </div>
@@ -309,72 +314,70 @@ export default function ScheduleDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm text-gray-600">Teacher</p>
-                <div className="flex items-center gap-2 mt-1">
-                  {schedule.teacher.profilePicture ? (
-                    <Image
-                      src={schedule.teacher.profilePicture}
-                      alt={schedule.teacher.name}
-                      width={32}
-                      height={32}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-600" />
-                    </div>
-                  )}
-                  <p className="font-medium text-gray-900">{schedule.teacher.name}</p>
+            {schedule.teacher && (
+              <div className="flex items-start gap-3">
+                <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-gray-600">Teacher</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {schedule.teacher.profilePicture ? (
+                      <Image
+                        src={schedule.teacher.profilePicture}
+                        alt={schedule.teacher.name}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <User className="w-4 h-4 text-gray-600" />
+                      </div>
+                    )}
+                    <p className="font-medium text-gray-900">{schedule.teacher.name}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {schedule.room && (
+            {schedule.room && schedule.room !== 'TBD' && (
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-medium text-gray-900">{schedule.room.name}</p>
+                  <p className="font-medium text-gray-900">{schedule.room}</p>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Feedback & Homework (for completed classes) */}
-        {isCompleted && (
-          <>
-            {schedule.feedback && (
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="flex items-start gap-3">
-                  <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 mb-2">Teacher&apos;s Feedback</p>
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {schedule.feedback}
-                    </p>
-                  </div>
-                </div>
+        {/* Feedback (for completed classes) */}
+        {isCompleted && schedule.feedback && (
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-start gap-3">
+              <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900 mb-2">Feedback</p>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  {schedule.feedback || 'No feedback'}
+                </p>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {schedule.homework && (
-              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                <div className="flex items-start gap-3">
-                  <Edit className="w-5 h-5 text-amber-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-amber-900 mb-2">Homework</p>
-                    <p className="text-amber-800 text-sm leading-relaxed">
-                      {schedule.homework}
-                    </p>
-                  </div>
-                </div>
+        {!isCompleted && !schedule.feedback && (
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="flex items-start gap-3">
+              <MessageSquare className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900 mb-2">Feedback</p>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  No feedback
+                </p>
               </div>
-            )}
-          </>
+            </div>
+          </div>
         )}
       </div>
 
