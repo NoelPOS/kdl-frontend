@@ -119,7 +119,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔄 Fetching parent profile for LINE ID:', lineUserId);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/profile?lineUserId=${lineUserId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/profile?lineUserId=${lineUserId}`
       );
 
       if (!response.ok) {

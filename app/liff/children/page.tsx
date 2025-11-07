@@ -47,7 +47,7 @@ export default function ChildrenPage() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentProfile.id}/children?limit=100`
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/${parentProfile.id}/children?limit=100`
       );
 
       if (!response.ok) {

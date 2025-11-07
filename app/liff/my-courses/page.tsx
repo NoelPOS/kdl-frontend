@@ -57,7 +57,7 @@ export default function CoursesPage() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/students/${studentId}/sessions`
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/students/${studentId}/sessions`
       );
 
       if (!response.ok) {

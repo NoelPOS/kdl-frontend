@@ -47,7 +47,7 @@ export default function LiffLoginPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/verify`,
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/verify`,
         {
           method: 'POST',
           headers: {

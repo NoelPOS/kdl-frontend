@@ -64,7 +64,7 @@ export default function ScheduleDetailPage() {
       setLoading(true);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/schedules/${scheduleId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}`,
         {
           headers: {
             'Authorization': `Bearer ${profile?.userId}`,
@@ -95,7 +95,7 @@ export default function ScheduleDetailPage() {
       setSubmitting(true);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/schedules/${scheduleId}/confirm`,
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}/confirm`,
         {
           method: 'POST',
           headers: {
@@ -131,7 +131,7 @@ export default function ScheduleDetailPage() {
       setSubmitting(true);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parents/schedules/${scheduleId}/reschedule`,
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}/reschedule`,
         {
           method: 'POST',
           headers: {
