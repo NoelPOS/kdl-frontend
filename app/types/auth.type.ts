@@ -15,6 +15,7 @@ export interface AuthUser {
 export interface AuthResponse {
   user: AuthUser;
   accessToken: string;
+  useCookies?: boolean; // True if backend uses HttpOnly cookies (EC2), false if using headers (Vercel)
 }
 
 export interface DecodedToken {

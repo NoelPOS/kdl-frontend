@@ -132,8 +132,17 @@ clientApi.interceptors.request.use(
       console.log("withCredentials:", config.withCredentials);
     }
 
-    // HttpOnly cookies are automatically sent with withCredentials: true
-    // No manual Authorization header needed - backend validates the cookie
+    // Check if we're using cookie-based or header-based auth
+    // authStorage is imported at the top of this file
+    const { authStorage } = require('@/lib/auth-storage');
+    const token = authStorage.getToken();
+    
+    if (token) {
+      // Vercel: Use Authorization header
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    // EC2: HttpOnly cookies are automatically sent with withCredentials: true
+    
     return config;
   },
   (error) => {

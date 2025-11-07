@@ -8,6 +8,7 @@ import {
   isProtectedRoute,
 } from "@/lib/jwt";
 import { getCurrentUser as apiGetCurrentUser, logout as apiLogout } from "@/lib/api/auth";
+import { authStorage } from "@/lib/auth-storage";
 
 interface AuthContextProps {
   user: AuthUser | null;
@@ -127,7 +128,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("Invalid authentication response");
       }
 
-      // HttpOnly cookie is set by backend automatically
+      // Save auth based on backend environment (cookie vs header-based)
+      const useCookies = response.useCookies ?? true; // Default to true for backward compatibility
+      authStorage.saveAuth(response.accessToken, useCookies);
+
       setUser(response.user);
 
       // Redirect to appropriate dashboard
@@ -141,13 +145,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      // Call API to clear HttpOnly cookie on backend
+      // Call API to clear HttpOnly cookie on backend (if using cookies)
       await apiLogout();
     } catch (error) {
       console.error("Logout error:", error);
       // Continue with logout even if backend call fails
     } finally {
-      // Always clear user state and redirect
+      // Always clear auth storage (tokens/cookies flag)
+      authStorage.clearAuth();
       setUser(null);
       router.push("/login");
     }
