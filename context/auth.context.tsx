@@ -33,6 +33,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false); // NEW: Track login in progress
 
   // Ensure component is mounted before accessing browser APIs
   useEffect(() => {
@@ -75,7 +76,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Check route permissions on pathname change
   useEffect(() => {
-    if (!authInitialized || isLoading) {
+    if (!authInitialized || isLoading || isLoggingIn) {
+      // Skip route guard if still initializing or login is in progress
       return;
     }
     
@@ -128,17 +130,26 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("Invalid authentication response");
       }
 
+      // Mark login as in progress to prevent route guard from interfering
+      setIsLoggingIn(true);
+
       // Save auth based on backend environment (cookie vs header-based)
       const useCookies = response.useCookies ?? true; // Default to true for backward compatibility
       authStorage.saveAuth(response.accessToken, useCookies);
 
+      // Set user state
       setUser(response.user);
 
-      // Redirect to appropriate dashboard
-      const defaultRoute = getDefaultRouteForRole(response.user.role);
-      router.push(defaultRoute);
+      // Wait for next tick to ensure state is updated, then navigate
+      setTimeout(() => {
+        const defaultRoute = getDefaultRouteForRole(response.user.role);
+        router.push(defaultRoute);
+        // Clear login flag after navigation
+        setIsLoggingIn(false);
+      }, 0);
     } catch (error) {
       console.error("Error during login:", error);
+      setIsLoggingIn(false);
       logout();
     }
   };
