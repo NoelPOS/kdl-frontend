@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from "axios";
+import { authStorage } from '@/lib/auth-storage';
 
 // Global error handler function
 const handleGlobalError = (error: any) => {
@@ -133,8 +134,6 @@ clientApi.interceptors.request.use(
     }
 
     // Check if we're using cookie-based or header-based auth
-    // authStorage is imported at the top of this file
-    const { authStorage } = require('@/lib/auth-storage');
     const token = authStorage.getToken();
     
     if (token) {
