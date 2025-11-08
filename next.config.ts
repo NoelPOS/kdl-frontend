@@ -9,6 +9,33 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker
   output: "standalone",
 
+  // Security headers including CSP for LIFF SDK
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.line-scdn.net",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https: blob:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://api.line.me https://*.line.me https://access.line.me https://*.amazonaws.com https://registrar.kiddeelab.co.th wss://*.line.me",
+              "frame-src 'self' https://access.line.me",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
+        ],
+      },
+    ];
+  },
+
   images: {
     // Modern remotePatterns configuration (replaces deprecated domains)
     remotePatterns: [

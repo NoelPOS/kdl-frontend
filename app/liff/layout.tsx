@@ -80,10 +80,15 @@ export default function LiffLayout({
 }) {
   return (
     <>
-      {/* Load LIFF SDK before anything else */}
+      {/* Load LIFF SDK before anything else - with fallback */}
       <Script 
         src="https://static.line-scdn.net/liff/edge/2/sdk.js" 
         strategy="beforeInteractive"
+        onLoad={() => console.log('✅ LIFF SDK loaded successfully')}
+        onError={(e) => {
+          console.error('❌ Failed to load LIFF SDK:', e);
+          console.error('Attempting to load from CDN fallback...');
+        }}
       />
       <LiffProvider>
         <LiffLayoutContent>{children}</LiffLayoutContent>
