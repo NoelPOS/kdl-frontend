@@ -81,6 +81,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
           NEXT_PUBLIC_AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
+          NEXT_PUBLIC_LIFF_ID="2008403698-g6d9DA22"
+          NEXT_PUBLIC_API_URL="https://registrar.kiddeelab.co.th/api/v1"
           EOF
           
           # Stop frontend container
