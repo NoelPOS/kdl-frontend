@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import liff from '@line/liff';
 
 /**
  * LIFF Context
@@ -12,14 +13,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
  * - Validates LIFF initialization before allowing access
  * - Provides parent profile after verification
  */
-
-// Dynamically import liff to avoid SSR issues
-const getLiff = () => {
-  if (typeof window !== 'undefined') {
-    return (window as any).liff;
-  }
-  return null;
-};
 
 // Define LIFF Profile type manually (LINE LIFF SDK doesn't export it)
 interface LiffProfile {
@@ -76,12 +69,6 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!liffId) {
         throw new Error('LIFF ID is not configured');
-      }
-
-      // Get LIFF from window object
-      const liff = getLiff();
-      if (!liff) {
-        throw new Error('LIFF SDK not loaded. Please wait for the script to load.');
       }
 
       // Initialize LIFF
@@ -171,10 +158,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const login = () => {
     if (!isInitialized) return;
-    const liff = getLiff();
-    if (liff) {
-      liff.login();
-    }
+    liff.login();
   };
 
   /**
@@ -182,13 +166,10 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const logout = () => {
     if (!isInitialized) return;
-    const liff = getLiff();
-    if (liff) {
-      liff.logout();
-      setIsLoggedIn(false);
-      setProfile(null);
-      setParentProfile(null);
-    }
+    liff.logout();
+    setIsLoggedIn(false);
+    setProfile(null);
+    setParentProfile(null);
   };
 
   /**
@@ -235,8 +216,7 @@ export const useLiff = () => {
  */
 export const isInLiffBrowser = (): boolean => {
   if (typeof window === 'undefined') return false;
-  const liff = getLiff();
-  return liff ? liff.isInClient() : false;
+  return liff.isInClient();
 };
 
 /**
@@ -244,6 +224,5 @@ export const isInLiffBrowser = (): boolean => {
  */
 export const getLiffContext = () => {
   if (typeof window === 'undefined') return null;
-  const liff = getLiff();
-  return liff ? liff.getContext() : null;
+  return liff.getContext();
 };
