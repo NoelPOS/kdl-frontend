@@ -22,7 +22,7 @@ import Image from 'next/image';
  */
 
 export default function LiffLoginPage() {
-  const { profile, refreshParentProfile } = useLiff();
+  const { profile, refreshParentProfile, isLoading, isLoggedIn, error: liffError } = useLiff();
   const router = useRouter();
   
   const [formData, setFormData] = useState({
@@ -33,6 +33,89 @@ export default function LiffLoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Show loading state while LIFF is initializing
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
+          <p className="text-gray-600 font-medium">Initializing LINE...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if LIFF initialization failed
+  if (liffError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <span className="text-3xl">❌</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">LIFF Initialization Failed</h2>
+            <p className="text-gray-600 text-sm mb-4">
+              {liffError}
+            </p>
+            <p className="text-xs text-gray-500">
+              Please open this page from LINE app
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if not logged in to LINE
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-yellow-50 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Logged In</h2>
+            <p className="text-gray-600 text-sm mb-4">
+              Please log in to LINE to continue
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if profile is not available
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <span className="text-3xl">❌</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">LINE Profile Not Available</h2>
+            <p className="text-gray-600 text-sm mb-4">
+              Failed to retrieve your LINE profile. This may be due to:
+            </p>
+            <ul className="text-left text-sm text-gray-600 space-y-2 mb-4">
+              <li>• LIFF app configuration issue</li>
+              <li>• Network connectivity problem</li>
+              <li>• LINE app permissions</li>
+            </ul>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-lg"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

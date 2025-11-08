@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import liff from '@line/liff';
 
 /**
  * LIFF Context
@@ -13,6 +12,14 @@ import liff from '@line/liff';
  * - Validates LIFF initialization before allowing access
  * - Provides parent profile after verification
  */
+
+// Dynamically import liff to avoid SSR issues
+const getLiff = () => {
+  if (typeof window !== 'undefined') {
+    return (window as any).liff;
+  }
+  return null;
+};
 
 // Define LIFF Profile type manually (LINE LIFF SDK doesn't export it)
 interface LiffProfile {
@@ -71,6 +78,12 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('LIFF ID is not configured');
       }
 
+      // Get LIFF from window object
+      const liff = getLiff();
+      if (!liff) {
+        throw new Error('LIFF SDK not loaded. Please wait for the script to load.');
+      }
+
       // Initialize LIFF
       console.log('📱 Calling liff.init()...');
       await liff.init({ liffId });
@@ -86,13 +99,24 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Get LINE profile
         console.log('👤 Getting LINE profile...');
-        const userProfile = await liff.getProfile();
-        console.log('✅ LINE profile retrieved:', userProfile);
-        setProfile(userProfile);
+        try {
+          const userProfile = await liff.getProfile();
+          console.log('✅ LINE profile retrieved:', userProfile);
+          
+          if (!userProfile || !userProfile.userId) {
+            throw new Error('LINE profile is invalid or missing userId');
+          }
+          
+          setProfile(userProfile);
 
-        // Fetch parent profile from backend
-        console.log('🔍 Fetching parent profile...');
-        await fetchParentProfile(userProfile.userId);
+          // Fetch parent profile from backend
+          console.log('🔍 Fetching parent profile...');
+          await fetchParentProfile(userProfile.userId);
+        } catch (profileError: any) {
+          console.error('❌ Failed to get LINE profile:', profileError);
+          setError(`Failed to get LINE profile: ${profileError.message}`);
+          setProfile(null);
+        }
       } else {
         // Not logged in - redirect to LINE login
         console.log('⚠️ User not logged in to LINE');
@@ -147,7 +171,10 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const login = () => {
     if (!isInitialized) return;
-    liff.login();
+    const liff = getLiff();
+    if (liff) {
+      liff.login();
+    }
   };
 
   /**
@@ -155,10 +182,13 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const logout = () => {
     if (!isInitialized) return;
-    liff.logout();
-    setIsLoggedIn(false);
-    setProfile(null);
-    setParentProfile(null);
+    const liff = getLiff();
+    if (liff) {
+      liff.logout();
+      setIsLoggedIn(false);
+      setProfile(null);
+      setParentProfile(null);
+    }
   };
 
   /**
@@ -205,7 +235,8 @@ export const useLiff = () => {
  */
 export const isInLiffBrowser = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return liff.isInClient();
+  const liff = getLiff();
+  return liff ? liff.isInClient() : false;
 };
 
 /**
@@ -213,5 +244,6 @@ export const isInLiffBrowser = (): boolean => {
  */
 export const getLiffContext = () => {
   if (typeof window === 'undefined') return null;
-  return liff.getContext();
+  const liff = getLiff();
+  return liff ? liff.getContext() : null;
 };
