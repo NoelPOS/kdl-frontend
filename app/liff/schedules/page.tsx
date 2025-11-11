@@ -107,6 +107,15 @@ export default function SchedulesPage() {
     router.push(`/liff/schedule/${scheduleId}?studentId=${studentId}`);
   };
 
+  // Helper to get local date string (YYYY-MM-DD) without timezone conversion
+  const getLocalDateString = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Calendar functions
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -120,9 +129,9 @@ export default function SchedulesPage() {
   };
 
   const hasScheduleOnDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(date);
     return schedules.some(schedule => {
-      const scheduleDate = new Date(schedule.date).toISOString().split('T')[0];
+      const scheduleDate = getLocalDateString(schedule.date);
       return scheduleDate === dateStr;
     });
   };
@@ -142,9 +151,9 @@ export default function SchedulesPage() {
 
     // Filter by selected date if one is selected
     if (selectedDate) {
-      const selectedDateStr = selectedDate.toISOString().split('T')[0];
+      const selectedDateStr = getLocalDateString(selectedDate);
       filtered = filtered.filter(schedule => {
-        const scheduleDate = new Date(schedule.date).toISOString().split('T')[0];
+        const scheduleDate = getLocalDateString(schedule.date);
         return scheduleDate === selectedDateStr;
       });
     }

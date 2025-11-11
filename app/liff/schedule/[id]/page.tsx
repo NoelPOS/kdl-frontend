@@ -33,6 +33,7 @@ interface ScheduleDetail {
     id: number;
     name: string;
     nickname: string;
+    studentId: string;
     profilePicture?: string;
   };
   teacher: {
@@ -91,13 +92,10 @@ export default function ScheduleDetailPage() {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}/confirm`,
         {
-          method: 'PUT',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            attendance: 'confirmed',
-          }),
         }
       );
 
@@ -127,19 +125,16 @@ export default function ScheduleDetailPage() {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/schedules/${scheduleId}/reschedule`,
         {
-          method: 'PUT',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            attendance: 'cancelled',
-          }),
         }
       );
 
       if (!response.ok) throw new Error('Failed to request reschedule');
 
-      alert('Schedule has been cancelled. Please contact us to reschedule.');
+      alert('Schedule has been cancelled. A replacement class will be arranged. Our team will contact you soon.');
       router.back();
     } catch (error) {
       console.error('Error requesting reschedule:', error);
@@ -224,192 +219,188 @@ export default function ScheduleDetailPage() {
   const { isUpcoming, isCompleted, isCancelled } = getScheduleStatus();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="p-1 hover:bg-gray-100 rounded-full"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold">Schedule Details</h1>
-              <p className="text-sm text-gray-600">{schedule.course?.title}</p>
-            </div>
-          </div>
+      <div className="bg-white border-b">
+        <div className="px-4 py-3">
+          <button
+            onClick={() => router.back()}
+            className="text-gray-600 hover:text-gray-900 text-sm"
+          >
+            ← Back
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-4">
-        {/* Student Card */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
+      <div className="px-4 py-4 space-y-4">
+        {/* Student Profile Card */}
+        <div className="bg-white rounded-lg p-4">
           <div className="flex items-center gap-3">
             {schedule.student?.profilePicture ? (
               <Image
                 src={schedule.student.profilePicture}
                 alt={schedule.student.name}
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-full object-cover"
+                width={60}
+                height={60}
+                className="w-15 h-15 rounded-full object-cover"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="w-6 h-6 text-blue-600" />
+              <div className="w-15 h-15 rounded-full bg-blue-100 flex items-center justify-center">
+                <User className="w-8 h-8 text-blue-600" />
               </div>
             )}
             <div>
-              <p className="font-semibold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900">
                 {schedule.student?.name}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {schedule.student?.studentId || ''}
               </p>
-              <p className="text-sm text-gray-600">{schedule.course?.title}</p>
             </div>
           </div>
+        </div>
+
+        {/* Last Update Info */}
+        <p className="text-xs text-gray-500 px-2">
+          Data last updated at {new Date().toLocaleDateString('en-GB', { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric' 
+          })} {new Date().toLocaleTimeString('en-GB', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })} hrs.
+        </p>
+
+        {/* Course Name */}
+        <div className="bg-white rounded-lg p-4">
+          <h3 className="text-lg font-bold text-gray-900">
+            {schedule.course?.title}
+          </h3>
         </div>
 
         {/* Status Badge */}
         {isCancelled && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-            <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-red-900">This class has been cancelled</p>
-              <p className="text-sm text-red-700">Please contact us for more information</p>
-            </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm font-medium text-red-900">⚠️ This class has been cancelled</p>
           </div>
         )}
 
         {isCompleted && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-green-900">Class completed</p>
-              {schedule.attendance === 'completed' && (
-                <p className="text-sm text-green-700">Student attended</p>
-              )}
-            </div>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm font-medium text-green-900">✓ Class completed</p>
           </div>
         )}
 
-        {/* Schedule Info */}
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="p-4 space-y-4">
+        {/* Schedule Information */}
+        <div className="bg-white rounded-lg p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-gray-600">Date</p>
+              <p className="font-medium text-gray-900">{formatDate(schedule.date)}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <Clock className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-gray-600">Time</p>
+              <p className="font-medium text-gray-900">
+                {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} Hrs.
+              </p>
+            </div>
+          </div>
+
+          {schedule.room && schedule.room !== 'TBD' && (
             <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-600">Date</p>
-                <p className="font-medium text-gray-900">{formatDate(schedule.date)}</p>
+              <MapPin className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-gray-600">Location</p>
+                <p className="font-medium text-gray-900">{schedule.room}</p>
               </div>
             </div>
+          )}
 
+          {schedule.teacher && (
             <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-600">Time</p>
-                <p className="font-medium text-gray-900">
-                  {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                </p>
+              <User className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-gray-600">Teacher</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {schedule.teacher.profilePicture ? (
+                    <Image
+                      src={schedule.teacher.profilePicture}
+                      alt={schedule.teacher.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                  )}
+                  <p className="font-medium text-gray-900">{schedule.teacher.name}</p>
+                </div>
               </div>
             </div>
+          )}
 
-            {schedule.teacher && (
-              <div className="flex items-start gap-3">
-                <User className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">Teacher</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {schedule.teacher.profilePicture ? (
-                      <Image
-                        src={schedule.teacher.profilePicture}
-                        alt={schedule.teacher.name}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User className="w-4 h-4 text-gray-600" />
-                      </div>
-                    )}
-                    <p className="font-medium text-gray-900">{schedule.teacher.name}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {schedule.room && schedule.room !== 'TBD' && (
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-medium text-gray-900">{schedule.room}</p>
-                </div>
-              </div>
-            )}
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-gray-600">Status</p>
+              <p className="font-medium text-gray-900 capitalize">
+                {schedule.attendance === 'pending' ? 'Pending' : 
+                 schedule.attendance === 'confirmed' ? 'Confirmed' : 
+                 schedule.attendance === 'completed' ? 'Completed' : 
+                 schedule.attendance === 'cancelled' ? 'Cancelled' : 
+                 'Pending'}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Feedback (for completed classes) */}
-        {isCompleted && schedule.feedback && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-start gap-3">
-              <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 mb-2">Feedback</p>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  {schedule.feedback || 'No feedback'}
-                </p>
-              </div>
-            </div>
+        {/* Feedback Area */}
+        <div className="bg-white rounded-lg p-4">
+          <div className="flex items-start gap-2 mb-2">
+            <MessageSquare className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm font-semibold text-gray-700">Feedback</p>
           </div>
-        )}
-
-        {!isCompleted && !schedule.feedback && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-start gap-3">
-              <MessageSquare className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 mb-2">Feedback</p>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  No feedback
-                </p>
-              </div>
-            </div>
+          <div className="bg-gray-50 rounded-lg p-3 min-h-[100px] border border-gray-200">
+            {schedule.feedback ? (
+              <p className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap">
+                {schedule.feedback}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 italic">No feedback</p>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Action Buttons (for upcoming classes only) */}
       {isUpcoming && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 space-y-3">
-          <button
-            onClick={handleConfirm}
-            disabled={submitting}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-          >
-            {submitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Confirming...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-5 h-5" />
-                <span>Confirm Attendance</span>
-              </>
-            )}
-          </button>
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
+          <div className="flex gap-3">
+            <button
+              onClick={handleReschedule}
+              disabled={submitting}
+              className="flex-1 bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {submitting ? 'Processing...' : 'Reschedule'}
+            </button>
 
-          <button
-            onClick={handleReschedule}
-            disabled={submitting}
-            className="w-full bg-white text-gray-700 py-3 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-          >
-            <Edit className="w-5 h-5" />
-            <span>Request Reschedule</span>
-          </button>
+            <button
+              onClick={handleConfirm}
+              disabled={submitting}
+              className="flex-1 bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {submitting ? 'Processing...' : 'Confirm'}
+            </button>
+          </div>
         </div>
       )}
     </div>
