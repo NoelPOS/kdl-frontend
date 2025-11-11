@@ -108,7 +108,8 @@ export default function SchedulesPage() {
   };
 
   // Helper to get local date string (YYYY-MM-DD) without timezone conversion
-  const getLocalDateString = (date: Date | string) => {
+  const getLocalDateString = (date: Date | string | null) => {
+    if (!date) return null;
     const d = typeof date === 'string' ? new Date(date) : date;
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -131,6 +132,7 @@ export default function SchedulesPage() {
   const hasScheduleOnDate = (date: Date) => {
     const dateStr = getLocalDateString(date);
     return schedules.some(schedule => {
+      if (!schedule.date) return false; // Skip schedules with null dates
       const scheduleDate = getLocalDateString(schedule.date);
       return scheduleDate === dateStr;
     });
@@ -153,6 +155,7 @@ export default function SchedulesPage() {
     if (selectedDate) {
       const selectedDateStr = getLocalDateString(selectedDate);
       filtered = filtered.filter(schedule => {
+        if (!schedule.date) return false; // Skip schedules with null dates
         const scheduleDate = getLocalDateString(schedule.date);
         return scheduleDate === selectedDateStr;
       });
@@ -161,6 +164,7 @@ export default function SchedulesPage() {
     // Filter by tab (upcoming/completed)
     const now = new Date();
     filtered = filtered.filter(schedule => {
+      if (!schedule.date) return false; // Skip schedules with null dates
       const scheduleDate = new Date(schedule.date);
       const isCompleted = schedule.attendance === 'completed' || scheduleDate < now;
       
@@ -172,6 +176,10 @@ export default function SchedulesPage() {
     });
 
     return filtered.sort((a, b) => {
+      // Handle null dates - put them at the end
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      
       const dateA = new Date(a.date + ' ' + a.startTime);
       const dateB = new Date(b.date + ' ' + b.startTime);
       return activeTab === 'upcoming' 
@@ -428,6 +436,9 @@ export default function SchedulesPage() {
         ) : (
           <div className="space-y-3">
             {filteredSchedules.map((schedule) => {
+              // Safety check for null dates (should be filtered out already)
+              if (!schedule.date) return null;
+              
               const scheduleDate = new Date(schedule.date);
               const month = scheduleDate.toLocaleDateString('en-US', { month: 'short' });
               const day = scheduleDate.getDate();

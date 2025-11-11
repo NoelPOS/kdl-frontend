@@ -144,7 +144,8 @@ export default function ScheduleDetailPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Date TBD';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -162,6 +163,13 @@ export default function ScheduleDetailPage() {
   // Determine schedule status based on date and attendance
   const getScheduleStatus = () => {
     if (!schedule) return { isUpcoming: false, isCompleted: false, isCancelled: false };
+    
+    // Handle null dates (replacement schedules)
+    if (!schedule.date) {
+      const isCancelled = schedule.attendance === 'cancelled';
+      const isUpcoming = !isCancelled && schedule.attendance === 'pending';
+      return { isUpcoming, isCompleted: false, isCancelled };
+    }
     
     const scheduleDate = new Date(schedule.date);
     const now = new Date();
