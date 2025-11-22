@@ -124,10 +124,14 @@ export function getDefaultRouteForRole(role: UserRole): string {
  * Get user from server-side using HttpOnly cookie
  * This calls the backend /auth/me endpoint
  */
-export async function getServerSideUser() {
+/**
+ * Get user from server-side using HttpOnly cookie
+ * This calls the backend /auth/me endpoint
+ */
+export async function getServerSideUser(accessToken?: string) {
   try {
-    const { getCurrentUser } = await import('./api/auth');
-    const user = await getCurrentUser();
+    const { getServerCurrentUser } = await import('./api/auth');
+    const user = await getServerCurrentUser(accessToken);
     return user;
   } catch (error) {
     console.error('Failed to get server-side user:', error);
@@ -139,7 +143,6 @@ export async function getServerSideUser() {
  * Get user from token by calling backend /auth/me
  * Note: We don't decode tokens client-side, we use HttpOnly cookies
  */
-export async function getUserFromToken(_token?: string) {
-  // Same as getServerSideUser - we rely on HttpOnly cookies
-  return getServerSideUser();
+export async function getUserFromToken(token?: string) {
+  return getServerSideUser(token);
 }
