@@ -19,11 +19,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.line-scdn.net",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.line-scdn.net https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.line.me https://*.line.me https://access.line.me https://*.line-scdn.net https://*.amazonaws.com https://registrar.kiddeelab.co.th wss://*.line.me",
+              "connect-src 'self' https://api.line.me https://*.line.me https://access.line.me https://*.line-scdn.net https://*.amazonaws.com https://registrar.kiddeelab.co.th https://cloudflareinsights.com https://*.cloudflareinsights.com wss://*.line.me",
               "frame-src 'self' https://access.line.me",
               "object-src 'none'",
               "base-uri 'self'",
