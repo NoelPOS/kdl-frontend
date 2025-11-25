@@ -37,16 +37,22 @@ export default function EditFeedbackDialog({
   const [originalFeedbackText, setOriginalFeedbackText] = useState("");
   const [mediaImages, setMediaImages] = useState<string[]>([]);
   const [mediaVideos, setMediaVideos] = useState<string[]>([]);
+  const [originalMediaImages, setOriginalMediaImages] = useState<string[]>([]);
+  const [originalMediaVideos, setOriginalMediaVideos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (feedback && open) {
       const originalText = feedback.feedback || "";
+      const originalImages = feedback.feedbackImages || [];
+      const originalVideos = feedback.feedbackVideos || [];
       setFeedbackText(originalText);
       setOriginalFeedbackText(originalText);
-      setMediaImages(feedback.feedbackImages || []);
-      setMediaVideos(feedback.feedbackVideos || []);
+      setMediaImages(originalImages);
+      setMediaVideos(originalVideos);
+      setOriginalMediaImages(originalImages);
+      setOriginalMediaVideos(originalVideos);
       setNewFiles([]);
     }
   }, [feedback, open]);
@@ -58,6 +64,8 @@ export default function EditFeedbackDialog({
       setOriginalFeedbackText("");
       setMediaImages([]);
       setMediaVideos([]);
+      setOriginalMediaImages([]);
+      setOriginalMediaVideos([]);
       setNewFiles([]);
       setIsSubmitting(false);
     }
@@ -80,6 +88,34 @@ export default function EditFeedbackDialog({
 
     setIsSubmitting(true);
     try {
+      // Identify removed files
+      const removedImages = originalMediaImages.filter(url => !mediaImages.includes(url));
+      const removedVideos = originalMediaVideos.filter(url => !mediaVideos.includes(url));
+      const removedFiles = [...removedImages, ...removedVideos];
+
+      // Delete removed files from S3
+      if (removedFiles.length > 0) {
+        console.log('Deleting removed files:', removedFiles);
+        const deletePromises = removedFiles.map(async (url) => {
+          try {
+            const response = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
+              {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url }),
+              }
+            );
+            if (!response.ok) {
+              console.error(`Failed to delete ${url}:`, await response.text());
+            }
+          } catch (error) {
+            console.error(`Error deleting ${url}:`, error);
+          }
+        });
+        await Promise.all(deletePromises);
+      }
+
       // Upload new files if any
       let newMediaUrls: string[] = [];
       if (newFiles.length > 0) {
@@ -127,8 +163,8 @@ export default function EditFeedbackDialog({
       // Call the API to update feedback field and media
       const updatedSchedule = await updateSchedule(parseInt(feedback.scheduleId), {
         feedback: feedbackText.trim(),
-        feedbackImages: finalImages.length > 0 ? finalImages : undefined,
-        feedbackVideos: finalVideos.length > 0 ? finalVideos : undefined,
+        feedbackImages: finalImages,
+        feedbackVideos: finalVideos,
       }) as any;
 
       // Update the feedback locally with the response from backend
@@ -161,6 +197,34 @@ export default function EditFeedbackDialog({
 
     setIsSubmitting(true);
     try {
+      // Identify removed files
+      const removedImages = originalMediaImages.filter(url => !mediaImages.includes(url));
+      const removedVideos = originalMediaVideos.filter(url => !mediaVideos.includes(url));
+      const removedFiles = [...removedImages, ...removedVideos];
+
+      // Delete removed files from S3
+      if (removedFiles.length > 0) {
+        console.log('Deleting removed files:', removedFiles);
+        const deletePromises = removedFiles.map(async (url) => {
+          try {
+            const response = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
+              {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url }),
+              }
+            );
+            if (!response.ok) {
+              console.error(`Failed to delete ${url}:`, await response.text());
+            }
+          } catch (error) {
+            console.error(`Error deleting ${url}:`, error);
+          }
+        });
+        await Promise.all(deletePromises);
+      }
+
       // Upload new files if any
       let newMediaUrls: string[] = [];
       if (newFiles.length > 0) {
@@ -209,8 +273,8 @@ export default function EditFeedbackDialog({
       const response = await updateFeedback(
         feedback.scheduleId,
         feedbackText.trim(),
-        finalImages.length > 0 ? finalImages : undefined,
-        finalVideos.length > 0 ? finalVideos : undefined
+        finalImages,
+        finalVideos
       );
 
       if (response.success) {
