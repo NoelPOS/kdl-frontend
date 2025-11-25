@@ -16,6 +16,8 @@ export interface FeedbackItem {
   verifyFb?: boolean; // Whether feedback has been verified by admin/registrar
   feedbackModifiedByName?: string; // Name of user who last modified feedback
   feedbackModifiedAt?: string; // When feedback was last modified
+  feedbackImages?: string[]; // S3 URLs of feedback images
+  feedbackVideos?: string[]; // S3 URLs of feedback videos
 }
 
 export interface FeedbackFilter {

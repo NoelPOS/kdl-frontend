@@ -1,107 +1,49 @@
 import { clientApi, createServerApi } from "./config";
 
 // Analytics Types
-export interface TotalCounts {
-  students: number;
-  teachers: number;
-  courses: number;
-  activeSessions: number;
-}
-
-export interface RevenueMetrics {
-  totalRevenue: number;
-  currentMonthRevenue: number;
-  revenueGrowth: number;
-}
-
-export interface TopCourse {
-  id: number;
-  title: string;
-  enrollmentCount: number;
-  revenue: number;
+export interface CourseTypeCount {
+  subject: string;
+  count: number;
 }
 
 export interface DashboardOverview {
-  totalCounts: TotalCounts;
-  revenue: RevenueMetrics;
-  topCourses: TopCourse[];
+  teacherClassCount?: number;
+  courseTypeCounts?: CourseTypeCount[];
+  activeStudentCount?: number;
+}
+
+export interface AnalyticsFilter {
+  startDate?: string;
+  endDate?: string;
+  teacherId?: number;
 }
 
 // Client-side functions
-export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const response = await clientApi.get<DashboardOverview>("/analytics/dashboard");
-  return response.data;
-}
+export async function getDashboardOverview(filter?: AnalyticsFilter): Promise<DashboardOverview> {
+  const params = new URLSearchParams();
+  if (filter?.startDate) params.set("startDate", filter.startDate);
+  if (filter?.endDate) params.set("endDate", filter.endDate);
+  if (filter?.teacherId) params.set("teacherId", filter.teacherId.toString());
 
-export async function getTotalCounts(): Promise<TotalCounts> {
-  const response = await clientApi.get<TotalCounts>("/analytics/total-counts");
-  return response.data;
-}
-
-export async function getRevenueMetrics(): Promise<RevenueMetrics> {
-  const response = await clientApi.get<RevenueMetrics>("/analytics/revenue");
-  return response.data;
-}
-
-export async function getTopCourses(): Promise<TopCourse[]> {
-  const response = await clientApi.get<TopCourse[]>("/analytics/top-courses");
+  const response = await clientApi.get<DashboardOverview>(`/analytics/dashboard?${params.toString()}`);
   return response.data;
 }
 
 // Server-side functions
 export async function fetchDashboardOverview(
-  accessToken?: string
+  accessToken?: string,
+  filter?: AnalyticsFilter
 ): Promise<{
   data: DashboardOverview;
   lastUpdated?: Date;
 }> {
   const api = await createServerApi(accessToken);
-  const response = await api.get<DashboardOverview>("/analytics/dashboard");
-  
-  return {
-    data: response.data,
-    lastUpdated: response.lastFetched
-  };
-}
+  const params = new URLSearchParams();
+  if (filter?.startDate) params.set("startDate", filter.startDate);
+  if (filter?.endDate) params.set("endDate", filter.endDate);
+  if (filter?.teacherId) params.set("teacherId", filter.teacherId.toString());
 
-export async function fetchTotalCounts(
-  accessToken?: string
-): Promise<{
-  data: TotalCounts;
-  lastUpdated?: Date;
-}> {
-  const api = await createServerApi(accessToken);
-  const response = await api.get<TotalCounts>("/analytics/total-counts");
-  
-  return {
-    data: response.data,
-    lastUpdated: response.lastFetched
-  };
-}
-
-export async function fetchRevenueMetrics(
-  accessToken?: string
-): Promise<{
-  data: RevenueMetrics;
-  lastUpdated?: Date;
-}> {
-  const api = await createServerApi(accessToken);
-  const response = await api.get<RevenueMetrics>("/analytics/revenue");
-  
-  return {
-    data: response.data,
-    lastUpdated: response.lastFetched
-  };
-}
-
-export async function fetchTopCourses(
-  accessToken?: string
-): Promise<{
-  data: TopCourse[];
-  lastUpdated?: Date;
-}> {
-  const api = await createServerApi(accessToken);
-  const response = await api.get<TopCourse[]>("/analytics/top-courses");
+  const response = await api.get<DashboardOverview>(`/analytics/dashboard?${params.toString()}`);
   
   return {
     data: response.data,

@@ -50,6 +50,8 @@ interface ScheduleUpdate {
   remark?: string;
   feedback?: string; // Teacher feedback field
   feedbackDate?: string; // When feedback was submitted
+  feedbackImages?: string[]; // S3 URLs of feedback images
+  feedbackVideos?: string[]; // S3 URLs of feedback videos
 }
 
 interface BatchScheduleCheck {

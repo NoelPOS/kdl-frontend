@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, User } from "lucide-react";
+import { MessageSquare, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/lib/toast";
 import {
@@ -17,6 +17,7 @@ import {
 import { SessionOverview } from "@/app/types/session.type";
 import { submitTeacherFeedback } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
+import FileUpload from "@/components/shared/file-upload";
 
 interface TeacherFeedbackDialogProps {
   session: SessionOverview;
@@ -26,23 +27,77 @@ export default function TeacherFeedbackDialog({
   session,
 }: TeacherFeedbackDialogProps) {
   const [feedback, setFeedback] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleFilesSelected = (files: File[]) => {
+    setSelectedFiles(files);
+  };
+
+  const removeSelectedFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+  };
 
   const handleSubmit = async () => {
     if (!feedback.trim()) return;
 
     setIsSubmitting(true);
     try {
+      let mediaUrls: string[] = [];
+
+      // Upload files if any are selected
+      if (selectedFiles.length > 0) {
+        const formData = new FormData();
+        selectedFiles.forEach((file) => {
+          formData.append("files", file);
+        });
+
+        // Verify FormData has files
+        const hasFiles = Array.from(formData.entries()).length > 0;
+        if (!hasFiles) {
+          throw new Error("No files to upload");
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Upload error:", errorText);
+          throw new Error(`Failed to upload files: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        mediaUrls = data.urls;
+      }
+
+      // Separate media URLs into images and videos
+      const images = mediaUrls.filter(url => 
+        /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+      );
+      const videos = mediaUrls.filter(url => 
+        /\.(mp4|webm|mov)$/i.test(url)
+      );
+
       // TODO: Get actual student ID - for now using placeholder
       const success = await submitTeacherFeedback(
         session.sessionId,
         1, // placeholder student ID
-        feedback
+        feedback,
+        images.length > 0 ? images : undefined,
+        videos.length > 0 ? videos : undefined
       );
 
       if (success) {
         setFeedback("");
+        setSelectedFiles([]);
         setIsOpen(false);
         showToast.success("Feedback submitted successfully!");
       } else {
@@ -114,6 +169,23 @@ export default function TeacherFeedbackDialog({
           <p className="text-xs text-gray-500">
             {feedback.length}/500 characters
           </p>
+        </div>
+
+        {/* File Upload */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-900">
+            Attach Photos/Videos (Optional)
+          </label>
+          <p className="text-xs text-gray-500">
+            Files will be uploaded when you submit the feedback
+          </p>
+          <FileUpload
+            onFilesSelected={handleFilesSelected}
+            accept="image/*,video/*"
+            maxFiles={10}
+            maxSizeMB={50}
+            disabled={isSubmitting}
+          />
         </div>
 
         <DialogFooter className="sm:justify-start">

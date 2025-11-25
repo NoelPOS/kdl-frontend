@@ -15,8 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, User, BookOpen, Calendar } from "lucide-react";
+import { MessageSquare, User, BookOpen, Calendar, X } from "lucide-react";
 import Image from "next/image";
+import FileUpload from "@/components/shared/file-upload";
+import MediaPreview from "@/components/shared/media-preview";
 
 interface EditFeedbackDialogProps {
   open: boolean;
@@ -33,6 +35,9 @@ export default function EditFeedbackDialog({
 }: EditFeedbackDialogProps) {
   const [feedbackText, setFeedbackText] = useState("");
   const [originalFeedbackText, setOriginalFeedbackText] = useState("");
+  const [mediaImages, setMediaImages] = useState<string[]>([]);
+  const [mediaVideos, setMediaVideos] = useState<string[]>([]);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -40,6 +45,9 @@ export default function EditFeedbackDialog({
       const originalText = feedback.feedback || "";
       setFeedbackText(originalText);
       setOriginalFeedbackText(originalText);
+      setMediaImages(feedback.feedbackImages || []);
+      setMediaVideos(feedback.feedbackVideos || []);
+      setNewFiles([]);
     }
   }, [feedback, open]);
 
@@ -48,39 +56,94 @@ export default function EditFeedbackDialog({
     if (!open) {
       setFeedbackText("");
       setOriginalFeedbackText("");
+      setMediaImages([]);
+      setMediaVideos([]);
+      setNewFiles([]);
       setIsSubmitting(false);
     }
   }, [open]);
+
+  const handleFilesSelected = (files: File[]) => {
+    setNewFiles(files);
+  };
+
+  const removeExistingImage = (index: number) => {
+    setMediaImages(mediaImages.filter((_, i) => i !== index));
+  };
+
+  const removeExistingVideo = (index: number) => {
+    setMediaVideos(mediaVideos.filter((_, i) => i !== index));
+  };
 
   const handleSave = async () => {
     if (!feedback || !feedbackText.trim()) return;
 
     setIsSubmitting(true);
     try {
-      // Import the updateSchedule API function to update only the feedback field
+      // Upload new files if any
+      let newMediaUrls: string[] = [];
+      if (newFiles.length > 0) {
+        const formData = new FormData();
+        newFiles.forEach((file) => {
+          formData.append("files", file);
+        });
+
+        // Verify FormData has files
+        const hasFiles = Array.from(formData.entries()).length > 0;
+        if (!hasFiles) {
+          throw new Error("No files to upload");
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Upload error:", errorText);
+          throw new Error(`Failed to upload files: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        newMediaUrls = data.urls;
+      }
+
+      // Combine existing media with new uploads
+      const allMediaUrls = [...mediaImages, ...mediaVideos, ...newMediaUrls];
+      const finalImages = allMediaUrls.filter(url => 
+        /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+      );
+      const finalVideos = allMediaUrls.filter(url => 
+        /\.(mp4|webm|mov)$/i.test(url)
+      );
+
+      // Import the updateSchedule API function to update feedback and media
       const { updateSchedule } = await import("@/lib/api/schedules");
 
-      // Call the API to update only the feedback field
+      // Call the API to update feedback field and media
       const updatedSchedule = await updateSchedule(parseInt(feedback.scheduleId), {
         feedback: feedbackText.trim(),
+        feedbackImages: finalImages.length > 0 ? finalImages : undefined,
+        feedbackVideos: finalVideos.length > 0 ? finalVideos : undefined,
       }) as any;
-
-      // Debug: Log the response to see what fields are returned
-      console.log('Updated schedule response:', updatedSchedule);
 
       // Update the feedback locally with the response from backend
       const updatedFeedback: FeedbackItem = {
         ...feedback,
         feedback: feedbackText.trim(),
+        feedbackImages: finalImages,
+        feedbackVideos: finalVideos,
         verifyFb: false, // Keep it unverified
-        // Update modification tracking fields if they exist in the response
         feedbackModifiedByName: updatedSchedule.feedbackModifiedByName || feedback.feedbackModifiedByName,
         feedbackModifiedAt: updatedSchedule.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
       };
 
       onFeedbackUpdate(updatedFeedback);
       showToast.success("Feedback saved successfully!");
-      // Don't close dialog for save - let user continue editing if needed
     } catch (error) {
       console.error("Error saving feedback:", error);
       const errorMessage =
@@ -98,13 +161,56 @@ export default function EditFeedbackDialog({
 
     setIsSubmitting(true);
     try {
+      // Upload new files if any
+      let newMediaUrls: string[] = [];
+      if (newFiles.length > 0) {
+        const formData = new FormData();
+        newFiles.forEach((file) => {
+          formData.append("files", file);
+        });
+
+        // Verify FormData has files
+        const hasFiles = Array.from(formData.entries()).length > 0;
+        if (!hasFiles) {
+          throw new Error("No files to upload");
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Upload error:", errorText);
+          throw new Error(`Failed to upload files: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        newMediaUrls = data.urls;
+      }
+
+      // Combine existing media with new uploads
+      const allMediaUrls = [...mediaImages, ...mediaVideos, ...newMediaUrls];
+      const finalImages = allMediaUrls.filter(url => 
+        /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+      );
+      const finalVideos = allMediaUrls.filter(url => 
+        /\.(mp4|webm|mov)$/i.test(url)
+      );
+
       // Import the updateFeedback API function for verification
       const { updateFeedback } = await import("@/lib/api/feedbacks");
 
       // Call the API to update feedback and verify it
       const response = await updateFeedback(
         feedback.scheduleId,
-        feedbackText.trim()
+        feedbackText.trim(),
+        finalImages.length > 0 ? finalImages : undefined,
+        finalVideos.length > 0 ? finalVideos : undefined
       );
 
       if (response.success) {
@@ -112,6 +218,8 @@ export default function EditFeedbackDialog({
         const verifiedFeedback: FeedbackItem = {
           ...feedback,
           feedback: feedbackText.trim(),
+          feedbackImages: finalImages,
+          feedbackVideos: finalVideos,
           verifyFb: true, // This will trigger removal from the list
         };
 
@@ -167,15 +275,15 @@ export default function EditFeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
             Feedback
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           {/* Session Information */}
           <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
             {/* Student Info */}
@@ -236,6 +344,7 @@ export default function EditFeedbackDialog({
           {/* Editable Feedback */}
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="feedback">Feedback Text</Label>
               <Textarea
                 id="feedback"
                 placeholder="Edit feedback about the student"
@@ -247,10 +356,101 @@ export default function EditFeedbackDialog({
                 required
               />
             </div>
+
+            {/* Existing Media */}
+            {(mediaImages.length > 0 || mediaVideos.length > 0) && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Current Attachments</Label>
+                  <p className="text-xs text-gray-500">Click on media to view</p>
+                </div>
+                
+                {/* Media Preview with Remove Buttons */}
+                <div className="relative">
+                  <MediaPreview 
+                    images={mediaImages}
+                    videos={mediaVideos}
+                  />
+                  
+                  {/* Remove buttons overlay */}
+                  <div className="mt-2 space-y-2">
+                    {mediaImages.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-700 mb-1">Remove images:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {mediaImages.map((url, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"
+                            >
+                              <span className="max-w-[150px] truncate" title={url}>
+                                Image {index + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeExistingImage(index)}
+                                disabled={isSubmitting}
+                                className="ml-2 text-red-600 hover:text-red-800 disabled:opacity-50"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {mediaVideos.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-700 mb-1">Remove videos:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {mediaVideos.map((url, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"
+                            >
+                              <span className="max-w-[150px] truncate" title={url}>
+                                Video {index + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeExistingVideo(index)}
+                                disabled={isSubmitting}
+                                className="ml-2 text-red-600 hover:text-red-800 disabled:opacity-50"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Add New Media */}
+            <div className="space-y-2">
+              <Label>Add New Attachments (Optional)</Label>
+              <p className="text-xs text-gray-500">
+                Files will be uploaded when you save
+              </p>
+              <FileUpload
+                onFilesSelected={handleFilesSelected}
+                accept="image/*,video/*"
+                maxFiles={10}
+                maxSizeMB={50}
+                disabled={isSubmitting}
+                existingFilesCount={mediaImages.length + mediaVideos.length}
+              />
+            </div>
           </div>
         </form>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <div className="flex justify-between w-full">
             <Button
               type="button"

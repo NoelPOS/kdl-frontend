@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, CheckCircle, Clock } from "lucide-react";
 import Image from "next/image";
 import EditFeedbackDialog from "../dialogs/edit-feedback-dialog";
+import MediaPreview from "@/components/shared/media-preview";
 
 interface FeedbackCardProps {
   feedback: FeedbackItem;
@@ -102,6 +103,16 @@ export default function FeedbackCard({
             <div className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">
               {currentFeedback.feedback}
             </div>
+            
+            {/* Media Preview */}
+            {((currentFeedback.feedbackImages?.length ?? 0) > 0 || (currentFeedback.feedbackVideos?.length ?? 0) > 0) && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <MediaPreview 
+                  images={currentFeedback.feedbackImages || []}
+                  videos={currentFeedback.feedbackVideos || []}
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end">

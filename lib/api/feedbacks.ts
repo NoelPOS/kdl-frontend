@@ -38,12 +38,16 @@ export async function getFilteredFeedbacks(
 // Update feedback and mark as verified (client-side for admin/registrar)
 export async function updateFeedback(
   scheduleId: string,
-  updatedFeedback: string
+  updatedFeedback: string,
+  feedbackImages?: string[],
+  feedbackVideos?: string[]
 ): Promise<{ success: boolean; message: string; feedbackRemoved: boolean }> {
   const res = await clientApi.patch<VerifyFeedbackResponse>(
     `/schedules/${scheduleId}/verify-feedback`,
     {
       feedback: updatedFeedback,
+      feedbackImages,
+      feedbackVideos,
     }
   );
 

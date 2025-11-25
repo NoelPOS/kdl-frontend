@@ -10,6 +10,11 @@ export async function searchTeachers(query: string): Promise<Teacher[]> {
   return response.data;
 }
 
+export async function getAllTeachers(): Promise<Teacher[]> {
+  const response = await clientApi.get<Teacher[]>("/teachers/all");
+  return response.data;
+}
+
 export async function getTeacherById(
   id: number,
   accessToken?: string

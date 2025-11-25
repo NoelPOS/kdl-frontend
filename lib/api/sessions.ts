@@ -247,7 +247,9 @@ export async function addCoursePlus(
 export async function submitTeacherFeedback(
   sessionId: number,
   studentId: number,
-  feedback: string
+  feedback: string,
+  feedbackImages?: string[],
+  feedbackVideos?: string[]
 ): Promise<boolean> {
   try {
     const response = await clientApi.post("/sessions/feedback", {
@@ -255,6 +257,8 @@ export async function submitTeacherFeedback(
       studentId,
       feedback,
       timestamp: new Date().toISOString(),
+      feedbackImages,
+      feedbackVideos,
     });
     return response.status === 200 || response.status === 201;
   } catch (error) {
