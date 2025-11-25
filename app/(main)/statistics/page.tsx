@@ -1,12 +1,21 @@
-import { fetchDashboardOverview } from "@/lib/api";
 import { getServerSideUser } from "@/lib/jwt";
 import { canAccessFinancials } from "@/lib/auth-utils";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import PageHeader from "@/components/shared/page-header";
-import StatisticsClientWrapper from "@/components/entities/statistics/statistics-client-wrapper";
+import { StatisticsFilter } from "@/components/entities/statistics/statistics-filter";
+import AuthLoadingPage from "@/components/auth/auth-loading";
+import { Suspense } from "react";
+import StatisticsContent from "@/components/entities/statistics/statistics-content";
+import { fetchDashboardOverview } from "@/lib/api";
 
-export default async function StatisticsPage() {
+export default async function StatisticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  
   // Get user information from server-side
   const user = await getServerSideUser();
   
@@ -15,33 +24,50 @@ export default async function StatisticsPage() {
     redirect("/unauthorized");
   }
 
-  // Fetch analytics data
-  let analyticsData = null;
-  let lastUpdated: Date | undefined;
-  let error: string | null = null;
+  // Check if user has clicked "Apply Filters"
+  const hasAppliedFilters = resolvedSearchParams.hasOwnProperty('applied');
 
-  try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("accessToken")?.value;
-    const result = await fetchDashboardOverview(accessToken);
-    analyticsData = result.data;
-    lastUpdated = result.lastUpdated;
-  } catch (err) {
-    console.error("Failed to fetch analytics data:", err);
-    error = "Failed to load analytics data. Please try again later.";
+  // Get timestamp for last updated
+  let lastUpdated: Date | undefined;
+  if (hasAppliedFilters) {
+    try {
+      const cookieStore = await cookies();
+      const accessToken = cookieStore.get("accessToken")?.value;
+      
+      const filter = {
+        startDate: (resolvedSearchParams.startDate as string) || undefined,
+        endDate: (resolvedSearchParams.endDate as string) || undefined,
+        teacherId: resolvedSearchParams.teacherId ? parseInt(resolvedSearchParams.teacherId as string) : undefined,
+      };
+
+      const { lastUpdated: timestamp } = await fetchDashboardOverview(accessToken, filter);
+      lastUpdated = timestamp;
+    } catch (error) {
+      console.error("Failed to get timestamp:", error);
+    }
   }
 
   return (
     <div className="p-6">
       <PageHeader title="Statistics & Analytics" lastUpdated={lastUpdated} />
       
-      {error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <h3 className="text-red-800 font-medium mb-2">Unable to Load Analytics</h3>
-          <p className="text-red-600">{error}</p>
+      <StatisticsFilter />
+      
+      {!hasAppliedFilters ? (
+        <div className="mt-6 bg-white rounded-lg p-12 text-center">
+          <p className="text-gray-500">Please select filters and click &quot;Apply Filters&quot; to view statistics.</p>
         </div>
       ) : (
-        <StatisticsClientWrapper initialData={analyticsData} />
+        <Suspense
+          key={`${resolvedSearchParams.startDate || ""}${resolvedSearchParams.endDate || ""}${resolvedSearchParams.teacherId || ""}`}
+          fallback={<AuthLoadingPage />}
+        >
+          <StatisticsContent
+            startDate={(resolvedSearchParams.startDate as string) || undefined}
+            endDate={(resolvedSearchParams.endDate as string) || undefined}
+            teacherId={resolvedSearchParams.teacherId ? parseInt(resolvedSearchParams.teacherId as string) : undefined}
+          />
+        </Suspense>
       )}
     </div>
   );
