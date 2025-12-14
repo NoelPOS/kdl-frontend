@@ -9,4 +9,20 @@ export type Teacher = {
   profileKey: string;
   password: string;
   role?: string;
+  teacherType?: 'full-time' | 'part-time';
+  workingDays?: string[];
+};
+
+export type TeacherAbsence = {
+  id: number;
+  teacherId: number;
+  absenceDate: string;
+  reason?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TeacherAvailability = {
+  available: boolean;
+  reason?: string;
 };

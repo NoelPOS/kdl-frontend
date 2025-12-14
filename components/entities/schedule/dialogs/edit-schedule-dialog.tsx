@@ -21,6 +21,7 @@ import {
   updateSchedule,
   checkScheduleConflict,
   getAllRooms,
+  checkTeacherAvailability,
 } from "@/lib/api";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
@@ -115,13 +116,35 @@ export function EditSchedule({
       
       try {
         let warningMessage = "none";
+        const teacherId = teachers.find((t) => t.name === data.teacher)?.id || 0;
+        
+        // Check teacher availability first
+        if (teacherId && data.date && data.starttime && data.endtime) {
+          try {
+            const availabilityResult = await checkTeacherAvailability(
+              teacherId,
+              data.date,
+              data.starttime,
+              data.endtime
+            );
+            
+            if (!availabilityResult.available) {
+              warningMessage = availabilityResult.reason || "Teacher is not available";
+              showToast.warning(`⚠️ ${warningMessage}`);
+            }
+          } catch (availabilityError) {
+            console.warn("Teacher availability check failed:", availabilityError);
+          }
+        }
+        
+        // Then check schedule conflicts
         try {
           const conflictResult = await checkScheduleConflict({
             date: data.date,
             startTime: data.starttime,
             endTime: data.endtime,
             room: data.room,
-            teacherId: teachers.find((t) => t.name === data.teacher)?.id || 0,
+            teacherId: teacherId,
             studentId:
               parseInt(data.student) ||
               parseInt(initialData?.student || "0") ||

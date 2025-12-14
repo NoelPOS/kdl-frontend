@@ -1,4 +1,4 @@
-import { Teacher } from "@/app/types/teacher.type";
+import { Teacher, TeacherAbsence, TeacherAvailability } from "@/app/types/teacher.type";
 import { Course } from "@/app/types/course.type";
 import { clientApi, createServerApi } from "./config";
 
@@ -144,5 +144,58 @@ export async function fetchAllTeachers(
 ): Promise<Teacher[]> {
   const api = await createServerApi(accessToken);
   const response = await api.get<Teacher[]>("/teachers/all");
+  return response.data;
+}
+
+// ==================== TEACHER ABSENCE API ====================
+
+export async function getTeacherAbsences(teacherId: number): Promise<TeacherAbsence[]> {
+  const response = await clientApi.get<TeacherAbsence[]>(`/teachers/${teacherId}/absences`);
+  return response.data;
+}
+
+export async function createTeacherAbsence(
+  teacherId: number,
+  data: { absenceDate: string; reason?: string }
+): Promise<TeacherAbsence> {
+  const response = await clientApi.post<TeacherAbsence>(`/teachers/${teacherId}/absences`, data);
+  return response.data;
+}
+
+export async function updateTeacherAbsence(
+  teacherId: number,
+  absenceId: number,
+  data: { absenceDate?: string; reason?: string }
+): Promise<TeacherAbsence> {
+  const response = await clientApi.patch<TeacherAbsence>(
+    `/teachers/${teacherId}/absences/${absenceId}`,
+    data
+  );
+  return response.data;
+}
+
+export async function deleteTeacherAbsence(
+  teacherId: number,
+  absenceId: number
+): Promise<void> {
+  await clientApi.delete(`/teachers/${teacherId}/absences/${absenceId}`);
+}
+
+// ==================== TEACHER AVAILABILITY API ====================
+
+export async function checkTeacherAvailability(
+  teacherId: number,
+  date: string,
+  startTime?: string,
+  endTime?: string
+): Promise<TeacherAvailability> {
+  const params = new URLSearchParams();
+  params.set("date", date);
+  if (startTime) params.set("startTime", startTime);
+  if (endTime) params.set("endTime", endTime);
+
+  const response = await clientApi.get<TeacherAvailability>(
+    `/teachers/${teacherId}/availability?${params.toString()}`
+  );
   return response.data;
 }

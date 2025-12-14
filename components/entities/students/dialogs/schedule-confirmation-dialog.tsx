@@ -20,6 +20,7 @@ import {
   createBulkSchedules,
   checkScheduleConflict,
   checkScheduleConflicts,
+  checkTeacherAvailability,
 } from "@/lib/api";
 
 // Types
@@ -98,13 +99,33 @@ export default function ScheduleConfirmationDialog({
           schedules: formattedSchedules,
         });
 
-        const updatedRows = rows.map((row) => {
+        const updatedRows = await Promise.all(rows.map(async (row) => {
           if (process.env.NODE_ENV !== "production") {
             console.log("Checking row for conflicts:", row);
           }
 
           const [rowStartTime, rowEndTime] = row.time.split(" - ");
+          const warnings: string[] = [];
 
+          // Check teacher availability
+          if (row.teacherId && row.date && rowStartTime && rowEndTime) {
+            try {
+              const availabilityResult = await checkTeacherAvailability(
+                row.teacherId,
+                row.date,
+                rowStartTime,
+                rowEndTime
+              );
+              
+              if (!availabilityResult.available && availabilityResult.reason) {
+                warnings.push(`⚠️ ${availabilityResult.reason}`);
+              }
+            } catch (availabilityError) {
+              console.warn("Teacher availability check failed:", availabilityError);
+            }
+          }
+
+          // Check schedule conflicts
           const conflictCourse = conflicts.find((c) => {
             // Must be same date
             if (c.date !== row.date) {
@@ -140,13 +161,15 @@ export default function ScheduleConfirmationDialog({
             }
           });
 
+          if (conflictCourse) {
+            warnings.push(generateConflictWarning(conflictCourse));
+          }
+
           return {
             ...row,
-            warning: conflictCourse
-              ? generateConflictWarning(conflictCourse)
-              : "",
+            warning: warnings.join(" | "),
           };
-        });
+        }));
 
         setScheduleRows(updatedRows);
       } catch (err) {

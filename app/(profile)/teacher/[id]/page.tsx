@@ -29,6 +29,7 @@ export default async function TeacherDetailPage({
       rightContent={
         <TeacherDetailRight
           teacherId={Number(id)}
+          teacher={teacher}
           searchParams={resolvedSearchParams}
         />
       }
