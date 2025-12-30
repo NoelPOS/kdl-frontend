@@ -141,31 +141,69 @@ kdl-frontend/
 ### Frontend Repository Secrets
 Configure these secrets in your frontend GitHub repository:
 ```
+# Docker & Deployment
 DOCKER_HUB_USERNAME=noel770
 DOCKER_HUB_ACCESS_TOKEN=your_token
-EC2_HOST=your_ec2_ip
+EC2_HOST=98.91.29.102
 EC2_USERNAME=ubuntu
-EC2_SSH_KEY=your_private_key
-NEXT_PUBLIC_BACKEND_URL=https://your-domain.com/api
+EC2_SSH_KEY=your_private_key_content
+
+# App Config
+NEXT_PUBLIC_BACKEND_URL=https://registrar.kiddeelab.co.th/api
+NEXT_PUBLIC_API_URL=https://registrar.kiddeelab.co.th:4000
 NEXT_PUBLIC_JWT_SECRET=123456
+NEXT_PUBLIC_LIFF_ID=2008403698-g6d9DA22
+ANALYZE=false
+NEXT_PUBLIC_FORCE_INSECURE_COOKIES=true
+
+# AWS S3 (For Uploads)
 AWS_ACCESS_KEY_ID=your_aws_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret
-AWS_S3_BUCKET_NAME=kdl-image
+AWS_REGION=us-east-1
+AWS_S3_BUCKET_NAME=kiddee-lab-lms
+NEXT_PUBLIC_AWS_S3_BUCKET_NAME=kiddee-lab-lms
 ```
 
 ### Backend Repository Secrets
 Configure these secrets in your backend GitHub repository:
 ```
+# Docker & Deployment
 DOCKER_HUB_USERNAME=noel770
 DOCKER_HUB_ACCESS_TOKEN=your_token
-EC2_HOST=your_ec2_ip
+EC2_HOST=98.91.29.102
 EC2_USERNAME=ubuntu
-EC2_SSH_KEY=your_private_key
-DATABASE_URL=your_database_url
+EC2_SSH_KEY=your_private_key_content
+
+# Database & App
+DATABASE_URL=postgresql://... (RDS Endpoint)
 JWT_SECRET=123456
+JWT_EXPIRATION=1d
 JWT_REFRESH_SECRET=refresh123456
+JWT_REFRESH_EXPIRATION=7d
+THROTTLE_TTL=60
+THROTTLE_LIMIT=100
+SWAGGER_ENABLED=true
+
+# External Services
 RESEND_API_KEY=your_resend_key
-RESEND_FROM_EMAIL=noreply@your-domain.com
+RESEND_FROM_EMAIL=noreply@noelpos.tech
+
+# Integration (LINE)
+LINE_CHANNEL_ACCESS_TOKEN=your_line_token
+LINE_CHANNEL_SECRET=your_line_secret
+LINE_LIFF_ID=2008403698-g6d9DA22
+UNVERIFIED_MENU_ID=richmenu-7d03576ea166ce848e8a070d7cebf20f
+VERIFIED_MENU_ID=richmenu-e5c3660093c845ffbac1a5c3f4afc12e
+
+# App Security & CORS
+FRONTEND_URL=https://registrar.kiddeelab.co.th
+CORS_ORIGINS=https://registrar.kiddeelab.co.th,http://localhost:3000
+
+# AWS S3
+AWS_ACCESS_KEY_ID=your_aws_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=kiddee-lab-lms
 ```
 
 ## 🚦 Deployment Workflow

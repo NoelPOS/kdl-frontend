@@ -82,31 +82,51 @@ Target: app.kdleducation.com
 Proxy Status: Proxied
 ```
 
-## Step 3: SSL/TLS Configuration
+## Step 3: SSL/TLS Configuration (Full Strict - REQUIRED)
 
-### 3.1 Configure SSL/TLS Settings
-Go to SSL/TLS → Overview:
+### 3.1 Generate Origin Certificate (Crucial First Step)
+Before enabling SSL on Cloudflare, you must install a valid certificate on your server to avoid "521 Web Server is Down" errors.
 
-1. **Encryption Mode**: Select `Flexible` (initially)
-   - This allows HTTPS between user and Cloudflare
-   - HTTP between Cloudflare and your server
+1. Go to Cloudflare Dashboard → SSL/TLS → **Origin Server**
+2. Click **"Create Certificate"**
+3. Keep defaults (RSA 2048, 15 years validity)
+4. List your hostnames (e.g., `*.kiddeelab.co.th`, `registrar.kiddeelab.co.th`)
+5. Click **Create**
+6. **IMMEDIATELY** save the Key and Certificate:
+   - **Origin Certificate**: Save as `cf_cert.pem`
+   - **Private Key**: Save as `cf_key.pem`
 
-2. **Always Use HTTPS**: Enable this setting
-   - SSL/TLS → Edge Certificates → Always Use HTTPS: `On`
+### 3.2 Install Certificate on Server
+SSH into your server and install the files:
 
-3. **Automatic HTTPS Rewrites**: Enable
-   - SSL/TLS → Edge Certificates → Automatic HTTPS Rewrites: `On`
+```bash
+# Create directories (if not exist)
+sudo mkdir -p /etc/ssl/certs /etc/ssl/private
 
-### 3.2 Configure Edge Certificates
-Go to SSL/TLS → Edge Certificates:
+# Paste content into files
+sudo nano /etc/ssl/certs/cf_cert.pem   # Paste Origin Certificate
+sudo nano /etc/ssl/private/cf_key.pem  # Paste Private Key
 
-1. **Universal SSL**: Should be enabled by default
-2. **Always Use HTTPS**: `On`
-3. **HTTP Strict Transport Security (HSTS)**: 
-   - Enable HSTS: `On`
-   - Max Age Header: `6 months`
-   - Include Subdomains: `On`
-   - Preload: `On`
+# Secure the key
+sudo chmod 600 /etc/ssl/private/cf_key.pem
+```
+
+*(Configuring Nginx to use these certs is covered in the Nginx Setup guide)*
+
+### 3.3 Enable Full (Strict) Mode
+Once Nginx is configured and running with the certificates:
+
+1. Go to **SSL/TLS** → **Overview**
+2. Select **Full (strict)**
+   - **Flexible**: ❌ INSECURE (HTTP to Backend). Causes redirect loops with recent Nginx setups.
+   - **Full**: ❌ Allows self-signed certs, but Strict is better.
+   - **Full (strict)**: ✅ REQUIRED. Validates your Origin Certificate.
+
+### 3.4 Configure Edge Certificates
+Go to **SSL/TLS** → **Edge Certificates**:
+1. **Always Use HTTPS**: `On`
+2. **Automatic HTTPS Rewrites**: `On`
+3. **HSTS**: Enable (Max Age: 6 months, Include Subdomains, Preload)
 
 ## Step 4: Update Application Configuration
 

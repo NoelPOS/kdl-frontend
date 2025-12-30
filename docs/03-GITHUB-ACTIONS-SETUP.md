@@ -287,6 +287,7 @@ jobs:
           cd /home/ubuntu/kdl-app
           
           # Update backend environment variables
+          # Update backend environment variables
           cat > backend.env << EOF
           NODE_ENV=production
           PORT=4000
@@ -298,9 +299,19 @@ jobs:
           JWT_REFRESH_EXPIRATION=7d
           THROTTLE_TTL=60
           THROTTLE_LIMIT=100
-          SWAGGER_ENABLED=true
           RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
+          FRONTEND_URL=https://registrar.kiddeelab.co.th
+          CORS_ORIGINS=https://registrar.kiddeelab.co.th,http://localhost:3000
+          LINE_CHANNEL_ACCESS_TOKEN=${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_CHANNEL_SECRET=${{ secrets.LINE_CHANNEL_SECRET }}
+          LINE_LIFF_ID=${{ secrets.LINE_LIFF_ID }}
+          UNVERIFIED_MENU_ID=${{ secrets.UNVERIFIED_MENU_ID }}
+          VERIFIED_MENU_ID=${{ secrets.VERIFIED_MENU_ID }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION=us-east-1
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
           EOF
           
           # Stop backend container
