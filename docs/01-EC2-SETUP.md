@@ -123,11 +123,41 @@ Add the following configuration:
 server {
     listen 80;
     server_name YOUR_DOMAIN_OR_IP;
+    # Redirect all HTTP traffic to HTTPS
+    return 301 https://$host$request_uri;
+}
 
-    # Increase client body size for file uploads
-    client_max_body_size 10M;
+server {
+    listen 443 ssl;
+    server_name YOUR_DOMAIN_OR_IP;
 
-    # Frontend routes
+    # SSL Certificate Configuration (Cloudflare Origin Cert)
+    ssl_certificate /etc/ssl/certs/cf_cert.pem;
+    ssl_certificate_key /etc/ssl/private/cf_key.pem;
+    
+    # Recommended SSL settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Exception: Next.js API route for S3 Upload
+    location /api/s3-upload-url {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+    }
+
+    # Exception: Next.js API route for S3 Delete
+    location /api/s3-delete {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+    }
+
+    # Frontend (Catch-all)
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -138,28 +168,15 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        proxy_set_header Cookie $http_cookie;
-        proxy_pass_header Set-Cookie;
-        proxy_buffering off;
-        proxy_read_timeout 120s;
     }
 
-    # API routes - backend
-    location /api/v1/ {
-        proxy_pass http://localhost:4000/;
+    # Backend API (Catch-all for other /api routes)
+    location /api {
+        proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header Cookie $http_cookie;
-        proxy_pass_header Set-Cookie;
-        proxy_set_header Authorization $http_authorization;
-        proxy_buffering off;
-        proxy_read_timeout 120s;
     }
 }
 ```

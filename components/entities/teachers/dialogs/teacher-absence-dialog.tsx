@@ -58,7 +58,11 @@ export function TeacherAbsenceDialog({
 
     setIsSaving(true);
     try {
-      const dateString = selectedDate.toISOString().split("T")[0];
+      // Fix: Use local date to avoid timezone shift (toISOString uses UTC)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
       
       if (isEditing && absence) {
         await updateTeacherAbsence(teacherId, absence.id, {
