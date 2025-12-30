@@ -64,13 +64,24 @@ export default function SchedulesPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const fetchSchedules = async () => {
-    if (!sessionId) return;
+    // We need either sessionId OR studentId to fetch schedules
+    if (!sessionId && !studentId) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/sessions/${sessionId}/schedules`
-      );
+      
+      let url = '';
+      if (sessionId) {
+        url = `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/sessions/${sessionId}/schedules`;
+      } else {
+        // Fallback: Fetch ALL schedules for the student if no session selected
+        url = `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/students/${studentId}/schedules`;
+      }
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Failed to fetch schedules');
@@ -81,7 +92,11 @@ export default function SchedulesPage() {
       
       if (data.length > 0) {
         setStudent(data[0].student);
-        setCourseName(data[0].course?.title || '');
+        if (sessionId) {
+          setCourseName(data[0].course?.title || '');
+        } else {
+          setCourseName('All Courses');
+        }
       }
 
       // Set last update time
@@ -101,7 +116,7 @@ export default function SchedulesPage() {
       fetchSchedules();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [sessionId, studentId]);
 
   const handleScheduleClick = (scheduleId: number) => {
     router.push(`/liff/schedule/${scheduleId}?studentId=${studentId}`);
