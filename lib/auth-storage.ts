@@ -6,6 +6,20 @@
 const TOKEN_KEY = 'accessToken';
 const USE_COOKIES_KEY = 'useCookies';
 
+// Helper to set a regular (non-HttpOnly) cookie that middleware can read
+function setAuthModeCookie(mode: 'cookie' | 'header' | null) {
+  if (typeof document === 'undefined') return;
+  
+  if (mode === null) {
+    // Clear cookie
+    document.cookie = 'authMode=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  } else {
+    // Set cookie with 8-hour expiry (match JWT)
+    const expires = new Date(Date.now() + 8 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `authMode=${mode}; path=/; expires=${expires}; SameSite=Lax`;
+  }
+}
+
 export const authStorage = {
   /**
    * Save login response
@@ -18,12 +32,15 @@ export const authStorage = {
       if (typeof window !== 'undefined') {
         localStorage.setItem(TOKEN_KEY, accessToken);
         localStorage.setItem(USE_COOKIES_KEY, 'false');
+        // Set marker cookie so middleware knows we're authenticated
+        setAuthModeCookie('header');
       }
     } else {
       // On EC2: Backend sets HttpOnly cookie, just remember we're using cookies
       if (typeof window !== 'undefined') {
         localStorage.setItem(USE_COOKIES_KEY, 'true');
         // Don't store token - it's in the cookie
+        setAuthModeCookie('cookie');
       }
     }
   },
@@ -59,6 +76,8 @@ export const authStorage = {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USE_COOKIES_KEY);
+      // Clear the marker cookie
+      setAuthModeCookie(null);
     }
   },
 

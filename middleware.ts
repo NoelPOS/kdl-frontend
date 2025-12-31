@@ -21,10 +21,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for HttpOnly auth cookie (set by backend)
-  const token = request.cookies.get("accessToken")?.value;
+  // Check for HttpOnly auth cookie (EC2 production)
+  const cookieToken = request.cookies.get("accessToken")?.value;
+  
+  // On Vercel, tokens are in localStorage (client-side only)
+  // We can't check localStorage in middleware, so we check for a marker cookie
+  // that indicates the user has logged in (set by client after login)
+  const isVercelAuth = request.cookies.get("authMode")?.value === "header";
 
-  if (!token) {
+  // Allow access if:
+  // 1. Has HttpOnly cookie (EC2), OR
+  // 2. Has authMode marker (Vercel - actual token validation happens client-side)
+  if (!cookieToken && !isVercelAuth) {
+    // No auth evidence - redirect to login
+    // But on Vercel, this might cause issues for first-time page loads
+    // Let the client-side auth context handle the redirect instead
+    const isVercelEnvironment = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+    
+    if (isVercelEnvironment) {
+      // On Vercel: Let client-side handle auth (localStorage check)
+      // Pass through and let AuthContext redirect if needed
+      return NextResponse.next();
+    }
+    
+    // On EC2: Strict cookie check
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
