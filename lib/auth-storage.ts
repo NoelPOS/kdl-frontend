@@ -20,6 +20,21 @@ function setAuthModeCookie(mode: 'cookie' | 'header' | null) {
   }
 }
 
+// Helper to set/clear the accessToken cookie for server components (Vercel only)
+function setAccessTokenCookie(token: string | null) {
+  if (typeof document === 'undefined') return;
+  
+  if (token === null) {
+    // Clear cookie
+    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  } else {
+    // Set cookie with 8-hour expiry (match JWT)
+    const expires = new Date(Date.now() + 8 * 60 * 60 * 1000).toUTCString();
+    // Note: This is NOT HttpOnly so it can be read by client JS, but server components need it
+    document.cookie = `accessToken=${token}; path=/; expires=${expires}; SameSite=Lax`;
+  }
+}
+
 export const authStorage = {
   /**
    * Save login response
@@ -29,17 +44,20 @@ export const authStorage = {
   saveAuth(accessToken: string, useCookies: boolean) {
     if (!useCookies) {
       // On Vercel: Store token in localStorage for Authorization headers
+      // AND in a regular cookie for server components to read
       if (typeof window !== 'undefined') {
         localStorage.setItem(TOKEN_KEY, accessToken);
         localStorage.setItem(USE_COOKIES_KEY, 'false');
         // Set marker cookie so middleware knows we're authenticated
         setAuthModeCookie('header');
+        // Set accessToken cookie for server components (non-HttpOnly)
+        setAccessTokenCookie(accessToken);
       }
     } else {
       // On EC2: Backend sets HttpOnly cookie, just remember we're using cookies
       if (typeof window !== 'undefined') {
         localStorage.setItem(USE_COOKIES_KEY, 'true');
-        // Don't store token - it's in the cookie
+        // Don't store token - it's in the HttpOnly cookie set by backend
         setAuthModeCookie('cookie');
       }
     }
@@ -78,6 +96,8 @@ export const authStorage = {
       localStorage.removeItem(USE_COOKIES_KEY);
       // Clear the marker cookie
       setAuthModeCookie(null);
+      // Clear the accessToken cookie (for Vercel server components)
+      setAccessTokenCookie(null);
     }
   },
 

@@ -119,8 +119,7 @@ const createBaseInstance = (baseURL?: string): AxiosInstance => {
 // Client-side axios instance
 export const clientApi = createBaseInstance();
 
-// Add withCredentials to automatically send cookies
-clientApi.defaults.withCredentials = true;
+// Note: withCredentials is set dynamically in the interceptor based on auth method
 
 // Request interceptor for client-side requests
 clientApi.interceptors.request.use(
@@ -128,19 +127,23 @@ clientApi.interceptors.request.use(
     // Add timestamp for debugging
     config.metadata = { startTime: new Date() };
 
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-      console.log("withCredentials:", config.withCredentials);
-    }
-
     // Check if we're using cookie-based or header-based auth
     const token = authStorage.getToken();
     
     if (token) {
-      // Vercel: Use Authorization header
+      // Vercel (header-based auth): Use Authorization header, don't send cookies
       config.headers.Authorization = `Bearer ${token}`;
+      config.withCredentials = false; // Don't send cookies - using header instead
+    } else {
+      // EC2 (cookie-based auth): Send HttpOnly cookies automatically
+      config.withCredentials = true;
     }
-    // EC2: HttpOnly cookies are automatically sent with withCredentials: true
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log("withCredentials:", config.withCredentials);
+      console.log("Using:", token ? "Authorization header" : "HttpOnly cookie");
+    }
     
     return config;
   },
