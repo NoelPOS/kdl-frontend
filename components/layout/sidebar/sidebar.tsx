@@ -16,6 +16,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import SidebarDetail from "./sidebar-detail";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
@@ -34,21 +35,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <Sidebar className="border-r border-gray-200" {...props}>
         <SidebarHeader className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src="/student.png" alt={user?.name || "User"} />
-              <AvatarFallback className="bg-gray-200 text-gray-600">
-                {user?.name?.charAt(0)?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="font-semibold text-gray-900">
-                {user?.name || "User"}
-              </span>
-              <span className="text-sm text-gray-500 capitalize">
-                {user?.role || "User"}
-              </span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar className="h-12 w-12 shrink-0">
+                <AvatarImage src="/student.png" alt={user?.name || "User"} />
+                <AvatarFallback className="bg-gray-200 text-gray-600">
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-gray-900 truncate">
+                  {user?.name || "User"}
+                </span>
+                <span className="text-sm text-gray-500 capitalize truncate">
+                  {user?.role || "User"}
+                </span>
+              </div>
             </div>
+            <NotificationBell />
           </div>
         </SidebarHeader>
 

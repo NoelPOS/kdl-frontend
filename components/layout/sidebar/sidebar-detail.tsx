@@ -98,12 +98,12 @@ const menuItems: MenuItem[] = [
     url: "/statistics",
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
-  // {
-  //   title: "notifications",
-  //   icon: Bell,
-  //   url: "/notifications",
-  //   roles: [UserRole.ADMIN],
-  // },
+  {
+    title: "notifications",
+    icon: Bell,
+    url: "/notifications",
+    roles: [UserRole.ADMIN, UserRole.REGISTRAR, UserRole.TEACHER],
+  },
   {
     title: "feedback",
     icon: MessageSquare,

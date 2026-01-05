@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,11 +57,7 @@ export function TeacherAvailabilityTab({
     null
   );
 
-  useEffect(() => {
-    loadAbsences();
-  }, [teacher.id]);
-
-  const loadAbsences = async () => {
+  const loadAbsences = useCallback(async () => {
     if (!teacher.id) return;
     setIsLoading(true);
     try {
@@ -72,7 +68,11 @@ export function TeacherAvailabilityTab({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [teacher.id]);
+
+  useEffect(() => {
+    loadAbsences();
+  }, [loadAbsences]);
 
   const handleWorkingDaysSave = async (days: string[], type: string) => {
     if (!teacher.id) return;
