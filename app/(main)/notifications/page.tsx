@@ -113,15 +113,15 @@ export default function NotificationsPage() {
     
     // Navigation logic
     if (notification.type === 'schedule_cancelled' || notification.type === 'schedule_confirmed') {
-      const { studentId, sessionId, scheduleId } = notification.data || {};
+      const { studentId, sessionId } = notification.data || {};
       if (studentId && sessionId) {
          router.push(`/student/${studentId}/session/${sessionId}`);
-      } else if (scheduleId) {
-        // Fallback for old notifications/data without session info
-        router.push(`/schedules/${scheduleId}`); 
+      } else {
+        // If no student/session data, go to general schedule page
+        router.push(`/schedule`);
       }
     } else if (notification.type === 'feedback_submitted') {
-       // Always redirect to feedback page as per user request
+       // Always redirect to feedback page
        router.push(`/feedback`);
     }
   };
