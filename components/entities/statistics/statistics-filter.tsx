@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Filter, X, GraduationCap, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function StatisticsFilter() {
@@ -31,6 +31,7 @@ export function StatisticsFilter() {
     searchParams.get("endDate") ? new Date(searchParams.get("endDate")!) : undefined
   );
   const [teacherId, setTeacherId] = useState(searchParams.get("teacherId") || "");
+  const [countBy, setCountBy] = useState<'timeslot' | 'enrollment'>(searchParams.get("countBy") as 'timeslot' | 'enrollment' || 'timeslot');
 
   // Calculate active filters count
   const activeFiltersCount = [startDate, endDate, teacherId].filter(Boolean).length;
@@ -56,6 +57,7 @@ export function StatisticsFilter() {
     if (startDate) params.set("startDate", format(startDate, "yyyy-MM-dd"));
     if (endDate) params.set("endDate", format(endDate, "yyyy-MM-dd"));
     if (teacherId) params.set("teacherId", teacherId);
+    params.set("countBy", countBy);
     
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -64,6 +66,7 @@ export function StatisticsFilter() {
     setStartDate(undefined);
     setEndDate(undefined);
     setTeacherId("");
+    setCountBy('timeslot');
     router.push(pathname);
   }, [router, pathname]);
 
@@ -194,6 +197,48 @@ export function StatisticsFilter() {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
+          </div>
+
+          {/* Counting Perspective Toggle */}
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <Label className="mb-2 block text-sm font-medium text-gray-700">Counting Perspective</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={countBy === 'timeslot' ? 'default' : 'outline'}
+                onClick={() => setCountBy('timeslot')}
+                className={cn(
+                  "flex-1",
+                  countBy === 'timeslot' 
+                    ? "bg-yellow-500 hover:bg-yellow-600 text-white" 
+                    : "bg-white hover:bg-gray-100 text-gray-700"
+                )}
+              >
+                <GraduationCap className="mr-2 h-4 w-4" />
+                Teacher View
+                <span className="ml-2 text-xs opacity-80">(Unique Classes)</span>
+              </Button>
+              <Button
+                type="button"
+                variant={countBy === 'enrollment' ? 'default' : 'outline'}
+                onClick={() => setCountBy('enrollment')}
+                className={cn(
+                  "flex-1",
+                  countBy === 'enrollment' 
+                    ? "bg-yellow-500 hover:bg-yellow-600 text-white" 
+                    : "bg-white hover:bg-gray-100 text-gray-700"
+                )}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Student View
+                <span className="ml-2 text-xs opacity-80">(Total Enrollments)</span>
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              {countBy === 'timeslot' 
+                ? "Counts unique time slots (3 students at same time = 1 class)"
+                : "Counts individual enrollments (3 students at same time = 3 enrollments)"}
+            </p>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">

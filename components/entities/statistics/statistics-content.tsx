@@ -15,13 +15,14 @@ interface StatisticsContentProps {
   startDate?: string;
   endDate?: string;
   teacherId?: number;
+  countBy?: 'timeslot' | 'enrollment';
 }
 
-export default async function StatisticsContent({ startDate, endDate, teacherId }: StatisticsContentProps) {
+export default async function StatisticsContent({ startDate, endDate, teacherId, countBy }: StatisticsContentProps) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  const filter = { startDate, endDate, teacherId };
+  const filter = { startDate, endDate, teacherId, countBy };
   
   let data = null;
   let error = null;
@@ -94,7 +95,9 @@ export default async function StatisticsContent({ startDate, endDate, teacherId 
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-gray-900">{data.teacherClassCount}</div>
-              <p className="text-sm text-gray-500 mt-1">unique timeslots</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {countBy === 'enrollment' ? 'total enrollments' : 'unique timeslots'}
+              </p>
             </CardContent>
           </Card>
         )}
@@ -121,7 +124,11 @@ export default async function StatisticsContent({ startDate, endDate, teacherId 
         <Card className="border border-gray-200">
           <CardHeader>
             <CardTitle>Class Distribution by Course</CardTitle>
-            <CardDescription>Number of unique timeslots per course type</CardDescription>
+            <CardDescription>
+              {countBy === 'enrollment' 
+                ? 'Number of total enrollments per course type'
+                : 'Number of unique timeslots per course type'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -130,7 +137,9 @@ export default async function StatisticsContent({ startDate, endDate, teacherId 
                   <TableRow>
                     <TableHead className="border h-20 text-center whitespace-nowrap min-w-[80px]">Rank</TableHead>
                     <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[200px]">Course</TableHead>
-                    <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[120px]">Timeslots</TableHead>
+                    <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                      {countBy === 'enrollment' ? 'Enrollments' : 'Timeslots'}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
