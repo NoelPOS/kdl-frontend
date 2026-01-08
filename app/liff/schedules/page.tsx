@@ -17,35 +17,29 @@ import Image from 'next/image';
  */
 
 interface Schedule {
-  id: number;
-  date: string;
-  startTime: string;
-  endTime: string;
-  room: string;
-  attendance: string;
-  feedback: string;
-  student: {
-    id: number;
-    name: string;
-    nickname: string;
-    studentId: string;
-    profilePicture?: string;
-  };
-  teacher: {
-    id: number;
-    name: string;
-  } | null;
-  course: {
-    id: number;
-    title: string;
-  };
-  session: {
-    id: number;
-    classOption: {
-      id: number;
-      classMode: string;
-    };
-  };
+  schedule_id: string;
+  schedule_date: string;
+  schedule_startTime: string;
+  schedule_endTime: string;
+  schedule_room: string;
+  schedule_attendance: string;
+  schedule_remark: string;
+  schedule_feedback: string;
+  schedule_feedbackDate: string;
+  schedule_verifyFb: boolean;
+  schedule_feedbackModifiedByName: string;
+  schedule_feedbackModifiedAt: string;
+  schedule_classNumber: number;
+  schedule_warning: string;
+  schedule_courseId: string;
+  course_title: string;
+  session_mode: string;
+  teacher_name: string;
+  student_id: string;
+  student_name: string;
+  student_nickname: string;
+  student_profilePicture: string;
+  student_phone: string;
 }
 
 export default function SchedulesPage() {
@@ -91,9 +85,15 @@ export default function SchedulesPage() {
       setSchedules(data);
       
       if (data.length > 0) {
-        setStudent(data[0].student);
+        // Map snake_case fields to student object
+        setStudent({
+          id: data[0].student_id,
+          name: data[0].student_name,
+          nickname: data[0].student_nickname,
+          profilePicture: data[0].student_profilePicture,
+        });
         if (sessionId) {
-          setCourseName(data[0].course?.title || '');
+          setCourseName(data[0].course_title || '');
         } else {
           setCourseName('All Courses');
         }
@@ -118,7 +118,7 @@ export default function SchedulesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, studentId]);
 
-  const handleScheduleClick = (scheduleId: number) => {
+  const handleScheduleClick = (scheduleId: string) => {
     router.push(`/liff/schedule/${scheduleId}?studentId=${studentId}`);
   };
 
@@ -147,8 +147,8 @@ export default function SchedulesPage() {
   const hasScheduleOnDate = (date: Date) => {
     const dateStr = getLocalDateString(date);
     return schedules.some(schedule => {
-      if (!schedule.date) return false; // Skip schedules with null dates
-      const scheduleDate = getLocalDateString(schedule.date);
+      if (!schedule.schedule_date) return false; // Skip schedules with null dates
+      const scheduleDate = getLocalDateString(schedule.schedule_date);
       return scheduleDate === dateStr;
     });
   };
@@ -170,8 +170,8 @@ export default function SchedulesPage() {
     if (selectedDate) {
       const selectedDateStr = getLocalDateString(selectedDate);
       filtered = filtered.filter(schedule => {
-        if (!schedule.date) return false; // Skip schedules with null dates
-        const scheduleDate = getLocalDateString(schedule.date);
+        if (!schedule.schedule_date) return false; // Skip schedules with null dates
+        const scheduleDate = getLocalDateString(schedule.schedule_date);
         return scheduleDate === selectedDateStr;
       });
     }
@@ -179,24 +179,24 @@ export default function SchedulesPage() {
     // Filter by tab (upcoming/completed)
     const now = new Date();
     filtered = filtered.filter(schedule => {
-      if (!schedule.date) return false; // Skip schedules with null dates
-      const scheduleDate = new Date(schedule.date);
-      const isCompleted = schedule.attendance === 'completed' || scheduleDate < now;
+      if (!schedule.schedule_date) return false; // Skip schedules with null dates
+      const scheduleDate = new Date(schedule.schedule_date);
+      const isCompleted = schedule.schedule_attendance === 'completed' || scheduleDate < now;
       
       if (activeTab === 'upcoming') {
-        return !isCompleted && schedule.attendance !== 'cancelled';
+        return !isCompleted && schedule.schedule_attendance !== 'cancelled';
       } else {
-        return isCompleted || schedule.attendance === 'cancelled';
+        return isCompleted || schedule.schedule_attendance === 'cancelled';
       }
     });
 
     return filtered.sort((a, b) => {
       // Handle null dates - put them at the end
-      if (!a.date) return 1;
-      if (!b.date) return -1;
+      if (!a.schedule_date) return 1;
+      if (!b.schedule_date) return -1;
       
-      const dateA = new Date(a.date + ' ' + a.startTime);
-      const dateB = new Date(b.date + ' ' + b.startTime);
+      const dateA = new Date(a.schedule_date + ' ' + a.schedule_startTime);
+      const dateB = new Date(b.schedule_date + ' ' + b.schedule_startTime);
       return activeTab === 'upcoming' 
         ? dateA.getTime() - dateB.getTime()
         : dateB.getTime() - dateA.getTime();
@@ -294,7 +294,7 @@ export default function SchedulesPage() {
   };
 
   const getStatusBadge = (schedule: Schedule) => {
-    if (schedule.attendance === 'cancelled') {
+    if (schedule.schedule_attendance === 'cancelled') {
       return (
         <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
           Cancelled
@@ -302,7 +302,7 @@ export default function SchedulesPage() {
       );
     }
 
-    if (schedule.attendance === 'completed') {
+    if (schedule.schedule_attendance === 'completed') {
       return (
         <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
           Completed
@@ -452,16 +452,16 @@ export default function SchedulesPage() {
           <div className="space-y-3">
             {filteredSchedules.map((schedule) => {
               // Safety check for null dates (should be filtered out already)
-              if (!schedule.date) return null;
+              if (!schedule.schedule_date) return null;
               
-              const scheduleDate = new Date(schedule.date);
+              const scheduleDate = new Date(schedule.schedule_date);
               const month = scheduleDate.toLocaleDateString('en-US', { month: 'short' });
               const day = scheduleDate.getDate();
 
               return (
                 <button
-                  key={schedule.id}
-                  onClick={() => handleScheduleClick(schedule.id)}
+                  key={schedule.schedule_id}
+                  onClick={() => handleScheduleClick(schedule.schedule_id)}
                   className="w-full bg-blue-50 rounded-lg p-4 text-left transition-all hover:shadow-lg active:scale-95 border border-blue-100"
                 >
                   <div className="flex gap-4">
@@ -474,7 +474,7 @@ export default function SchedulesPage() {
                     {/* Schedule Info */}
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-bold text-gray-900">{schedule.course.title}</h3>
+                        <h3 className="font-bold text-gray-900">{schedule.course_title}</h3>
                         {getStatusBadge(schedule)}
                       </div>
 
@@ -483,25 +483,25 @@ export default function SchedulesPage() {
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          <span>{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} Hrs.</span>
+                          <span>{formatTime(schedule.schedule_startTime)} - {formatTime(schedule.schedule_endTime)} Hrs.</span>
                         </div>
 
-                        {schedule.teacher && (
+                        {schedule.teacher_name && (
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            <span>{schedule.teacher.name}</span>
+                            <span>{schedule.teacher_name}</span>
                           </div>
                         )}
 
-                        {schedule.room && schedule.room !== 'TBD' && (
+                        {schedule.schedule_room && schedule.schedule_room !== 'TBD' && (
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span>{schedule.room}</span>
+                            <span>{schedule.schedule_room}</span>
                           </div>
                         )}
                       </div>
