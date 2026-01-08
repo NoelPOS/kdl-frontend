@@ -16,6 +16,8 @@ export interface AnalyticsFilter {
   startDate?: string;
   endDate?: string;
   teacherId?: number;
+  countBy?: 'timeslot' | 'enrollment';
+  attendance?: string;
 }
 
 // Client-side functions
@@ -24,6 +26,8 @@ export async function getDashboardOverview(filter?: AnalyticsFilter): Promise<Da
   if (filter?.startDate) params.set("startDate", filter.startDate);
   if (filter?.endDate) params.set("endDate", filter.endDate);
   if (filter?.teacherId) params.set("teacherId", filter.teacherId.toString());
+  if (filter?.countBy) params.set("countBy", filter.countBy);
+  if (filter?.attendance) params.set("attendance", filter.attendance);
 
   const response = await clientApi.get<DashboardOverview>(`/analytics/dashboard?${params.toString()}`);
   return response.data;
@@ -42,6 +46,8 @@ export async function fetchDashboardOverview(
   if (filter?.startDate) params.set("startDate", filter.startDate);
   if (filter?.endDate) params.set("endDate", filter.endDate);
   if (filter?.teacherId) params.set("teacherId", filter.teacherId.toString());
+  if (filter?.countBy) params.set("countBy", filter.countBy);
+  if (filter?.attendance) params.set("attendance", filter.attendance);
 
   const response = await api.get<DashboardOverview>(`/analytics/dashboard?${params.toString()}`);
   

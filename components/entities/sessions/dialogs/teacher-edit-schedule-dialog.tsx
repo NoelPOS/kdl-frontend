@@ -31,6 +31,7 @@ import {
   BookOpen,
   MessageSquare,
 } from "lucide-react";
+import FileUpload from "@/components/shared/file-upload";
 
 interface TeacherEditScheduleProps {
   open: boolean;
@@ -63,16 +64,20 @@ export default function TeacherEditScheduleDialog({
   });
 
   const [feedback, setFeedback] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasPreviousFeedback, setHasPreviousFeedback] = useState(false);
 
+  const handleFilesSelected = (files: File[]) => {
+    setSelectedFiles(files);
+  };
+
   useEffect(() => {
     if (initialData) {
-      console.log("Setting initial data:", initialData); // Debug log
       setFormData(initialData);
       const existingFeedback = initialData.feedback || "";
       setFeedback(existingFeedback);
-      setHasPreviousFeedback(!!existingFeedback.trim()); // Check if feedback already exists
+      setHasPreviousFeedback(!!existingFeedback.trim());
     }
   }, [initialData]);
 
@@ -96,6 +101,7 @@ export default function TeacherEditScheduleDialog({
         warning: "",
       });
       setFeedback("");
+      setSelectedFiles([]);
       setIsSubmitting(false);
       setHasPreviousFeedback(false); // Reset feedback state
     }
@@ -107,11 +113,53 @@ export default function TeacherEditScheduleDialog({
 
     setIsSubmitting(true);
     try {
+      // Upload new files if any using pre-signed URLs
+      let mediaUrls: string[] = [];
+      if (!hasPreviousFeedback && selectedFiles.length > 0) {
+        const uploadPromises = selectedFiles.map(async (file) => {
+          // Get pre-signed URL
+          const getUrlRes = await fetch(
+            `/api/s3-upload-url?fileName=${encodeURIComponent(
+              file.name
+            )}&fileType=${encodeURIComponent(file.type)}&folder=feedback`
+          );
+          if (!getUrlRes.ok) {
+            throw new Error(`Failed to get upload URL for ${file.name}`);
+          }
+          const { url } = await getUrlRes.json();
+
+          // Upload directly to S3
+          const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name}`);
+          }
+
+          // Construct the final S3 URL
+          const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/feedback/${encodeURIComponent(file.name)}`;
+          return s3Url;
+        });
+        mediaUrls = await Promise.all(uploadPromises);
+      }
+
+      // Separate media URLs into images and videos
+      const images = mediaUrls.filter(url => 
+        /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+      );
+      const videos = mediaUrls.filter(url => 
+        /\.(mp4|webm|mov)$/i.test(url)
+      );
+
       // Prepare update data
       const updateData: {
         attendance: string;
         feedback?: string;
         feedbackDate?: string;
+        feedbackImages?: string[];
+        feedbackVideos?: string[];
       } = {
         attendance: formData.status || "pending",
       };
@@ -119,7 +167,13 @@ export default function TeacherEditScheduleDialog({
       // Only include feedback in update if it hasn't been provided before
       if (!hasPreviousFeedback && feedback.trim()) {
         updateData.feedback = feedback;
-        updateData.feedbackDate = new Date().toISOString(); // Add current timestamp
+        updateData.feedbackDate = new Date().toISOString();
+        if (images.length > 0) {
+          updateData.feedbackImages = images;
+        }
+        if (videos.length > 0) {
+          updateData.feedbackVideos = videos;
+        }
       }
 
       const updatedSchedule = await updateSchedule(
@@ -136,9 +190,6 @@ export default function TeacherEditScheduleDialog({
 
       onScheduleUpdate(updatedFormData);
       onOpenChange(false);
-
-      // Optional: Show success message
-      console.log("Schedule updated successfully");
       showToast.success("Schedule updated successfully!");
     } catch (error) {
       console.error("Error updating schedule:", error);
@@ -292,6 +343,25 @@ export default function TeacherEditScheduleDialog({
                 </>
               )}
             </div>
+
+            {/* File Upload - only show if feedback hasn't been provided */}
+            {!hasPreviousFeedback && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-900">
+                  Attach Photos/Videos (Optional)
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Upload images or videos to support your feedback
+                </p>
+                <FileUpload
+                  onFilesSelected={handleFilesSelected}
+                  accept="image/*,video/*"
+                  maxFiles={10}
+                  maxSizeMB={50}
+                  disabled={isSubmitting}
+                />
+              </div>
+            )}
           </div>
         </form>
 

@@ -98,14 +98,14 @@ export default function EditFeedbackDialog({
         console.log('Deleting removed files:', removedFiles);
         const deletePromises = removedFiles.map(async (url) => {
           try {
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
-              {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url }),
-              }
-            );
+            // Extract the key from the S3 URL
+            const urlObj = new URL(url);
+            const key = urlObj.pathname.substring(1); // Remove leading '/'
+            const response = await fetch("/api/s3-delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ key }),
+            });
             if (!response.ok) {
               console.error(`Failed to delete ${url}:`, await response.text());
             }
@@ -116,36 +116,36 @@ export default function EditFeedbackDialog({
         await Promise.all(deletePromises);
       }
 
-      // Upload new files if any
+      // Upload new files if any using pre-signed URLs
       let newMediaUrls: string[] = [];
       if (newFiles.length > 0) {
-        const formData = new FormData();
-        newFiles.forEach((file) => {
-          formData.append("files", file);
-        });
-
-        // Verify FormData has files
-        const hasFiles = Array.from(formData.entries()).length > 0;
-        if (!hasFiles) {
-          throw new Error("No files to upload");
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
-          {
-            method: "POST",
-            body: formData,
+        const uploadPromises = newFiles.map(async (file) => {
+          // Get pre-signed URL
+          const getUrlRes = await fetch(
+            `/api/s3-upload-url?fileName=${encodeURIComponent(
+              file.name
+            )}&fileType=${encodeURIComponent(file.type)}&folder=feedback`
+          );
+          if (!getUrlRes.ok) {
+            throw new Error(`Failed to get upload URL for ${file.name}`);
           }
-        );
+          const { url } = await getUrlRes.json();
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Upload error:", errorText);
-          throw new Error(`Failed to upload files: ${response.status} ${response.statusText}`);
-        }
+          // Upload directly to S3
+          const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name}`);
+          }
 
-        const data = await response.json();
-        newMediaUrls = data.urls;
+          // Construct the final S3 URL
+          const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/feedback/${encodeURIComponent(file.name)}`;
+          return s3Url;
+        });
+        newMediaUrls = await Promise.all(uploadPromises);
       }
 
       // Combine existing media with new uploads
@@ -207,14 +207,14 @@ export default function EditFeedbackDialog({
         console.log('Deleting removed files:', removedFiles);
         const deletePromises = removedFiles.map(async (url) => {
           try {
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
-              {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url }),
-              }
-            );
+            // Extract the key from the S3 URL
+            const urlObj = new URL(url);
+            const key = urlObj.pathname.substring(1); // Remove leading '/'
+            const response = await fetch("/api/s3-delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ key }),
+            });
             if (!response.ok) {
               console.error(`Failed to delete ${url}:`, await response.text());
             }
@@ -225,38 +225,39 @@ export default function EditFeedbackDialog({
         await Promise.all(deletePromises);
       }
 
-      // Upload new files if any
+      // Upload new files if any using pre-signed URLs
       let newMediaUrls: string[] = [];
       if (newFiles.length > 0) {
-        const formData = new FormData();
-        newFiles.forEach((file) => {
-          formData.append("files", file);
-        });
-
-        // Verify FormData has files
-        const hasFiles = Array.from(formData.entries()).length > 0;
-        if (!hasFiles) {
-          throw new Error("No files to upload");
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
-          {
-            method: "POST",
-            body: formData,
+        const uploadPromises = newFiles.map(async (file) => {
+          // Get pre-signed URL
+          const getUrlRes = await fetch(
+            `/api/s3-upload-url?fileName=${encodeURIComponent(
+              file.name
+            )}&fileType=${encodeURIComponent(file.type)}&folder=feedback`
+          );
+          if (!getUrlRes.ok) {
+            throw new Error(`Failed to get upload URL for ${file.name}`);
           }
-        );
+          const { url } = await getUrlRes.json();
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Upload error:", errorText);
-          throw new Error(`Failed to upload files: ${response.status} ${response.statusText}`);
-        }
+          // Upload directly to S3
+          const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name}`);
+          }
 
-        const data = await response.json();
-        newMediaUrls = data.urls;
+          // Construct the final S3 URL
+          const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/feedback/${encodeURIComponent(file.name)}`;
+          return s3Url;
+        });
+        newMediaUrls = await Promise.all(uploadPromises);
       }
 
+      // Continue with the rest of the logic
       // Combine existing media with new uploads
       const allMediaUrls = [...mediaImages, ...mediaVideos, ...newMediaUrls];
       const finalImages = allMediaUrls.filter(url => 
@@ -266,35 +267,30 @@ export default function EditFeedbackDialog({
         /\.(mp4|webm|mov)$/i.test(url)
       );
 
-      // Import the updateFeedback API function for verification
-      const { updateFeedback } = await import("@/lib/api/feedbacks");
+      // Import the verifyScheduleFeedback API function
+      const { verifyScheduleFeedback } = await import("@/lib/api/schedules");
 
-      // Call the API to update feedback and verify it
-      const response = await updateFeedback(
-        feedback.scheduleId,
-        feedbackText.trim(),
-        finalImages,
-        finalVideos
-      );
+      // Call the API to update and verify feedback
+      const updatedSchedule = await verifyScheduleFeedback(parseInt(feedback.scheduleId), {
+        feedback: feedbackText.trim(),
+        feedbackImages: finalImages,
+        feedbackVideos: finalVideos,
+        verifyFb: true,
+      }) as any;
 
-      if (response.success) {
-        // Since the feedback is now verified, create a verified feedback item
-        const verifiedFeedback: FeedbackItem = {
-          ...feedback,
-          feedback: feedbackText.trim(),
-          feedbackImages: finalImages,
-          feedbackVideos: finalVideos,
-          verifyFb: true, // This will trigger removal from the list
-        };
+      // Update the feedback locally with the response from backend
+      const updatedFeedback: FeedbackItem = {
+        ...feedback,
+        feedback: feedbackText.trim(),
+        feedbackImages: finalImages,
+        feedbackVideos: finalVideos,
+        verifyFb: true,
+        feedbackModifiedByName: updatedSchedule.feedbackModifiedByName || feedback.feedbackModifiedByName,
+        feedbackModifiedAt: updatedSchedule.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
+      };
 
-        onFeedbackUpdate(verifiedFeedback);
-        onOpenChange(false);
-        showToast.success(
-          response.message || "Feedback saved and verified successfully!"
-        );
-      } else {
-        throw new Error(response.message || "Failed to verify feedback");
-      }
+      onFeedbackUpdate(updatedFeedback);
+      showToast.success("Feedback saved and verified successfully!");
     } catch (error) {
       console.error("Error saving and verifying feedback:", error);
       const errorMessage =
@@ -307,35 +303,7 @@ export default function EditFeedbackDialog({
     }
   };
 
-  const handleReset = () => {
-    setFeedbackText(originalFeedbackText);
-    showToast.info("Feedback reset to original text");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Default form submit behavior can be handled by Save button
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getStudentInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  if (!feedback) return null;
+  if (!feedback) {\n    return null;\n  }\n\n  const handleReset = () => {\n    setFeedbackText(originalFeedbackText);\n    showToast.info(\"Feedback reset to original text\");\n  };\n\n  const handleSubmit = async (e: React.FormEvent) => {\n    e.preventDefault();\n    // Default form submit behavior can be handled by Save button\n  };\n\n  const formatDate = (dateString: string) => {\n    const date = new Date(dateString);\n    return date.toLocaleDateString(\"en-US\", {\n      day: \"2-digit\",\n      month: \"short\",\n      year: \"numeric\",\n    });\n  };\n\n  const getStudentInitials = (name: string) => {\n    return name\n      .split(\" \")\n      .map((n) => n[0])\n      .join(\"\")\n      .toUpperCase()\n      .slice(0, 2);\n  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

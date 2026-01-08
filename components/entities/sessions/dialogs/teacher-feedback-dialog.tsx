@@ -47,35 +47,35 @@ export default function TeacherFeedbackDialog({
     try {
       let mediaUrls: string[] = [];
 
-      // Upload files if any are selected
+      // Upload files if any are selected using pre-signed URLs
       if (selectedFiles.length > 0) {
-        const formData = new FormData();
-        selectedFiles.forEach((file) => {
-          formData.append("files", file);
-        });
-
-        // Verify FormData has files
-        const hasFiles = Array.from(formData.entries()).length > 0;
-        if (!hasFiles) {
-          throw new Error("No files to upload");
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/upload/feedback-media`,
-          {
-            method: "POST",
-            body: formData,
+        const uploadPromises = selectedFiles.map(async (file) => {
+          // Get pre-signed URL
+          const getUrlRes = await fetch(
+            `/api/s3-upload-url?fileName=${encodeURIComponent(
+              file.name
+            )}&fileType=${encodeURIComponent(file.type)}&folder=feedback`
+          );
+          if (!getUrlRes.ok) {
+            throw new Error(`Failed to get upload URL for ${file.name}`);
           }
-        );
+          const { url } = await getUrlRes.json();
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Upload error:", errorText);
-          throw new Error(`Failed to upload files: ${response.status} ${response.statusText}`);
-        }
+          // Upload directly to S3
+          const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload ${file.name}`);
+          }
 
-        const data = await response.json();
-        mediaUrls = data.urls;
+          // Construct the final S3 URL
+          const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/feedback/${encodeURIComponent(file.name)}`;
+          return s3Url;
+        });
+        mediaUrls = await Promise.all(uploadPromises);
       }
 
       // Separate media URLs into images and videos

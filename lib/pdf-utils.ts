@@ -38,7 +38,7 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
             <div style="text-align: center; font-size: 12px; line-height: 2; margin-bottom: 20px; color: #000000;">
               <p style="margin: 2px 0;">อาคารโครงการลาซาล อเวนิว ชั้น 2 ห้องเลขที่ H-209</p>
               <p style="margin: 2px 0;">549, 549/1 ถนนลาซาล-แบริ่ง แขวงบางนาใต้ เขตบางนา กรุงเทพฯ 10260</p>
-              <p style="margin: 2px 0;"> โทรศัพท์ 083 887 1199     เลขประจำตัวผู้เสียภาษี 0105561131663</p>
+              <p style="margin: 2px 0;">โทรศัพท์ 083 887 1199&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;เลขประจำตัวผู้เสียภาษี 0105561131663</p>
             </div>
           </div>
         </div>
@@ -53,15 +53,13 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
           <table style="width: 100%; font-size: 14px;">
             <tr>
               <td style="width: 120px; padding: 4px 0; color: #000000;"><strong>เอกสารเลขที่</strong></td>
-              <td style="padding: 4px 0; color: #000000;">${
-                invoice.documentId
-              }</td>
+              <td style="padding: 4px 0; color: #000000;">${invoice.documentId}</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>วันที่ </strong></td>
+              <td style="padding: 4px 0; color: #000000;"><strong>วันที่</strong></td>
               <td style="padding: 4px 0; color: #000000;">${new Date(
                 invoice.date
-              ).toLocaleDateString("en-US", {
+              ).toLocaleDateString("en-GB", {
                 year: "numeric",
                 month: "2-digit",
                 day: "2-digit",
@@ -74,11 +72,17 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
               }</td>
             </tr>
             <tr>
+              <td style="padding: 4px 0; color: #000000;"><strong>ชื่อเล่น</strong></td>
+              <td style="padding: 4px 0; color: #000000;">${
+                invoice.studentNickname || "-"
+              }</td>
+            </tr>
+            <tr>
               <td style="padding: 4px 0; color: #000000;"><strong>ที่อยู่</strong></td>
               <td style="padding: 4px 0; color: #000000;">-</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>เลขประจำตัวผู้เสียภาษีอากร  </strong></td>
+              <td style="padding: 4px 0; color: #000000;"><strong>เลขประจำตัวผู้เสียภาษี</strong></td>
               <td style="padding: 4px 0; color: #000000;">-</td>
             </tr>
           </table>

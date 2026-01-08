@@ -16,13 +16,14 @@ interface StatisticsContentProps {
   endDate?: string;
   teacherId?: number;
   countBy?: 'timeslot' | 'enrollment';
+  attendance?: string;
 }
 
-export default async function StatisticsContent({ startDate, endDate, teacherId, countBy }: StatisticsContentProps) {
+export default async function StatisticsContent({ startDate, endDate, teacherId, countBy, attendance }: StatisticsContentProps) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  const filter = { startDate, endDate, teacherId, countBy };
+  const filter = { startDate, endDate, teacherId, countBy, attendance };
   
   let data = null;
   let error = null;

@@ -22,6 +22,7 @@ export interface Invoice {
   receiptDone: boolean;
   // type: "course" | "courseplus" | "package";
   studentName: string | null;
+  studentNickname?: string | null;
   courseName: string | null;
   items: InvoiceItem[];
 }

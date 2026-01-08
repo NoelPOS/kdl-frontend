@@ -32,9 +32,10 @@ export function StatisticsFilter() {
   );
   const [teacherId, setTeacherId] = useState(searchParams.get("teacherId") || "");
   const [countBy, setCountBy] = useState<'timeslot' | 'enrollment'>(searchParams.get("countBy") as 'timeslot' | 'enrollment' || 'timeslot');
+  const [attendance, setAttendance] = useState(searchParams.get("attendance") || "");
 
   // Calculate active filters count
-  const activeFiltersCount = [startDate, endDate, teacherId].filter(Boolean).length;
+  const activeFiltersCount = [startDate, endDate, teacherId, attendance !== "" ? attendance : null].filter(Boolean).length;
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -57,6 +58,7 @@ export function StatisticsFilter() {
     if (startDate) params.set("startDate", format(startDate, "yyyy-MM-dd"));
     if (endDate) params.set("endDate", format(endDate, "yyyy-MM-dd"));
     if (teacherId) params.set("teacherId", teacherId);
+    if (attendance) params.set("attendance", attendance);
     params.set("countBy", countBy);
     
     router.push(`${pathname}?${params.toString()}`);
@@ -66,6 +68,7 @@ export function StatisticsFilter() {
     setStartDate(undefined);
     setEndDate(undefined);
     setTeacherId("");
+    setAttendance("");
     setCountBy('timeslot');
     router.push(pathname);
   }, [router, pathname]);
@@ -193,6 +196,27 @@ export function StatisticsFilter() {
                       {teacher.name}
                     </option>
                   ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Attendance Filter */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="attendance">Class Attendance (Optional)</Label>
+              <div className="relative">
+                <select
+                  id="attendance"
+                  value={attendance}
+                  onChange={(e) => setAttendance(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none text-sm"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="completed">Completed</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending">Pending</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="absent">Absent</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>

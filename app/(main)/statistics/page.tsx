@@ -39,6 +39,7 @@ export default async function StatisticsPage({
         endDate: (resolvedSearchParams.endDate as string) || undefined,
         teacherId: resolvedSearchParams.teacherId ? parseInt(resolvedSearchParams.teacherId as string) : undefined,
         countBy: (resolvedSearchParams.countBy as 'timeslot' | 'enrollment') || undefined,
+        attendance: (resolvedSearchParams.attendance as string) || undefined,
       };
 
       const { lastUpdated: timestamp } = await fetchDashboardOverview(accessToken, filter);
@@ -60,7 +61,7 @@ export default async function StatisticsPage({
         </div>
       ) : (
         <Suspense
-          key={`${resolvedSearchParams.startDate || ""}${resolvedSearchParams.endDate || ""}${resolvedSearchParams.teacherId || ""}${resolvedSearchParams.countBy || ""}`}
+          key={`${resolvedSearchParams.startDate || ""}${resolvedSearchParams.endDate || ""}${resolvedSearchParams.teacherId || ""}${resolvedSearchParams.countBy || ""}${resolvedSearchParams.attendance || ""}`}
           fallback={<AuthLoadingPage />}
         >
           <StatisticsContent
@@ -68,6 +69,7 @@ export default async function StatisticsPage({
             endDate={(resolvedSearchParams.endDate as string) || undefined}
             teacherId={resolvedSearchParams.teacherId ? parseInt(resolvedSearchParams.teacherId as string) : undefined}
             countBy={(resolvedSearchParams.countBy as 'timeslot' | 'enrollment') || 'timeslot'}
+            attendance={(resolvedSearchParams.attendance as string) || undefined}
           />
         </Suspense>
       )}
