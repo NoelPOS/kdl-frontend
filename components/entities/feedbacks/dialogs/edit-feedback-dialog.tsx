@@ -303,7 +303,37 @@ export default function EditFeedbackDialog({
     }
   };
 
-  if (!feedback) {\n    return null;\n  }\n\n  const handleReset = () => {\n    setFeedbackText(originalFeedbackText);\n    showToast.info(\"Feedback reset to original text\");\n  };\n\n  const handleSubmit = async (e: React.FormEvent) => {\n    e.preventDefault();\n    // Default form submit behavior can be handled by Save button\n  };\n\n  const formatDate = (dateString: string) => {\n    const date = new Date(dateString);\n    return date.toLocaleDateString(\"en-US\", {\n      day: \"2-digit\",\n      month: \"short\",\n      year: \"numeric\",\n    });\n  };\n\n  const getStudentInitials = (name: string) => {\n    return name\n      .split(\" \")\n      .map((n) => n[0])\n      .join(\"\")\n      .toUpperCase()\n      .slice(0, 2);\n  };
+  if (!feedback) {
+    return null;
+  }
+
+  const handleReset = () => {
+    setFeedbackText(originalFeedbackText);
+    showToast.info("Feedback reset to original text");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Default form submit behavior can be handled by Save button
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getStudentInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

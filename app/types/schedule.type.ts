@@ -14,6 +14,8 @@ export interface ClassSchedule {
   schedule_remark: string;
   schedule_feedback?: string; // Teacher feedback field
   schedule_feedbackDate?: string; // When feedback was submitted
+  schedule_feedbackImages?: string[]; // S3 URLs of feedback images
+  schedule_feedbackVideos?: string[]; // S3 URLs of feedback videos
   schedule_verifyFb?: boolean; // Whether feedback is verified
   schedule_feedbackModifiedByName?: string; // Who last modified feedback
   schedule_feedbackModifiedAt?: string; // When feedback was last modified
@@ -51,6 +53,8 @@ export type FormData = {
   remark: string;
   feedback?: string; // Teacher feedback field
   feedbackDate?: string; // When feedback was submitted
+  feedbackImages?: string[]; // S3 URLs of feedback images
+  feedbackVideos?: string[]; // S3 URLs of feedback videos
   status?: string;
   courseId: number;
   studentId?: number;

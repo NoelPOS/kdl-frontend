@@ -91,7 +91,7 @@ export function EditSchedule({
   const validateStartTime = (value: string) => {
     if (!value) return "Start time is required";
     if (!isWithinBusinessHours(value)) {
-      return "Start time must be between 9:00 AM and 5:00 PM";
+      return "Please enter a valid time";
     }
     if (endTime && value >= endTime) {
       return "Start time must be before end time";
@@ -102,7 +102,7 @@ export function EditSchedule({
   const validateEndTime = (value: string) => {
     if (!value) return "End time is required";
     if (!isWithinBusinessHours(value)) {
-      return "End time must be between 9:00 AM and 5:00 PM";
+      return "Please enter a valid time";
     }
     if (startTime && value <= startTime) {
       return "End time must be after start time";

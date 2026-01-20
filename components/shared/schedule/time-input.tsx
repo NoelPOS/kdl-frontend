@@ -13,8 +13,8 @@ interface TimeInputProps {
   error?: string;
   required?: boolean;
   validation?: any;
-  min?: string; // Minimum time (e.g., "09:00")
-  max?: string; // Maximum time (e.g., "17:00")
+  min?: string; // Minimum time (e.g., "00:00")
+  max?: string; // Maximum time (e.g., "23:59")
 }
 
 export const TimeInput: React.FC<TimeInputProps> = ({
@@ -26,8 +26,8 @@ export const TimeInput: React.FC<TimeInputProps> = ({
   error,
   required = false,
   validation = {},
-  min = "09:00",
-  max = "17:00",
+  min = "00:00",
+  max = "23:59",
 }) => (
   <div className="space-y-1">
     <Label className={` ${error ? "text-red-500" : "text-black"}`}>

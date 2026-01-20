@@ -23,23 +23,46 @@ export const DAYS_OF_WEEK = [
   { key: "sunday", label: "Sun", dayIndex: 0 },
 ];
 
+// Helper to determine option type (same logic as in dialogs)
+function getOptionType(classMode: string, optionType?: 'camp' | 'fixed' | 'check'): 'camp' | 'fixed' | 'check' {
+  if (optionType) return optionType;
+  // Fallback
+  const name = classMode.toLowerCase();
+  if (name.includes('camp')) return 'camp';
+  if (name.includes('fixed') || name.includes('times')) return 'fixed';
+  return 'check';
+}
+
 export function generateScheduleRows(
   students: Student[],
   classSchedule: ComfirmClassScheduleData,
   teacherData: TeacherData
 ): ComfirmScheduleRow[] {
   const rows: ComfirmScheduleRow[] = [];
+  const { classType } = classSchedule;
+  
+  // Use explicit optionType if available, or fallback to name inference
+  const optionType = getOptionType(classType.classMode, classType.optionType);
+  const limit = classType.classLimit || 0;
 
-  console.log("Generating schedule rows for class mode:", classSchedule);
-  console.log("Students:", students);
-  console.log("Teacher data:", teacherData);
+  console.log("Generating schedule rows:", {
+    classMode: classType.classMode,
+    optionType,
+    limit,
+    studentsCount: students.length
+  });
 
-  if (classSchedule.classType.classMode === "12 times check") {
-    // For 12 times check, create 12 placeholder rows
-    for (let i = 0; i < 12; i++) {
+  if (optionType === 'check') {
+    // Generate placeholder rows based on class limit (default to 1, or 12 if name implies)
+    // Legacy support: if name has "12 times", use 12. New support: use limit.
+    let count = limit;
+    if (count === 0 && classType.classMode.includes("12 times")) count = 12;
+    if (count === 0) count = 1; // Default to at least 1 row
+
+    for (let i = 0; i < count; i++) {
       students.forEach((student) => {
         rows.push({
-          date: undefined, // Placeholder, will be set later
+          date: undefined, 
           time: "TBD - TBD",
           student: student.nickname || student.name,
           teacher: "TBD",
@@ -51,20 +74,24 @@ export function generateScheduleRows(
         });
       });
     }
-  } else if (classSchedule.classType.classMode === "12 times fixed") {
-    // Generate 12 sessions based on selected days
+  } else if (optionType === 'fixed') {
+    // Generate sessions based on selected days for the duration of the limit
     if (classSchedule.fixedDays && classSchedule.fixedDays.length > 0) {
       const selectedDays = classSchedule.fixedDays;
       const startTime = classSchedule.fixedStartTime;
       const endTime = classSchedule.fixedEndTime;
 
-      // Generate dates for the next 12 sessions
+      // Determine number of sessions
+      let sessionCount = limit;
+      if (sessionCount === 0 && classType.classMode.includes("12 times")) sessionCount = 12;
+      if (sessionCount === 0) sessionCount = 12; // Fallback default
+
+      // Generate dates for the next N sessions
       const today = new Date();
       const sessionDates: string[] = [];
       const currentDate = new Date(today);
 
-      // Find the next 12 occurrences of the selected days
-      while (sessionDates.length < 12) {
+      while (sessionDates.length < sessionCount) {
         const dayOfWeek = DAYS_OF_WEEK.find(
           (d) => d.dayIndex === currentDate.getDay()
         );
@@ -91,10 +118,7 @@ export function generateScheduleRows(
         });
       });
     }
-  } else if (
-    classSchedule.classType.classMode === "5 days camp" ||
-    classSchedule.classType.classMode === "2 days camp"
-  ) {
+  } else if (optionType === 'camp') {
     // Generate sessions based on selected dates
     if (classSchedule.campDates && classSchedule.campDates.length > 0) {
       const startTime = classSchedule.campStartTime;
@@ -117,22 +141,6 @@ export function generateScheduleRows(
         });
       });
     }
-  }
-  else if (classSchedule.classType.classMode === "1 times check") {
-    students.forEach((student) => {
-      rows.push({
-        date: undefined, 
-        time: "TBD - TBD",
-        student: student.nickname || student.name,
-        teacher: "TBD",
-        room: "TBD",
-        remark: "TBD",
-        warning: "TBD",
-        studentId: Number(student.id),
-        studentIdDisplay: student.studentId 
-      });
-    }
-    );
   }
 
   return rows;

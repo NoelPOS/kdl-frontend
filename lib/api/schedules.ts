@@ -108,6 +108,34 @@ export async function updateSchedule(
   return res.data;
 }
 
+interface VerifyFeedbackData {
+  feedback: string;
+  feedbackImages?: string[];
+  feedbackVideos?: string[];
+  verifyFb?: boolean;
+  verificationNote?: string;
+}
+
+export async function verifyScheduleFeedback(
+  scheduleId: number,
+  data: VerifyFeedbackData
+): Promise<{
+  success: boolean;
+  message: string;
+  scheduleId: number;
+  feedbackModifiedByName?: string;
+  feedbackModifiedAt?: string;
+}> {
+  const res = await clientApi.patch<{
+    success: boolean;
+    message: string;
+    scheduleId: number;
+    feedbackModifiedByName?: string;
+    feedbackModifiedAt?: string;
+  }>(`/schedules/${scheduleId}/verify-feedback`, data);
+  return res.data;
+}
+
 export async function getSchedulesByStudentAndSession(
   sessionId: number,
   studentId: number,

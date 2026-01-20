@@ -221,48 +221,23 @@ export function StatisticsFilter() {
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
-          </div>
 
-          {/* Counting Perspective Toggle */}
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <Label className="mb-2 block text-sm font-medium text-gray-700">Counting Perspective</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={countBy === 'timeslot' ? 'default' : 'outline'}
-                onClick={() => setCountBy('timeslot')}
-                className={cn(
-                  "flex-1",
-                  countBy === 'timeslot' 
-                    ? "bg-yellow-500 hover:bg-yellow-600 text-white" 
-                    : "bg-white hover:bg-gray-100 text-gray-700"
-                )}
-              >
-                <GraduationCap className="mr-2 h-4 w-4" />
-                Teacher View
-                <span className="ml-2 text-xs opacity-80">(Unique Classes)</span>
-              </Button>
-              <Button
-                type="button"
-                variant={countBy === 'enrollment' ? 'default' : 'outline'}
-                onClick={() => setCountBy('enrollment')}
-                className={cn(
-                  "flex-1",
-                  countBy === 'enrollment' 
-                    ? "bg-yellow-500 hover:bg-yellow-600 text-white" 
-                    : "bg-white hover:bg-gray-100 text-gray-700"
-                )}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Student View
-                <span className="ml-2 text-xs opacity-80">(Total Enrollments)</span>
-              </Button>
+            {/* Counting Perspective Select */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="countBy">Counting Perspective (Optional)</Label>
+              <div className="relative">
+                <select
+                  id="countBy"
+                  value={countBy}
+                  onChange={(e) => setCountBy(e.target.value as 'timeslot' | 'enrollment')}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none text-sm"
+                >
+                  <option value="timeslot">Teacher View (Class Count)</option>
+                  <option value="enrollment">Student View (Schedule Count)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              </div>
             </div>
-            <p className="mt-2 text-xs text-gray-500">
-              {countBy === 'timeslot' 
-                ? "Counts unique time slots (3 students at same time = 1 class)"
-                : "Counts individual enrollments (3 students at same time = 3 enrollments)"}
-            </p>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">

@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { updateSchedule } from "@/lib/api";
 import AttendanceConfirmationDialog from "../dialogs/attendance-confirmation-dialog";
+import MediaPreview from "@/components/shared/media-preview";
 
 
 const getAttendanceBadge = (attendance: string | null | undefined) => {
@@ -269,6 +270,8 @@ export default function RoleAwareScheduleTable({
         remark: selectedSchedule.schedule_remark,
         feedback: selectedSchedule.schedule_feedback || "",
         feedbackDate: selectedSchedule.schedule_feedbackDate || "",
+        feedbackImages: selectedSchedule.schedule_feedbackImages || [],
+        feedbackVideos: selectedSchedule.schedule_feedbackVideos || [],
         status: selectedSchedule.schedule_attendance,
         courseId: parseInt(selectedSchedule.schedule_courseId),
         studentId: parseInt(selectedSchedule.student_id),
@@ -430,6 +433,11 @@ export default function RoleAwareScheduleTable({
                   {!showStudentHeader && (
                     <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
                       {session.student_name}
+                      {session.student_nickname && (
+                        <span className="text-gray-500 ml-1">
+                          ({session.student_nickname})
+                        </span>
+                      )}
                     </TableCell>
                   )}
                   {viewMode === "Confirm" && (
@@ -708,6 +716,20 @@ export default function RoleAwareScheduleTable({
                         "No feedback available"}
                     </div>
                   </div>
+
+                  {/* Feedback Images and Videos */}
+                  {((feedbackSchedule.schedule_feedbackImages && feedbackSchedule.schedule_feedbackImages.length > 0) ||
+                    (feedbackSchedule.schedule_feedbackVideos && feedbackSchedule.schedule_feedbackVideos.length > 0)) && (
+                    <div className="bg-white rounded-md p-4 shadow-sm">
+                      <div className="text-sm font-semibold text-gray-700 mb-3">
+                        Attached Media
+                      </div>
+                      <MediaPreview
+                        images={feedbackSchedule.schedule_feedbackImages || []}
+                        videos={feedbackSchedule.schedule_feedbackVideos || []}
+                      />
+                    </div>
+                  )}
 
                   {feedbackSchedule.schedule_feedbackDate && (
                     <div className="text-xs text-gray-500 text-center">

@@ -69,6 +69,7 @@ export default function MediaPreview({
                     alt={`Feedback image ${index + 1}`}
                     fill
                     className="object-cover"
+                    unoptimized={true}
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -157,6 +158,7 @@ export default function MediaPreview({
                       alt={`Media ${selectedIndex + 1}`}
                       fill
                       className="object-contain"
+                      unoptimized={true}
                     />
                   </div>
                 ) : (

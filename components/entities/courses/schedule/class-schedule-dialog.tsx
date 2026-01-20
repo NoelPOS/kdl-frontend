@@ -29,12 +29,16 @@ import {
   getRequiredCampDateCount,
 } from "@/lib/validation-utils";
 
-// Constants
-const CLASS_TYPES = {
-  TWELVE_TIMES_FIXED: "12 times fixed",
-  FIVE_DAYS_CAMP: "5 days camp",
-  TWO_DAYS_CAMP: "2 days camp",
-} as const;
+// Helper function to get option type with fallback for backward compatibility
+function getOptionType(option: ClassOption | undefined): 'camp' | 'fixed' | 'check' {
+  if (!option) return 'check';
+  if (option.optionType) return option.optionType;
+  // Fallback: infer from name for old data without optionType
+  const name = option.classMode.toLowerCase();
+  if (name.includes('camp')) return 'camp';
+  if (name.includes('fixed') || name.includes('times')) return 'fixed';
+  return 'check';
+}
 
 const VALIDATION_MESSAGES = {
   SELECT_CLASS_TYPE: "Please select a class type.",
@@ -47,22 +51,23 @@ const validateDayDateSelection = (
   selectedDays: string[],
   selectedDates: string[]
 ): boolean => {
-  if (selectedCourseType.classMode === CLASS_TYPES.TWELVE_TIMES_FIXED) {
+  const optionType = getOptionType(selectedCourseType);
+  
+  if (optionType === 'fixed') {
     if (selectedDays.length === 0) {
       showToast.error(VALIDATION_MESSAGES.SELECT_DAYS_FIXED);
       return false;
     }
-  } else if (
-    selectedCourseType.classMode === CLASS_TYPES.FIVE_DAYS_CAMP ||
-    selectedCourseType.classMode === CLASS_TYPES.TWO_DAYS_CAMP
-  ) {
+  } else if (optionType === 'camp') {
     const requiredCount = getRequiredCampDateCount(
-      selectedCourseType.classMode
+      selectedCourseType.classMode,
+      selectedCourseType.classLimit
     );
     if (selectedDates.length !== requiredCount) {
       const message = getCampDateValidationMessage(
         selectedCourseType.classMode,
-        selectedDates.length
+        selectedDates.length,
+        requiredCount
       );
       showToast.error(message);
       return false;
@@ -274,11 +279,11 @@ export function ClassScheduleDialog({
                 }}
               />
 
-              {/* 12 Times Fixed - Day selection with start/end time */}
-              {classType === CLASS_TYPES.TWELVE_TIMES_FIXED && (
+              {/* Fixed - Day selection with start/end time */}
+              {getOptionType(selectedCourseOption) === 'fixed' && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
-                    12 Times Fixed Schedule
+                    Fixed Schedule
                   </h3>
 
                   <DaySelector
@@ -337,8 +342,7 @@ export function ClassScheduleDialog({
               )}
 
               {/* Camp Class - Calendar selection with start/end time */}
-              {(classType === CLASS_TYPES.FIVE_DAYS_CAMP ||
-                classType === CLASS_TYPES.TWO_DAYS_CAMP) && (
+              {getOptionType(selectedCourseOption) === 'camp' && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
                   <h3 className="font-medium text-gray-900">
                     Camp Class Schedule
@@ -354,7 +358,8 @@ export function ClassScheduleDialog({
                     maxSelectable={
                       selectedCourseOption
                         ? getRequiredCampDateCount(
-                            selectedCourseOption.classMode
+                            selectedCourseOption.classMode,
+                            selectedCourseOption.classLimit
                           )
                         : undefined
                     }
@@ -363,7 +368,11 @@ export function ClassScheduleDialog({
                       selectedCourseOption
                         ? getCampDateValidationMessage(
                             selectedCourseOption.classMode,
-                            selectedDates.length
+                            selectedDates.length,
+                            getRequiredCampDateCount(
+                              selectedCourseOption.classMode,
+                              selectedCourseOption.classLimit
+                            )
                           )
                         : undefined
                     }

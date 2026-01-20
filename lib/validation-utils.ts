@@ -2,8 +2,8 @@
 
 // Time validation constants
 export const BUSINESS_HOURS = {
-  START: "09:00",
-  END: "17:00",
+  START: "00:00",
+  END: "23:59",
 } as const;
 
 export const isWithinBusinessHours = (time: string): boolean => {
@@ -39,7 +39,9 @@ export const isCorrectCampDateCount = (
   return true;
 };
 
-export const getRequiredCampDateCount = (classMode: string): number => {
+export const getRequiredCampDateCount = (classMode: string, limit?: number): number => {
+  if (limit) return limit;
+  // Fallback for legacy behavior if limit not provided
   if (classMode === "5 days camp") return 5;
   if (classMode === "2 days camp") return 2;
   return 0;
@@ -47,9 +49,10 @@ export const getRequiredCampDateCount = (classMode: string): number => {
 
 export const getCampDateValidationMessage = (
   classMode: string,
-  selectedCount: number
+  selectedCount: number,
+  requiredCount?: number
 ): string => {
-  const required = getRequiredCampDateCount(classMode);
+  const required = requiredCount || getRequiredCampDateCount(classMode);
   if (required === 0) return "";
 
   if (selectedCount === 0) {
@@ -74,7 +77,7 @@ export const getTimeValidationRules = (
     validate: {
       withinBusinessHours: (value: string) => {
         if (!isWithinBusinessHours(value)) {
-          return "Time must be between 9:00 AM and 5:00 PM";
+          return "Please enter a valid time";
         }
         return true;
       },
@@ -106,7 +109,7 @@ export const getTimeErrorMessage = (error: any): string | undefined => {
   }
 
   if (error.type === "withinBusinessHours") {
-    return "Time must be between 9:00 AM and 5:00 PM";
+    return "Please enter a valid time";
   }
 
   if (error.type === "validRange") {

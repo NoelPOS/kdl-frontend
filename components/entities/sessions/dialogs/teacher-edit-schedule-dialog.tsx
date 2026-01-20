@@ -30,8 +30,10 @@ import {
   User,
   BookOpen,
   MessageSquare,
+  Image as ImageIcon,
 } from "lucide-react";
 import FileUpload from "@/components/shared/file-upload";
+import MediaPreview from "@/components/shared/media-preview";
 
 interface TeacherEditScheduleProps {
   open: boolean;
@@ -67,6 +69,8 @@ export default function TeacherEditScheduleDialog({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasPreviousFeedback, setHasPreviousFeedback] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [existingVideos, setExistingVideos] = useState<string[]>([]);
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(files);
@@ -78,6 +82,9 @@ export default function TeacherEditScheduleDialog({
       const existingFeedback = initialData.feedback || "";
       setFeedback(existingFeedback);
       setHasPreviousFeedback(!!existingFeedback.trim());
+      // Set existing images and videos
+      setExistingImages(initialData.feedbackImages || []);
+      setExistingVideos(initialData.feedbackVideos || []);
     }
   }, [initialData]);
 
@@ -104,6 +111,8 @@ export default function TeacherEditScheduleDialog({
       setSelectedFiles([]);
       setIsSubmitting(false);
       setHasPreviousFeedback(false); // Reset feedback state
+      setExistingImages([]);
+      setExistingVideos([]);
     }
   }, [open]);
 
@@ -317,10 +326,25 @@ export default function TeacherEditScheduleDialog({
 
               {hasPreviousFeedback ? (
                 // Show existing feedback as read-only
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="p-3 bg-gray-50 border rounded-md">
                     <p className="text-sm text-gray-700">{feedback}</p>
                   </div>
+                  
+                  {/* Show existing media attachments */}
+                  {(existingImages.length > 0 || existingVideos.length > 0) && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <ImageIcon className="h-4 w-4" />
+                        <span>Attached media ({existingImages.length + existingVideos.length} files)</span>
+                      </div>
+                      <MediaPreview 
+                        images={existingImages}
+                        videos={existingVideos}
+                      />
+                    </div>
+                  )}
+                  
                   <p className="text-xs text-gray-500">
                     Feedback has already been provided and cannot be modified.
                   </p>

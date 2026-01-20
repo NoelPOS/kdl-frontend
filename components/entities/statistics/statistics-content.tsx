@@ -97,7 +97,7 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
             <CardContent>
               <div className="text-4xl font-bold text-gray-900">{data.teacherClassCount}</div>
               <p className="text-sm text-gray-500 mt-1">
-                {countBy === 'enrollment' ? 'total enrollments' : 'unique timeslots'}
+                {countBy === 'enrollment' ? 'schedule count' : 'class count'}
               </p>
             </CardContent>
           </Card>
@@ -127,8 +127,8 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
             <CardTitle>Class Distribution by Course</CardTitle>
             <CardDescription>
               {countBy === 'enrollment' 
-                ? 'Number of total enrollments per course type'
-                : 'Number of unique timeslots per course type'}
+                ? 'Number of schedules per course type'
+                : 'Number of classes per course type'}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -139,7 +139,7 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
                     <TableHead className="border h-20 text-center whitespace-nowrap min-w-[80px]">Rank</TableHead>
                     <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[200px]">Course</TableHead>
                     <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[120px]">
-                      {countBy === 'enrollment' ? 'Enrollments' : 'Timeslots'}
+                      {countBy === 'enrollment' ? 'Schedule Count' : 'Class Count'}
                     </TableHead>
                   </TableRow>
                 </TableHeader>

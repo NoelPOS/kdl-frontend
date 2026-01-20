@@ -13,12 +13,7 @@ export type TeacherData = {
 };
 
 export type ComfirmClassScheduleData = {
-  classType: {
-    id: number;
-    classLimit: number;
-    classMode: string;
-    tuitionFee: number;
-  };
+  classType: ClassOption;
   // For 12 times fixed
   fixedDays?: string[];
   fixedStartTime?: string;
@@ -85,4 +80,5 @@ export type ClassOption = {
   classMode: string;
   classLimit: number;
   tuitionFee: number;
+  optionType?: 'camp' | 'fixed' | 'check';
 };

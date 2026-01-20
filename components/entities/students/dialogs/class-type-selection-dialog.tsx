@@ -27,12 +27,16 @@ import {
   getRequiredCampDateCount,
 } from "@/lib/validation-utils";
 
-// Constants from original dialog
-const CLASS_TYPES = {
-  TWELVE_TIMES_FIXED: "12 times fixed",
-  FIVE_DAYS_CAMP: "5 days camp",
-  TWO_DAYS_CAMP: "2 days camp",
-} as const;
+// Helper function to get option type with fallback for backward compatibility
+function getOptionType(option: ClassOption | undefined): 'camp' | 'fixed' | 'check' {
+  if (!option) return 'check';
+  if (option.optionType) return option.optionType;
+  // Fallback: infer from name for old data without optionType
+  const name = option.classMode.toLowerCase();
+  if (name.includes('camp')) return 'camp';
+  if (name.includes('fixed') || name.includes('times')) return 'fixed';
+  return 'check';
+}
 
 type FormData = {
   classTypeId: string;
@@ -154,7 +158,9 @@ export default function ClassTypeSelectionDialog({
       }
 
       // Validate day/date selection with detailed toast messages
-      if (selectedCourseType.classMode === CLASS_TYPES.TWELVE_TIMES_FIXED) {
+      const optionType = getOptionType(selectedCourseType);
+      
+      if (optionType === 'fixed') {
         if (selectedDays.length === 0) {
           showToast.error(
             "Please select at least one day for the fixed schedule."
@@ -172,12 +178,10 @@ export default function ClassTypeSelectionDialog({
           showToast.error("Please select an end time for the fixed schedule.");
           return;
         }
-      } else if (
-        selectedCourseType.classMode === CLASS_TYPES.FIVE_DAYS_CAMP ||
-        selectedCourseType.classMode === CLASS_TYPES.TWO_DAYS_CAMP
-      ) {
+      } else if (optionType === 'camp') {
         const requiredCount = getRequiredCampDateCount(
-          selectedCourseType.classMode
+          selectedCourseType.classMode,
+          selectedCourseType.classLimit
         );
 
         if (selectedDates.length === 0) {
@@ -263,11 +267,11 @@ export default function ClassTypeSelectionDialog({
             }}
           />
 
-          {/* 12 Times Fixed Schedule */}
-          {classType === CLASS_TYPES.TWELVE_TIMES_FIXED && (
+          {/* Fixed Schedule */}
+          {getOptionType(selectedCourseOption) === 'fixed' && (
             <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-medium text-gray-900">
-                12 Times Fixed Schedule
+                Fixed Schedule
               </h3>
 
               {/* Day Selection */}
@@ -322,8 +326,7 @@ export default function ClassTypeSelectionDialog({
           )}
 
           {/* Camp Schedule */}
-          {(classType === CLASS_TYPES.FIVE_DAYS_CAMP ||
-            classType === CLASS_TYPES.TWO_DAYS_CAMP) && (
+          {getOptionType(selectedCourseOption) === 'camp' && (
             <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
               <h3 className="font-medium text-gray-900">Camp Class Schedule</h3>
 
@@ -337,7 +340,7 @@ export default function ClassTypeSelectionDialog({
                 label="Select Dates"
                 maxSelectable={
                   selectedCourseOption
-                    ? getRequiredCampDateCount(selectedCourseOption.classMode)
+                    ? getRequiredCampDateCount(selectedCourseOption.classMode, selectedCourseOption.classLimit)
                     : undefined
                 }
                 classMode={selectedCourseOption?.classMode}
