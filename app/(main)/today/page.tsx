@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { Course } from "@/app/types/today.type";
 import RenderSchedule from "@/components/entities/today/render-schedule";
 import PageHeader from "@/components/shared/page-header";
+import TriggerDailyNotificationButton from "@/components/entities/today/trigger-daily-notification-button";
 import { getTodaySchedules } from "@/lib/api";
 import { cookies } from "next/headers";
 import Image from "next/image";
@@ -48,7 +49,9 @@ export default async function TodayPage() {
   return (
     <div className="p-6 bg-white h-screen">
       <div className="max-w-full mx-auto">
-        <PageHeader title={formattedDate} lastUpdated={lastUpdated} className="mb-6" />
+        <PageHeader title={formattedDate} lastUpdated={lastUpdated} className="mb-6">
+          <TriggerDailyNotificationButton />
+        </PageHeader>
         
         {hasCourses ? (
           <RenderSchedule

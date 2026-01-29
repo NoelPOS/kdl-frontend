@@ -74,3 +74,17 @@ export const notificationApi: NotificationApi = {
     return response.data;
   },
 };
+
+export interface TriggerDailyNotificationsResponse {
+  success: boolean;
+  message: string;
+  targetDate: string | null;
+  daysOffset: number;
+}
+
+export const triggerDailyNotifications = async (daysOffset: number = 3): Promise<TriggerDailyNotificationsResponse> => {
+  const response = await api.get<TriggerDailyNotificationsResponse>('/line/trigger-daily-notifications', {
+    params: { daysOffset },
+  });
+  return response.data;
+};
