@@ -53,6 +53,10 @@ export default async function StatisticsPage({
     <div className="p-6">
       <PageHeader title="Statistics & Analytics" lastUpdated={lastUpdated} />
       
+      <p className="text-sm text-gray-600 mb-4">
+        View metrics by date range and optionally by teacher. Choose <strong>Teacher View</strong> to count distinct classes (timeslots: same date, time, room = 1) or <strong>Student View</strong> to count each student enrollment (schedules). Then click &quot;Apply Filters&quot; to load data.
+      </p>
+      
       <StatisticsFilter />
       
       {!hasAppliedFilters ? (

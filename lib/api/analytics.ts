@@ -7,9 +7,12 @@ export interface CourseTypeCount {
 }
 
 export interface DashboardOverview {
+  timeslotCount: number;
+  scheduleCount: number;
+  activeStudentCount: number;
+  distinctCourseCount: number;
+  courseTypeCounts: CourseTypeCount[];
   teacherClassCount?: number;
-  courseTypeCounts?: CourseTypeCount[];
-  activeStudentCount?: number;
 }
 
 export interface AnalyticsFilter {

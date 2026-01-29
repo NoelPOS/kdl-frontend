@@ -103,26 +103,27 @@ export default function NotificationsPage() {
     if (!notification.isRead) {
       try {
         await notificationApi.markAsRead(notification.id);
-        setNotifications(prev => 
+        setNotifications(prev =>
           prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
         );
       } catch (error) {
         console.error('Failed to mark as read:', error);
       }
     }
-    
-    // Navigation logic
+
+    const { studentId, sessionId } = notification.data || {};
+
+    // Correct link: student session page (e.g. /student/1403/session/351)
+    if (studentId != null && sessionId != null) {
+      router.push(`/student/${studentId}/session/${sessionId}`);
+      return;
+    }
+
+    // Fallback when notification has no student/session in data
     if (notification.type === 'schedule_cancelled' || notification.type === 'schedule_confirmed') {
-      const { studentId, sessionId } = notification.data || {};
-      if (studentId && sessionId) {
-         router.push(`/student/${studentId}/session/${sessionId}`);
-      } else {
-        // If no student/session data, go to general schedule page
-        router.push(`/schedule`);
-      }
+      router.push('/schedule');
     } else if (notification.type === 'feedback_submitted') {
-       // Always redirect to feedback page
-       router.push(`/feedback`);
+      router.push('/feedback');
     }
   };
 

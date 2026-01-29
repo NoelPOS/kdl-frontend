@@ -90,18 +90,23 @@ export function NotificationBell() {
     if (!notification.isRead) {
       await handleMarkAsRead(notification.id);
     }
-    
-    // Determine redirect based on type
-    if (notification.type === 'schedule_cancelled' || notification.type === 'schedule_confirmed') {
-      if (notification.data?.scheduleId) {
-        router.push(`/schedules/${notification.data.scheduleId}`);
-      }
-    } else if (notification.type === 'feedback_submitted') {
-      if (notification.data?.scheduleId) {
-        router.push(`/schedules/${notification.data.scheduleId}`);
-      }
+
+    const { studentId, sessionId } = notification.data || {};
+
+    // Redirect to student session page when we have studentId and sessionId (correct URL)
+    if (studentId != null && sessionId != null) {
+      router.push(`/student/${studentId}/session/${sessionId}`);
+      setIsOpen(false);
+      return;
     }
-    
+
+    // Fallback by type when no student/session in data
+    if (notification.type === 'schedule_cancelled' || notification.type === 'schedule_confirmed') {
+      router.push('/schedule');
+    } else if (notification.type === 'feedback_submitted') {
+      router.push('/feedback');
+    }
+
     setIsOpen(false);
   };
 

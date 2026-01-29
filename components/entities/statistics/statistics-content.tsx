@@ -1,6 +1,6 @@
 import { fetchDashboardOverview } from "@/lib/api";
 import { cookies } from "next/headers";
-import { Users, GraduationCap, BookOpen } from "lucide-react";
+import { Users, GraduationCap, BookOpen, CalendarClock, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -53,9 +53,11 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
     );
   }
 
-  const hasData = data.activeStudentCount !== undefined || 
-                  data.teacherClassCount !== undefined || 
-                  (data.courseTypeCounts && data.courseTypeCounts.length > 0);
+  const isTeacherView = countBy === 'timeslot';
+  const hasData = data.activeStudentCount !== undefined ||
+    data.timeslotCount !== undefined ||
+    data.scheduleCount !== undefined ||
+    (data.courseTypeCounts && data.courseTypeCounts.length > 0);
 
   if (!hasData) {
     return (
@@ -65,70 +67,93 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
     );
   }
 
+  const mainCount = isTeacherView ? data.timeslotCount : data.scheduleCount;
+  const mainLabel = isTeacherView ? "Timeslots" : "Total Schedules";
+  const mainDescription = isTeacherView
+    ? "Distinct classes (same date, time, and room = 1). One class with 3 students = 1 timeslot."
+    : "Each student enrollment counts as one. One class with 3 students = 3 schedules.";
+
   return (
     <div className="mt-6 space-y-6">
+      {/* View explanation */}
+      <Card className="border border-gray-200 bg-gray-50/50">
+        <CardContent className="pt-4 pb-4">
+          <p className="text-sm text-gray-700">
+            {isTeacherView ? (
+              <>
+                <strong>Teacher View:</strong> Numbers are counted by <strong>timeslots</strong> (unique date + time + room).
+                One class with multiple students = one timeslot. Use this to see how many classes were taught.
+              </>
+            ) : (
+              <>
+                <strong>Student View:</strong> Numbers are counted by <strong>schedules</strong> (each enrollment).
+                One class with 3 students = 3 schedules. Use this to see total student enrollments.
+              </>
+            )}
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Active Students */}
-        {data.activeStudentCount !== undefined && (
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-yellow-600">
-                <Users className="h-4 w-4" />
-                Active Students
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-gray-900">{data.activeStudentCount}</div>
-              <p className="text-sm text-gray-500 mt-1">students in selected period</p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Main count: Timeslots or Schedules */}
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardHeader className="pb-3">
+            <CardDescription className="flex items-center gap-2 text-yellow-600">
+              {isTeacherView ? <CalendarClock className="h-4 w-4" /> : <ClipboardList className="h-4 w-4" />}
+              {mainLabel}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-gray-900">{mainCount}</div>
+            <p className="text-sm text-gray-500 mt-1">{mainDescription}</p>
+          </CardContent>
+        </Card>
 
-        {/* Teacher Classes */}
-        {data.teacherClassCount !== undefined && data.teacherClassCount > 0 && (
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-yellow-600">
-                <GraduationCap className="h-4 w-4" />
-                Classes Taught
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-gray-900">{data.teacherClassCount}</div>
-              <p className="text-sm text-gray-500 mt-1">
-                {countBy === 'enrollment' ? 'schedule count' : 'class count'}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Students */}
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardHeader className="pb-3">
+            <CardDescription className="flex items-center gap-2 text-yellow-600">
+              <Users className="h-4 w-4" />
+              Students
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-gray-900">{data.activeStudentCount}</div>
+            <p className="text-sm text-gray-500 mt-1">
+              Unique students in the selected period{teacherId ? " (for selected teacher)" : ""}.
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Total Course Types */}
-        {data.courseTypeCounts && data.courseTypeCounts.length > 0 && (
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardHeader className="pb-3">
-              <CardDescription className="flex items-center gap-2 text-yellow-600">
-                <BookOpen className="h-4 w-4" />
-                Course Types
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-gray-900">{data.courseTypeCounts.length}</div>
-              <p className="text-sm text-gray-500 mt-1">different courses</p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Courses */}
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardHeader className="pb-3">
+            <CardDescription className="flex items-center gap-2 text-yellow-600">
+              <BookOpen className="h-4 w-4" />
+              Courses
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-gray-900">{data.distinctCourseCount}</div>
+            <p className="text-sm text-gray-500 mt-1">
+              Different course types in the selected period.
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Course Breakdown */}
       {data.courseTypeCounts && data.courseTypeCounts.length > 0 && (
         <Card className="border border-gray-200">
           <CardHeader>
-            <CardTitle>Class Distribution by Course</CardTitle>
+            <CardTitle>
+              {isTeacherView ? "Timeslots by Course" : "Schedules by Course"}
+            </CardTitle>
             <CardDescription>
-              {countBy === 'enrollment' 
-                ? 'Number of schedules per course type'
-                : 'Number of classes per course type'}
+              {isTeacherView
+                ? "Number of distinct classes (timeslots) per course. Same date, time, room = one."
+                : "Number of schedule entries (student enrollments) per course."}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -139,7 +164,7 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
                     <TableHead className="border h-20 text-center whitespace-nowrap min-w-[80px]">Rank</TableHead>
                     <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[200px]">Course</TableHead>
                     <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[120px]">
-                      {countBy === 'enrollment' ? 'Schedule Count' : 'Class Count'}
+                      {isTeacherView ? "Timeslots" : "Schedules"}
                     </TableHead>
                   </TableRow>
                 </TableHeader>

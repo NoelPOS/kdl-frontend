@@ -222,9 +222,9 @@ export function StatisticsFilter() {
               </div>
             </div>
 
-            {/* Counting Perspective Select */}
+            {/* View: Teacher vs Student */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="countBy">Counting Perspective (Optional)</Label>
+              <Label htmlFor="countBy">View</Label>
               <div className="relative">
                 <select
                   id="countBy"
@@ -232,11 +232,16 @@ export function StatisticsFilter() {
                   onChange={(e) => setCountBy(e.target.value as 'timeslot' | 'enrollment')}
                   className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none text-sm"
                 >
-                  <option value="timeslot">Teacher View (Class Count)</option>
-                  <option value="enrollment">Student View (Schedule Count)</option>
+                  <option value="timeslot">Teacher View — count timeslots (same date, time, room = 1)</option>
+                  <option value="enrollment">Student View — count schedules (each enrollment = 1)</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
+              <p className="text-xs text-gray-500">
+                {countBy === 'timeslot'
+                  ? "Teacher View: one class with 3 students = 1 timeslot."
+                  : "Student View: one class with 3 students = 3 schedules."}
+              </p>
             </div>
           </div>
 
