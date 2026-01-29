@@ -11,7 +11,7 @@ import Image from 'next/image';
  * Matches your UI mockup with:
  * - Student header with profile picture and ID
  * - Month calendar view with blue highlighted dates for class days
- * - Upcoming/Completed tabs
+ * - Upcoming/Past tabs (by date; attendance badges stay separate)
  * - Schedule cards with date, time, location, and teacher info
  * - Bottom navigation
  */
@@ -378,7 +378,7 @@ export default function SchedulesPage() {
             <p className="text-xs text-blue-600 mt-1">
               {activeTab === 'upcoming' 
                 ? `${filteredSchedules.length} upcoming ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
-                : `${filteredSchedules.length} completed ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
+                : `${filteredSchedules.length} past ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
               }
             </p>
           </div>
@@ -417,7 +417,7 @@ export default function SchedulesPage() {
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Completed
+          Past
           {activeTab === 'completed' && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-600"></div>
           )}
@@ -448,7 +448,7 @@ export default function SchedulesPage() {
                 ? 'No schedules found for this date'
                 : activeTab === 'upcoming' 
                   ? 'No upcoming schedules'
-                  : 'No completed schedules'
+                  : 'No past schedules'
               }
             </p>
           </div>
