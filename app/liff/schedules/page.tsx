@@ -112,8 +112,12 @@ export default function SchedulesPage() {
   };
 
   useEffect(() => {
-    if (sessionId) {
+    // If we have either a sessionId (specific course) or just a studentId,
+    // load schedules. If neither is provided, stop loading state.
+    if (sessionId || studentId) {
       fetchSchedules();
+    } else {
+      setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, studentId]);
