@@ -187,12 +187,14 @@ export async function checkTeacherAvailability(
   teacherId: number,
   date: string,
   startTime?: string,
-  endTime?: string
+  endTime?: string,
+  excludeScheduleId?: number
 ): Promise<TeacherAvailability> {
   const params = new URLSearchParams();
   params.set("date", date);
   if (startTime) params.set("startTime", startTime);
   if (endTime) params.set("endTime", endTime);
+  if (excludeScheduleId) params.set("excludeScheduleId", excludeScheduleId.toString());
 
   const response = await clientApi.get<TeacherAvailability>(
     `/teachers/${teacherId}/availability?${params.toString()}`

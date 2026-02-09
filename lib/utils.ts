@@ -175,6 +175,11 @@ export const generateConflictWarning = (conflict: ConflictDetail) => {
   const { conflictType, courseTitle, teacherName, studentName, room, time } =
     conflict;
 
+  // Handle teacher unavailable (working days / absences)
+  if (conflictType === "teacher_unavailable") {
+    return (conflict as any).unavailableReason || `Teacher ${teacherName} is not available`;
+  }
+
   switch (conflictType) {
     case "room":
       return `${room} is not available. There is a ${courseTitle} class at ${time}.`;

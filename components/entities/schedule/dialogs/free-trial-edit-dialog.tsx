@@ -28,7 +28,7 @@ import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
 import { Course } from "@/app/types/course.type";
 import { TimeInput } from "@/components/shared/schedule/time-input";
-import { isWithinBusinessHours } from "@/lib/validation-utils";
+
 import { formatDateLocal, generateConflictWarning } from "@/lib/utils";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
 import { useDebouncedCallback } from "use-debounce";
@@ -91,9 +91,6 @@ export function FreeTrialEditDialog({
   // Validation functions
   const validateStartTime = (value: string) => {
     if (!value) return "Start time is required";
-    if (!isWithinBusinessHours(value)) {
-      return "Start time must be between 9:00 AM and 5:00 PM";
-    }
     if (endTime && value >= endTime) {
       return "Start time must be before end time";
     }
@@ -102,9 +99,6 @@ export function FreeTrialEditDialog({
 
   const validateEndTime = (value: string) => {
     if (!value) return "End time is required";
-    if (!isWithinBusinessHours(value)) {
-      return "End time must be between 9:00 AM and 5:00 PM";
-    }
     if (startTime && value <= startTime) {
       return "End time must be after start time";
     }

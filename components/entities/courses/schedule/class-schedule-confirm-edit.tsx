@@ -20,7 +20,7 @@ import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
 import { formatDateLocal } from "@/lib/utils";
 import { TimeInput } from "@/components/shared/schedule/time-input";
-import { isWithinBusinessHours } from "@/lib/validation-utils";
+
 import { toast } from "sonner";
 import { showToast } from "@/lib/toast";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
@@ -80,9 +80,6 @@ export function EditScheduleDialog({
   // Validation functions
   const validateStartTime = (value: string) => {
     if (!value) return "Start time is required";
-    if (!isWithinBusinessHours(value)) {
-      return "Start time must be between 9:00 AM and 5:00 PM";
-    }
     if (endTime && value >= endTime) {
       return "Start time must be before end time";
     }
@@ -91,9 +88,6 @@ export function EditScheduleDialog({
 
   const validateEndTime = (value: string) => {
     if (!value) return "End time is required";
-    if (!isWithinBusinessHours(value)) {
-      return "End time must be between 9:00 AM and 5:00 PM";
-    }
     if (startTime && value <= startTime) {
       return "End time must be after start time";
     }

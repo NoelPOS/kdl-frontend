@@ -93,12 +93,6 @@ const menuItems: MenuItem[] = [
     roles: [UserRole.ADMIN],
   },
   {
-    title: "class Options",
-    icon: Package,
-    url: "/class-options",
-    roles: [UserRole.ADMIN],
-  },
-  {
     title: "statistics",
     icon: BarChart3,
     url: "/statistics",

@@ -21,7 +21,6 @@ import {
   updateSchedule,
   checkScheduleConflict,
   getAllRooms,
-  checkTeacherAvailability,
 } from "@/lib/api";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
@@ -117,28 +116,12 @@ export function EditSchedule({
       try {
         let warningMessage = "none";
         const teacherId = teachers.find((t) => t.name === data.teacher)?.id || 0;
+        const currentScheduleId = Number(data.scheduleId) || initialData?.scheduleId || 0;
         
-        // Check teacher availability first
-        if (teacherId && data.date && data.starttime && data.endtime) {
-          try {
-            const availabilityResult = await checkTeacherAvailability(
-              teacherId,
-              data.date,
-              data.starttime,
-              data.endtime
-            );
-            
-            if (!availabilityResult.available) {
-              warningMessage = availabilityResult.reason || "Teacher is not available";
-              showToast.warning(`⚠️ ${warningMessage}`);
-            }
-          } catch (availabilityError) {
-            console.warn("Teacher availability check failed:", availabilityError);
-          }
-        }
-        
-        // Then check schedule conflicts
+        // Check for all conflicts (room, teacher, student + teacher availability)
         try {
+          console.log("DEBUG excludeId:", currentScheduleId, "data.scheduleId:", data.scheduleId, "initialData?.scheduleId:", initialData?.scheduleId);
+          
           const conflictResult = await checkScheduleConflict({
             date: data.date,
             startTime: data.starttime,
@@ -149,13 +132,14 @@ export function EditSchedule({
               parseInt(data.student) ||
               parseInt(initialData?.student || "0") ||
               0,
-            excludeId: initialData?.scheduleId || 0,
+            excludeId: currentScheduleId,
           });
 
           console.log("Conflict result:", conflictResult);
 
           if (conflictResult) {
             warningMessage = generateConflictWarning(conflictResult);
+            showToast.warning(`⚠️ ${warningMessage}`);
           }
         } catch (conflictError) {
           console.warn("Conflict check failed:", conflictError);
@@ -204,7 +188,7 @@ export function EditSchedule({
 
         router.refresh();
 
-        if (warningMessage) {
+        if (warningMessage && warningMessage !== "none") {
           showToast.warning(`Schedule updated with warning: ${warningMessage}`);
         } else {
           showToast.success("Schedule updated successfully!");

@@ -41,7 +41,7 @@ export function StudentCard({ student }: StudentCardProps) {
       student.doNotEat.some((item) => item.trim() !== ""));
 
   return (
-    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px]">
+    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px] h-full flex flex-col">
       <>
         {/* Only show Pizza icon if student has allergies or dietary restrictions */}
         {hasAllergiesOrDietaryRestrictions && (
@@ -126,13 +126,15 @@ export function StudentCard({ student }: StudentCardProps) {
         </div>
       )}
 
-      <div className="flex flex-col items-center text-center mb-4">
+      <div className="flex flex-col items-center text-center mb-4 flex-grow">
         <Avatar className="h-16 w-16 mb-3">
           <AvatarImage src={student.profilePicture} alt={student.name} />
           <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
         </Avatar>
 
-        <h3 className="font-semibold text-orange-500 mb-2">{student.name}</h3>
+        <h3 className="font-semibold text-orange-500 mb-2">
+          {student.name}{student.nickname && ` (${student.nickname})`}
+        </h3>
 
         <div className="space-y-1 text-sm text-gray-600">
           <div className="flex items-center gap-2">
@@ -161,7 +163,7 @@ export function StudentCard({ student }: StudentCardProps) {
       </div>
 
       <Button
-        className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer"
+        className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer mt-auto"
         onClick={() => router.push(`/student/${student.id}`)}
       >
         Details
