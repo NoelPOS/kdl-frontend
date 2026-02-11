@@ -129,7 +129,7 @@ export default function EditFeedbackDialog({
           if (!getUrlRes.ok) {
             throw new Error(`Failed to get upload URL for ${file.name}`);
           }
-          const { url } = await getUrlRes.json();
+          const { url, publicUrl } = await getUrlRes.json();
 
           // Upload directly to S3
           const uploadRes = await fetch(url, {
@@ -141,9 +141,8 @@ export default function EditFeedbackDialog({
             throw new Error(`Failed to upload ${file.name}`);
           }
 
-          // Construct the final S3 URL
-          const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/feedback/${encodeURIComponent(file.name)}`;
-          return s3Url;
+          // Return the public URL provided by the backend
+          return publicUrl;
         });
         newMediaUrls = await Promise.all(uploadPromises);
       }
@@ -238,7 +237,7 @@ export default function EditFeedbackDialog({
           if (!getUrlRes.ok) {
             throw new Error(`Failed to get upload URL for ${file.name}`);
           }
-          const { url } = await getUrlRes.json();
+          const { url, publicUrl } = await getUrlRes.json();
 
           // Upload directly to S3
           const uploadRes = await fetch(url, {
@@ -250,9 +249,8 @@ export default function EditFeedbackDialog({
             throw new Error(`Failed to upload ${file.name}`);
           }
 
-          // Construct the final S3 URL
-          const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.amazonaws.com/feedback/${encodeURIComponent(file.name)}`;
-          return s3Url;
+          // Return the public URL provided by the backend
+          return publicUrl;
         });
         newMediaUrls = await Promise.all(uploadPromises);
       }

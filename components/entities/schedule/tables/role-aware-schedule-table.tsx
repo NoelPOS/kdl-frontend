@@ -135,6 +135,14 @@ export default function RoleAwareScheduleTable({
             student_nickname: updatedFormData.nickname || "",
             schedule_feedback:
               updatedFormData.feedback || schedule.schedule_feedback || "",
+            schedule_feedbackImages:
+              updatedFormData.feedbackImages ||
+              schedule.schedule_feedbackImages ||
+              [],
+            schedule_feedbackVideos:
+              updatedFormData.feedbackVideos ||
+              schedule.schedule_feedbackVideos ||
+              [],
             schedule_warning: updatedFormData.warning || "",
           } as ClassSchedule;
         }

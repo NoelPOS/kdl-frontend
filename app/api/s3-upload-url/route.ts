@@ -45,8 +45,9 @@ export async function GET(req: NextRequest) {
     });
 
     const url = await getSignedUrl(s3, command, { expiresIn: 60 }); // 1 minute expiry
+    const publicUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${folder}/${fileName}`;
 
-    return NextResponse.json({ url });
+    return NextResponse.json({ url, publicUrl });
   } catch (error) {
     console.error("S3 upload URL generation failed:", error);
     return NextResponse.json(
