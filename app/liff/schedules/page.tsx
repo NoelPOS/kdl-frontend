@@ -298,7 +298,9 @@ export default function SchedulesPage() {
   };
 
   const getStatusBadge = (schedule: Schedule) => {
-    if (schedule.schedule_attendance === 'cancelled') {
+    const status = schedule.schedule_attendance;
+
+    if (status === 'cancelled') {
       return (
         <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
           Cancelled
@@ -306,7 +308,7 @@ export default function SchedulesPage() {
       );
     }
 
-    if (schedule.schedule_attendance === 'completed') {
+    if (status === 'completed' || status === 'present') {
       return (
         <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
           Completed
@@ -314,8 +316,16 @@ export default function SchedulesPage() {
       );
     }
 
+    if (status === 'confirmed') {
+      return (
+        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+          Confirmed
+        </span>
+      );
+    }
+
     return (
-      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+      <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
         Pending
       </span>
     );
