@@ -16,6 +16,7 @@ import {
   ReceiptIcon,
   Package,
   BarChart3,
+  Settings,
 } from "lucide-react";
 
 import {
@@ -97,6 +98,12 @@ const menuItems: MenuItem[] = [
     icon: BarChart3,
     url: "/statistics",
     roles: [UserRole.ADMIN, UserRole.REGISTRAR],
+  },
+  {
+    title: "class Options",
+    icon: Settings,
+    url: "/class-options",
+    roles: [UserRole.ADMIN],
   },
   {
     title: "notifications",
