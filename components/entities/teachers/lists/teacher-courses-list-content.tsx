@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getTeacherCourses } from "@/lib/api";
+import { getTeacherCourses, removeCourseFromTeacher } from "@/lib/api";
 import { Course } from "@/app/types/course.type";
 import { CourseCard } from "@/components/entities/courses/cards/course-card";
 import { Pagination } from "@/components/ui/pagination";
+import RemoveCourseDialog from "../dialogs/remove-course-dialog";
 
 interface TeacherCoursesListContentProps {
   teacherId: number;
@@ -27,6 +28,14 @@ export default function TeacherCoursesListContent({
     hasNext: false,
     hasPrev: false,
   });
+
+  // State for remove course dialog
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [courseToRemove, setCourseToRemove] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const currentPage = parseInt(searchParams.page || "1");
   const searchQuery = searchParams.query;
@@ -89,34 +98,67 @@ export default function TeacherCoursesListContent({
     );
   }
 
+  const handleRemoveClick = (courseId: number, courseName: string) => {
+    setCourseToRemove({ id: courseId, name: courseName });
+    setRemoveDialogOpen(true);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!courseToRemove) return;
+
+    setIsRemoving(true);
+    try {
+      await removeCourseFromTeacher(teacherId, courseToRemove.id);
+      setRemoveDialogOpen(false);
+      setCourseToRemove(null);
+      fetchCourses();
+    } catch (error) {
+      console.error("Failed to remove course:", error);
+      alert("Failed to remove course");
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course) => (
-          <CourseCard
-            key={course.id}
-            course={course}
-            setCourseId={() => {}}
-            setCourseName={() => {}}
-            onOpenDialog={() => {}}
-            isTeacher={true}
-          />
-        ))}
+    <>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              setCourseId={() => {}}
+              setCourseName={() => {}}
+              onOpenDialog={() => {}}
+              isTeacher={true}
+              onRemove={() => handleRemoveClick(course.id, course.title)}
+            />
+          ))}
+        </div>
+
+        {pagination.totalPages > 1 && (
+          <div className="mt-8">
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalCount={pagination.totalCount}
+              hasNext={pagination.hasNext}
+              hasPrev={pagination.hasPrev}
+              itemsPerPage={12}
+              itemName="courses"
+            />
+          </div>
+        )}
       </div>
 
-      {pagination.totalPages > 1 && (
-        <div className="mt-8">
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalCount={pagination.totalCount}
-            hasNext={pagination.hasNext}
-            hasPrev={pagination.hasPrev}
-            itemsPerPage={12}
-            itemName="courses"
-          />
-        </div>
-      )}
-    </div>
+      <RemoveCourseDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        onConfirm={handleConfirmRemove}
+        courseName={courseToRemove?.name || ""}
+        isRemoving={isRemoving}
+      />
+    </>
   );
 }

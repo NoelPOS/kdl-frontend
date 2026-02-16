@@ -8,6 +8,7 @@ import { SessionOverview } from "@/app/types/session.type";
 import { Student } from "@/app/types/course.type";
 import { CoursePlusDialog } from "../dialogs/course-plus.dialog";
 import AssignCourseFlow from "../dialogs/assign-course-flow";
+import SwapScheduleFlow from "../dialogs/swap-schedule-flow";
 import { CommentDialog } from "../dialogs/comment.dialog";
 
 interface StudentCourseProps {
@@ -126,7 +127,21 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
                 {/* Only show Course Plus for active sessions */}
                 {course.status?.toLowerCase() !== "completed" &&
                   course.status?.toLowerCase() !== "cancelled" && (
-                    <CoursePlusDialog course={course} />
+                    <>
+                      <SwapScheduleFlow
+                        session={course}
+                        studentId={Number(params.id)}
+                        studentData={student}
+                        trigger={
+                          <Button 
+                            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                          >
+                            Swap Schedule
+                          </Button>
+                        }
+                      />
+                      <CoursePlusDialog course={course} />
+                    </>
                   )}
               </>
             )}

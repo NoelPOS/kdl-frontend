@@ -20,6 +20,7 @@ export default async function TeacherSessionDetails({
   // Mock session data for feedback dialog
   const sessionData = {
     sessionId: Number(sessionId),
+    courseId: 0, // Mock ID since we don't have it easily available here
     courseTitle: schedules[0]?.course_title || "Course",
     mode: "8 Classes",
     completedCount: 0,

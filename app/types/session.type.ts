@@ -5,6 +5,7 @@ export interface SessionOverview {
   classCancel: number;
   progress: string;
   sessionId: number;
+  courseId: number;
   courseDescription: string;
   payment: string;
   medium: string;

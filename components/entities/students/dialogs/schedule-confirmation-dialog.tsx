@@ -21,6 +21,7 @@ import {
   checkScheduleConflict,
   checkScheduleConflicts,
   checkTeacherAvailability,
+  swapSessionType,
 } from "@/lib/api";
 
 // Types
@@ -48,7 +49,7 @@ interface ScheduleConfirmationDialogProps {
   onConfirm: () => void;
   onBack: () => void;
   onCancel: () => void;
-  mode?: "create" | "assign";
+  mode?: "create" | "assign" | "swap";
   session?: SessionOverview; // Optional for assign mode
   // Package-related props
   isFromPackage?: boolean;
@@ -79,9 +80,24 @@ export default function ScheduleConfirmationDialog({
   useEffect(() => {
     const init = async () => {
       if (!classSchedule || !teacherData) return;
+      
+      let overrideLimit: number | undefined;
+
+      if (mode === "swap" && session) {
+        // Calculate remaining sessions only for swap mode
+        // Total new limit is classSchedule.classType.classLimit
+        // Consumed = completedCount + classCancel
+        const totalNewLimit = classSchedule.classType.classLimit || 12; // Default to 12 if not set, or handle logic
+        const consumed = (session.completedCount || 0) + (session.classCancel || 0);
+        overrideLimit = Math.max(0, totalNewLimit - consumed);
+        
+        if (process.env.NODE_ENV !== "production") {
+            console.log("Swap Mode - Consumed:", consumed, "Total:", totalNewLimit, "Remaining:", overrideLimit);
+        }
+      }
 
       try {
-        const rows = generateScheduleRows(students, classSchedule, teacherData);
+        const rows = generateScheduleRows(students, classSchedule, teacherData, overrideLimit);
 
         const formattedSchedules = rows.map((row) => {
           const [startTime, endTime] = row.time.split(" - ");
@@ -179,7 +195,8 @@ export default function ScheduleConfirmationDialog({
           const rows = generateScheduleRows(
             students,
             classSchedule,
-            teacherData
+            teacherData,
+            overrideLimit
           );
           setScheduleRows(rows);
         }
@@ -187,7 +204,7 @@ export default function ScheduleConfirmationDialog({
     };
 
     init();
-  }, [students, classSchedule, teacherData]);
+  }, [students, classSchedule, teacherData, mode, session]);
 
   const normalizeDate = (d?: string) => {
     const parsed = new Date(d ?? "");
@@ -336,6 +353,51 @@ export default function ScheduleConfirmationDialog({
         if (process.env.NODE_ENV !== "production") {
           console.log("Session updated successfully");
         }
+      } else if (mode === "swap" && session) {
+        // Mode: swap - Call swapSessionType API
+        if (process.env.NODE_ENV !== "production") {
+          console.log("=== Swapping Session Type ===");
+        }
+
+        const schedulePayload = scheduleRows.map((row, index) => {
+          const [startTime, endTime] = row.time.split(" - ");
+          const student = students.find(
+            (s) => s.nickname === row.student || s.name === row.student
+          );
+          
+          return {
+            sessionId: session.sessionId,
+            courseId: course.id,
+            studentId: Number(student!.id),
+            teacherId: row.teacherId
+              ? row.teacherId
+              : teacherData.teacherId === -1
+              ? undefined
+              : teacherData.teacherId,
+            date: row.date,
+            startTime,
+            endTime,
+            room: row.room,
+            remark: row.remark,
+            attendance: row.attendance || "pending",
+            feedback: "",
+            verifyFb: false,
+            classNumber: index + 1,
+            warning: row.warning || "",
+          };
+        });
+
+        await swapSessionType(session.sessionId, {
+          classOptionId: classSchedule.classType.id,
+          newSchedules: schedulePayload,
+        });
+
+        showToast.dismiss(toastId);
+        showToast.success(`Successfully swapped schedule to ${classSchedule.classType.classMode}!`);
+
+        onConfirm();
+        router.refresh();
+        return; // Exit early as we handled everything
       } else {
         // Mode: create - Create new sessions
         if (process.env.NODE_ENV !== "production") {
@@ -358,7 +420,7 @@ export default function ScheduleConfirmationDialog({
         }
       }
 
-      // Create schedule entries for both modes
+      // Create schedule entries for create/assign modes
       const schedulePayload = scheduleRows.map((row, index) => {
         const [startTime, endTime] = row.time.split(" - ");
         const student = students.find(
@@ -405,6 +467,8 @@ export default function ScheduleConfirmationDialog({
       const errorMessage =
         mode === "assign"
           ? "Failed to update session and create schedules. Check console for details."
+          : mode === "swap"
+          ? "Failed to swap session type. Check console for details."
           : "Failed to create sessions and schedules. Check console for details.";
 
       showToast.error(errorMessage);

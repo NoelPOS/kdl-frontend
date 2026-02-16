@@ -36,14 +36,15 @@ function getOptionType(classMode: string, optionType?: 'camp' | 'fixed' | 'check
 export function generateScheduleRows(
   students: Student[],
   classSchedule: ComfirmClassScheduleData,
-  teacherData: TeacherData
+  teacherData: TeacherData,
+  overrideLimit?: number
 ): ComfirmScheduleRow[] {
   const rows: ComfirmScheduleRow[] = [];
   const { classType } = classSchedule;
   
   // Use explicit optionType if available, or fallback to name inference
   const optionType = getOptionType(classType.classMode, classType.optionType);
-  const limit = classType.classLimit || 0;
+  const limit = overrideLimit ?? (classType.classLimit || 0);
 
   console.log("Generating schedule rows:", {
     classMode: classType.classMode,

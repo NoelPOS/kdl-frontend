@@ -63,6 +63,13 @@ export async function assignCoursesToTeacher(
   await clientApi.post(`/teachers/${teacherId}/courses`, { courseIds });
 }
 
+export async function removeCourseFromTeacher(
+  teacherId: number,
+  courseId: number
+): Promise<void> {
+  await clientApi.delete(`/teachers/${teacherId}/courses/${courseId}`);
+}
+
 export async function getTeacherCourses(
   teacherId: number,
   filter: { query?: string } = {},

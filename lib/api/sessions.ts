@@ -39,6 +39,18 @@ export async function createSession(
   return res.data;
 }
 
+export async function swapSessionType(
+  sessionId: number,
+  data: {
+    classOptionId: number;
+    newSchedules: any[];
+  }
+) {
+  return clientApi
+    .patch(`/sessions/${sessionId}/swap-type`, data)
+    .then((res) => res.data);
+}
+
 
 export async function updateSession(
   sessionId: number,
