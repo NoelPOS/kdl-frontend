@@ -35,7 +35,7 @@ interface Session {
   classOption: {
     id: number;
     classMode: string;
-    classCount: number;
+    classLimit: number;
   };
   student: {
     id: number;
@@ -104,8 +104,8 @@ export default function CoursesPage() {
   };
 
   const getTotalClasses = (session: Session) => {
-    // Return the class count from class option
-    return session.classOption?.classCount || 0;
+    // Return total scheduled classes from backend count
+    return session.totalScheduledCount || 0;
   };
 
   const getCanceledClasses = (session: Session) => {

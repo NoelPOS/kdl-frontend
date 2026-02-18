@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Calendar, ChevronDown } from "lucide-react";
-import { getAllClassOptions, createClassOption, updateClassOption, deleteClassOption } from "@/lib/api";
+import { Plus, Calendar, ChevronDown, PowerOff } from "lucide-react";
+import { getAllClassOptions, createClassOption, updateClassOption } from "@/lib/api";
 import { ClassOption, CreateClassOptionDto, UpdateClassOptionDto, ClassOptionType } from "@/app/types/class-option.type";
 import { showToast } from "@/lib/toast";
 import {
@@ -23,9 +23,8 @@ export default function ClassOptionsPage() {
   const [classOptions, setClassOptions] = useState<ClassOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingOption, setDeletingOption] = useState<ClassOption | null>(null);
-  const [editingOption, setEditingOption] = useState<ClassOption | null>(null);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [deactivatingOption, setDeactivatingOption] = useState<ClassOption | null>(null);
   const [formData, setFormData] = useState<CreateClassOptionDto>({
     classMode: "",
     classLimit: 1,
@@ -60,23 +59,10 @@ export default function ClassOptionsPage() {
       effectiveStartDate: new Date().toISOString().split("T")[0],
       optionType: "check",
     });
-    setEditingOption(null);
   };
 
-  const handleOpenDialog = (option?: ClassOption) => {
-    if (option) {
-      setEditingOption(option);
-      setFormData({
-        classMode: option.classMode,
-        classLimit: option.classLimit,
-        tuitionFee: option.tuitionFee,
-        effectiveStartDate: option.effectiveStartDate?.split("T")[0] || new Date().toISOString().split("T")[0],
-        effectiveEndDate: option.effectiveEndDate?.split("T")[0],
-        optionType: option.optionType || "check",
-      });
-    } else {
-      resetForm();
-    }
+  const handleOpenDialog = () => {
+    resetForm();
     setDialogOpen(true);
   };
 
@@ -96,41 +82,37 @@ export default function ClassOptionsPage() {
 
     setSubmitting(true);
     try {
-      if (editingOption) {
-        await updateClassOption(editingOption.id, formData);
-        showToast.success("Class option updated successfully");
-      } else {
-        await createClassOption(formData);
-        showToast.success("Class option created successfully");
-      }
+      await createClassOption(formData);
+      showToast.success("Class option created successfully");
       setDialogOpen(false);
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Failed to save class option:", error);
-      showToast.error(editingOption ? "Failed to update class option" : "Failed to create class option");
+      showToast.error("Failed to create class option");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDeleteClick = (option: ClassOption) => {
-    setDeletingOption(option);
-    setDeleteDialogOpen(true);
+  const handleDeactivateClick = (option: ClassOption) => {
+    setDeactivatingOption(option);
+    setDeactivateDialogOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!deletingOption) return;
-    
+  const handleConfirmDeactivate = async () => {
+    if (!deactivatingOption) return;
+
     try {
-      await deleteClassOption(deletingOption.id);
-      showToast.success("Class option deleted successfully");
-      setDeleteDialogOpen(false);
-      setDeletingOption(null);
+      const today = new Date().toISOString().split("T")[0];
+      await updateClassOption(deactivatingOption.id, { effectiveEndDate: today });
+      showToast.success("Class option deactivated successfully");
+      setDeactivateDialogOpen(false);
+      setDeactivatingOption(null);
       fetchData();
     } catch (error) {
-      console.error("Failed to delete class option:", error);
-      showToast.error("Failed to delete class option");
+      console.error("Failed to deactivate class option:", error);
+      showToast.error("Failed to deactivate class option");
     }
   };
 
@@ -163,13 +145,9 @@ export default function ClassOptionsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>
-                {editingOption ? "Edit Class Option" : "Add New Class Option"}
-              </DialogTitle>
+              <DialogTitle>Add New Class Option</DialogTitle>
               <DialogDescription>
-                {editingOption
-                  ? "Update the class option details below."
-                  : "Creating a new option with an existing name will auto-expire the old one."}
+                Creating a new option with an existing name will auto-expire the old one.
               </DialogDescription>
             </DialogHeader>
 
@@ -234,17 +212,6 @@ export default function ClassOptionsPage() {
                 />
               </div>
 
-              {editingOption && (
-                <div className="space-y-2">
-                  <Label htmlFor="effectiveEndDate">Effective End Date (Optional)</Label>
-                  <Input
-                    id="effectiveEndDate"
-                    type="date"
-                    value={formData.effectiveEndDate || ""}
-                    onChange={(e) => setFormData({ ...formData, effectiveEndDate: e.target.value || undefined })}
-                  />
-                </div>
-              )}
             </div>
 
             <DialogFooter>
@@ -256,32 +223,32 @@ export default function ClassOptionsPage() {
                 disabled={submitting}
                 className="bg-yellow-500 hover:bg-yellow-600 text-white"
               >
-                {submitting ? "Saving..." : editingOption ? "Update" : "Create"}
+                {submitting ? "Saving..." : "Create"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </PageHeader>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Deactivate Confirmation Dialog */}
+      <Dialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Class Option?</DialogTitle>
+            <DialogTitle>Deactivate Class Option?</DialogTitle>
             <DialogDescription>
-              This will permanently delete &quot;{deletingOption?.classMode}&quot;. 
-              This action cannot be undone. Existing invoices referencing this option may be affected.
+              This will deactivate &quot;{deactivatingOption?.classMode}&quot; by setting today as its end date.
+              Existing sessions using this option will not be affected.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDeactivateDialogOpen(false)}>
               Cancel
             </Button>
             <Button
-              onClick={handleConfirmDelete}
+              onClick={handleConfirmDeactivate}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Delete
+              Deactivate
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -392,18 +359,11 @@ export default function ClassOptionsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleOpenDialog(option)}
-                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          onClick={() => handleDeactivateClick(option)}
+                          disabled={isExpired(option)}
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(option)}
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
+                          <PowerOff className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
