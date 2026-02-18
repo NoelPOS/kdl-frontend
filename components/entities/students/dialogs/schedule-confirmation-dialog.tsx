@@ -207,8 +207,29 @@ export default function ScheduleConfirmationDialog({
   }, [students, classSchedule, teacherData, mode, session]);
 
   const normalizeDate = (d?: string) => {
-    const parsed = new Date(d ?? "");
-    return parsed.toLocaleDateString();
+    if (!d) return '';
+    // If already in YYYY-MM-DD format, return as-is (safe across all browsers/locales)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+    // For other formats, parse and re-format as YYYY-MM-DD
+    const parsed = new Date(d);
+    if (isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Safari-safe date display: parse YYYY-MM-DD parts directly (avoids UTC midnight shift)
+  const formatDateDisplay = (dateStr?: string) => {
+    if (!dateStr) return 'TBD';
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      return d.toLocaleDateString('en-GB');
+    }
+    // Fallback for any other format
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? dateStr : parsed.toLocaleDateString('en-GB');
   };
 
   const handleRowDoubleClick = (row: ComfirmScheduleRow, index: number) => {
@@ -562,9 +583,7 @@ export default function ScheduleConfirmationDialog({
                   onDoubleClick={() => handleRowDoubleClick(row, index)}
                 >
                   <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
-                    {row.date
-                      ? new Date(row.date).toLocaleDateString("en-GB")
-                      : "TBD"}
+                    {formatDateDisplay(row.date)}
                   </TableCell>
                   <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[120px]">
                     {row.time}
