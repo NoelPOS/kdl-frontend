@@ -17,11 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search, Calendar, ChevronDown, X } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
-import {
-  addNewStudent,
-  searchParents,
-  assignChildrenToParent,
-} from "@/lib/api";
+import { searchParents } from "@/lib/api";
+import { useCreateStudent } from "@/hooks/mutation/use-student-mutations";
+import { useAssignChildrenToParent } from "@/hooks/mutation/use-parent-mutations";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -49,6 +47,8 @@ export function AddNewStudent() {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const { mutateAsync: createStudent } = useCreateStudent();
+  const { mutateAsync: assignToParent } = useAssignChildrenToParent();
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [parentSearchResults, setParentSearchResults] = useState<Parent[]>([]);
@@ -183,7 +183,6 @@ export function AddNewStudent() {
         showToast.success("Image uploaded");
       }
 
-      toastId = showToast.loading("Creating student...");
       const preparedData = {
         ...data,
         allergic: data.allergic
@@ -198,29 +197,20 @@ export function AddNewStudent() {
         profileKey: key,
       };
       console.log("Prepared student data:", preparedData);
-      const newStudent = await addNewStudent(preparedData);
-      showToast.dismiss(toastId);
+      const newStudent = await createStudent(preparedData as any);
 
       // If a parent was selected, assign the student to the parent
       if (selectedParent && newStudent.id) {
-        toastId = showToast.loading("Assigning parent...");
         try {
-          await assignChildrenToParent(selectedParent.id, {
-            studentIds: [Number(newStudent.id)],
-            isPrimary: true,
+          await assignToParent({
+            parentId: selectedParent.id,
+            data: { studentIds: [Number(newStudent.id)], isPrimary: true },
           });
-          showToast.dismiss(toastId);
-          showToast.success("Parent assigned successfully");
         } catch (parentError) {
-          showToast.dismiss(toastId);
           console.error("Failed to assign parent:", parentError);
-          showToast.warning(
-            "Student created but failed to assign parent. You can assign the parent later."
-          );
         }
       }
 
-      showToast.success("Student created successfully!");
       // Close dialog using state
       reset();
       setImagePreview(""); // Reset image preview
@@ -232,7 +222,6 @@ export function AddNewStudent() {
     } catch (error) {
       showToast.dismiss();
       console.error("Error creating student:", error);
-      showToast.error("Failed to create student. Please try again.");
     }
   };
 

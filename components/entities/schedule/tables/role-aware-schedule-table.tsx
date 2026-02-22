@@ -26,7 +26,7 @@ import {
 import { MessageSquare, User, BookOpen, Calendar, Check, X, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { updateSchedule } from "@/lib/api";
+import { useUpdateSchedule } from "@/hooks/mutation/use-schedule-mutations";
 import AttendanceConfirmationDialog from "../dialogs/attendance-confirmation-dialog";
 import MediaPreview from "@/components/shared/media-preview";
 
@@ -81,8 +81,8 @@ export default function RoleAwareScheduleTable({
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
   const [attendanceSchedule, setAttendanceSchedule] = useState<ClassSchedule | null>(null);
   const [attendanceAction, setAttendanceAction] = useState<"confirmed" | "cancelled">("confirmed");
-  const [isUpdatingAttendance, setIsUpdatingAttendance] = useState(false);
 
+  const { mutate: updateSchedule, isPending: isUpdatingAttendance } = useUpdateSchedule();
   const router = useRouter();
   const [localSchedules, setLocalSchedules] =
     useState<ClassSchedule[]>(schedules);
@@ -182,36 +182,24 @@ export default function RoleAwareScheduleTable({
 
     // For "confirmed" action, update immediately without dialog
     if (attendanceStatus === "confirmed") {
-      setIsUpdatingAttendance(true);
-      try {
-        await updateSchedule(parseInt(scheduleId), {
-          attendance: attendanceStatus
-        });
-        
-        // Update local state
-        setLocalSchedules((prevSchedules) =>
-          prevSchedules.map((s) => {
-            if (s.schedule_id === scheduleId) {
-              return {
-                ...s,
-                schedule_attendance: attendanceStatus,
-              };
+      updateSchedule(
+        { scheduleId: parseInt(scheduleId), data: { attendance: attendanceStatus } },
+        {
+          onSuccess: () => {
+            setLocalSchedules((prevSchedules) =>
+              prevSchedules.map((s) => {
+                if (s.schedule_id === scheduleId) {
+                  return { ...s, schedule_attendance: attendanceStatus };
+                }
+                return s;
+              })
+            );
+            if (shouldRefreshOnUpdate) {
+              router.refresh();
             }
-            return s;
-          })
-        );
-
-        showToast.success(`Attendance updated successfully to ${attendanceStatus}.`);
-        
-        if (shouldRefreshOnUpdate) {
-          router.refresh();
+          },
         }
-      } catch (error) {
-        console.error("Error updating attendance:", error);
-        showToast.error("Failed to update attendance. Please try again.");
-      } finally {
-        setIsUpdatingAttendance(false);
-      }
+      );
       return;
     }
 
@@ -221,45 +209,36 @@ export default function RoleAwareScheduleTable({
     setIsAttendanceDialogOpen(true);
   };
 
-  const handleConfirmAttendanceUpdate = async () => {
+  const handleConfirmAttendanceUpdate = () => {
     if (!attendanceSchedule) return;
 
     const scheduleId = attendanceSchedule.schedule_id;
     const newAttendance = attendanceAction;
 
-    setIsUpdatingAttendance(true);
-
-    try {
-      await updateSchedule(parseInt(scheduleId), {
-        attendance: newAttendance
-      });
-      
-      // Update local state
-      setLocalSchedules((prevSchedules) =>
-        prevSchedules.map((schedule) => {
-          if (schedule.schedule_id === scheduleId) {
-            return {
-              ...schedule,
-              schedule_attendance: newAttendance,
-            };
+    updateSchedule(
+      { scheduleId: parseInt(scheduleId), data: { attendance: newAttendance } },
+      {
+        onSuccess: () => {
+          setLocalSchedules((prevSchedules) =>
+            prevSchedules.map((schedule) => {
+              if (schedule.schedule_id === scheduleId) {
+                return { ...schedule, schedule_attendance: newAttendance };
+              }
+              return schedule;
+            })
+          );
+          if (shouldRefreshOnUpdate) {
+            router.refresh();
           }
-          return schedule;
-        })
-      );
-
-      showToast.success(`Attendance updated successfully to ${newAttendance}.`);
-      
-      if (shouldRefreshOnUpdate) {
-        router.refresh();
+          setIsAttendanceDialogOpen(false);
+          setAttendanceSchedule(null);
+        },
+        onError: () => {
+          setIsAttendanceDialogOpen(false);
+          setAttendanceSchedule(null);
+        },
       }
-    } catch (error) {
-      console.error("Error updating attendance:", error);
-      showToast.error("Failed to update attendance. Please try again.");
-    } finally {
-      setIsUpdatingAttendance(false);
-      setIsAttendanceDialogOpen(false);
-      setAttendanceSchedule(null);
-    }
+    );
   };
 
   const selectedFormData: FormData | undefined = selectedSchedule

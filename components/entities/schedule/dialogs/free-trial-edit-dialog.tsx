@@ -18,11 +18,11 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   getTeacherByCourseId,
-  updateSchedule,
   checkScheduleConflict,
   getAllRooms,
   searchCourses,
 } from "@/lib/api";
+import { useUpdateSchedule } from "@/hooks/mutation/use-schedule-mutations";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
@@ -58,6 +58,7 @@ export function FreeTrialEditDialog({
   onScheduleUpdate,
 }: FreeTrialEditDialogProps) {
   const router = useRouter();
+  const { mutate: updateSchedule, isPending } = useUpdateSchedule();
   const {
     register,
     handleSubmit,
@@ -187,7 +188,6 @@ export function FreeTrialEditDialog({
         };
 
         console.log("Update data:", updateData);
-        await updateSchedule(Number(data.scheduleId), updateData);
 
         // Construct updated FormData for direct state update
         const updatedFormData: FormData = {
@@ -205,22 +205,26 @@ export function FreeTrialEditDialog({
           status: data.status || "",
           warning: warningMessage || "",
         };
-        
-        if (onScheduleUpdate) {
-          onScheduleUpdate(updatedFormData);
-        }
 
-        router.refresh();
-
-        if (warningMessage && warningMessage !== "none") {
-          showToast.warning(`Schedule updated with warning: ${warningMessage}`);
-        } else {
-          showToast.success("Free trial schedule updated successfully!");
-        }
-        onOpenChange(false);
+        updateSchedule(
+          { scheduleId: Number(data.scheduleId), data: updateData },
+          {
+            onSuccess: () => {
+              if (onScheduleUpdate) {
+                onScheduleUpdate(updatedFormData);
+              }
+              router.refresh();
+              if (warningMessage && warningMessage !== "none") {
+                showToast.warning(
+                  `Schedule updated with warning: ${warningMessage}`
+                );
+              }
+              onOpenChange(false);
+            },
+          }
+        );
       } catch (error) {
         console.error("Failed to update schedule", error);
-        showToast.error("Failed to update schedule. Please try again.");
       }
     },
     [
@@ -231,6 +235,7 @@ export function FreeTrialEditDialog({
       initialData?.student,
       selectedCourse?.id,
       router,
+      updateSchedule,
     ]
   );
 
@@ -492,7 +497,7 @@ export function FreeTrialEditDialog({
                 type="button"
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-500 hover:text-white rounded-2xl w-[5rem]"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isPending}
               >
                 Cancel
               </Button>
@@ -500,9 +505,9 @@ export function FreeTrialEditDialog({
             <Button
               type="submit"
               className="bg-yellow-500 text-white hover:bg-yellow-400 rounded-2xl w-[5rem]"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isPending}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting || isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </form>

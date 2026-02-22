@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { Parent } from "@/app/types/parent.type";
-import { updateParentById } from "@/lib/api";
+import { useUpdateParent } from "@/hooks/mutation/use-parent-mutations";
 
 interface ParentFormData {
   name: string;
@@ -25,12 +25,11 @@ export default function ParentDetailClient({
   parent: Partial<Parent>;
 }) {
   //   console.log("ParentDetailClient", parent);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const { mutate: updateParent, isPending: isUpdating } = useUpdateParent(
+    Number(parent.id || 0)
+  );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,13 +64,9 @@ export default function ParentDetailClient({
   };
 
   const onSubmit = async (data: ParentFormData) => {
-    if (!parent.id) {
-      setMessage({ type: "error", text: "Parent ID is required" });
-      return;
-    }
+    if (!parent.id) return;
 
-    setIsLoading(true);
-    setMessage(null);
+    setIsUploading(true);
 
     let newImageUrl = parent.profilePicture;
     let newProfileKey = parent.profileKey;
@@ -105,24 +100,15 @@ export default function ParentDetailClient({
       }
     }
 
-    try {
-      const updateData: Partial<Parent> = {
-        ...data,
-        profilePicture: newImageUrl,
-        profileKey: newProfileKey,
-      };
+    setIsUploading(false);
 
-      await updateParentById(Number(parent.id), updateData);
-      setMessage({ type: "success", text: "Parent updated successfully!" });
-    } catch (error) {
-      console.error("Error updating parent:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to update parent. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    const updateData: Partial<Parent> = {
+      ...data,
+      profilePicture: newImageUrl,
+      profileKey: newProfileKey,
+    };
+
+    updateParent(updateData);
   };
 
   return (
@@ -247,25 +233,13 @@ export default function ParentDetailClient({
           )}
         </div>
 
-        {message && (
-          <div
-            className={`p-2 text-xs rounded ${
-              message.type === "success"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isUploading || isUpdating}
             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
           >
-            {isLoading ? "Updating..." : "Update Parent"}
+            {isUploading || isUpdating ? "Updating..." : "Update Parent"}
           </Button>
         </div>
       </form>

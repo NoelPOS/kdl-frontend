@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,10 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, ChevronDown } from "lucide-react";
 
-import { addNewCourse } from "@/lib/api";
-import { useRef } from "react";
+import { useCreateCourse } from "@/hooks/mutation/use-course-mutations";
 import { Course } from "@/app/types/course.type";
-import { showToast } from "@/lib/toast";
 
 export type CourseFormData = {
   title: string;
@@ -32,12 +31,14 @@ export function AddNewCourse({
 }: {
   onCourseAdded?: (course: Course) => void;
 }) {
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const { mutate: createCourse, isPending } = useCreateCourse();
+
   const {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitting, errors },
+    formState: { errors },
   } = useForm<CourseFormData>({
     defaultValues: {
       title: "",
@@ -47,35 +48,20 @@ export function AddNewCourse({
     },
   });
 
-  const onSubmit = async (data: CourseFormData) => {
-    try {
-      const newCourse = await addNewCourse(data);
-      if (newCourse) {
-        showToast.success(
-          "Course created successfully!",
-          "The new course has been added to your course list."
-        );
-        if (onCourseAdded) {
-          onCourseAdded(newCourse);
+  const onSubmit = (data: CourseFormData) => {
+    createCourse(data as any, {
+      onSuccess: (newCourse) => {
+        if (onCourseAdded && newCourse) {
+          onCourseAdded(newCourse as Course);
         }
         reset();
-        closeRef.current?.click();
-      }
-    } catch (error: any) {
-      console.error("Failed to create course:", error);
-
-      // Check if backend returned a duplicate-course error
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to create course. Please try again.";
-
-      showToast.error(message);
-    }
+        setOpen(false);
+      },
+    });
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
@@ -218,7 +204,6 @@ export function AddNewCourse({
           <DialogFooter className="flex justify-end gap-3 mt-6">
             <DialogClose asChild>
               <Button
-                ref={closeRef}
                 type="button"
                 variant="outline"
                 className="border-gray-300 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-full px-6"
@@ -229,10 +214,10 @@ export function AddNewCourse({
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Creating..." : "Create"}
+              {isPending ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </form>

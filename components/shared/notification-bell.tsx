@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +8,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { notificationApi, Notification } from '@/lib/api/notifications';
+import { Notification } from '@/lib/api/notifications';
+import { useNotificationList, useUnreadNotificationCount } from '@/hooks/query/use-notifications';
+import { useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/mutation/use-notification-mutations';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -16,79 +18,25 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export function NotificationBell() {
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchUnreadCount = async () => {
-    try {
-      const data = await notificationApi.getUnreadCount();
-      setUnreadCount(data.count);
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
-    }
-  };
+  // Fetch unread count and latest notifications
+  const { data: unreadData } = useUnreadNotificationCount();
+  const { data: notificationsData, isLoading } = useNotificationList({ 
+    page: 1, 
+    limit: 5 
+  });
 
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const data = await notificationApi.getAll(1, 5); // Get latest 5
-      setNotifications(data.items);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { mutate: markAsRead } = useMarkNotificationRead();
+  const { mutate: markAllAsRead } = useMarkAllNotificationsRead();
 
-  useEffect(() => {
-    fetchUnreadCount();
-    
-    // Poll every 30 seconds
-    pollingInterval.current = setInterval(fetchUnreadCount, 30000);
-
-    return () => {
-      if (pollingInterval.current) {
-        clearInterval(pollingInterval.current);
-      }
-    };
-  }, []);
-
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (open) {
-      fetchNotifications();
-    }
-  };
-
-  const handleMarkAsRead = async (id: number) => {
-    try {
-      await notificationApi.markAsRead(id);
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
-    } catch (error) {
-      console.error('Failed to mark as read:', error);
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    try {
-      await notificationApi.markAllAsRead();
-      setUnreadCount(0);
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
-  };
+  const unreadCount = unreadData?.count ?? 0;
+  const notifications = notificationsData?.items ?? [];
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
-      await handleMarkAsRead(notification.id);
+      markAsRead(notification.id);
     }
 
     const { studentId, sessionId } = notification.data || {};
@@ -111,7 +59,7 @@ export function NotificationBell() {
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -133,7 +81,7 @@ export function NotificationBell() {
               variant="ghost" 
               size="sm" 
               className="text-xs h-auto p-1"
-              onClick={handleMarkAllRead}
+              onClick={() => markAllAsRead()}
             >
               Mark all read
             </Button>

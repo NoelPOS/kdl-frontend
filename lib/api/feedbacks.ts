@@ -58,3 +58,25 @@ export async function updateFeedback(
     feedbackRemoved: true, // Since verifyFb is always set to true
   };
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export async function getFeedbacks(
+  filter: FeedbackFilter,
+  page: number = 1,
+  limit: number = 10
+): Promise<FeedbackResponse> {
+  const params = new URLSearchParams();
+  if (filter.studentName) params.set("studentName", filter.studentName);
+  if (filter.courseName) params.set("courseName", filter.courseName);
+  if (filter.teacherName) params.set("teacherName", filter.teacherName);
+  if (filter.startDate) params.set("startDate", filter.startDate);
+  if (filter.endDate) params.set("endDate", filter.endDate);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const res = await clientApi.get<FeedbackResponse>(
+    `/schedules/feedbacks?${params.toString()}`
+  );
+  return res.data;
+}

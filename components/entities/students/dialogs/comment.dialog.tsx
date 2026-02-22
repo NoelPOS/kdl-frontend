@@ -12,8 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MessageSquare } from "lucide-react";
-import { updateSession } from "@/lib/api/sessions";
-import { showToast } from "@/lib/toast";
+import { useUpdateSession } from "@/hooks/mutation/use-session-mutations";
 
 interface CommentDialogProps {
   sessionId: number;
@@ -28,28 +27,19 @@ export function CommentDialog({
 }: CommentDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState(currentComment);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { mutate: updateSession, isPending } = useUpdateSession(sessionId);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const result = await updateSession(sessionId, { comment });
-      
-      if (result.success) {
-        showToast.success("Comment updated successfully");
-        onCommentUpdate?.(comment);
-        setIsOpen(false);
-      } else {
-        showToast.error("Failed to update comment");
+    updateSession(
+      { comment },
+      {
+        onSuccess: () => {
+          onCommentUpdate?.(comment);
+          setIsOpen(false);
+        },
       }
-    } catch (error) {
-      console.error("Error updating comment:", error);
-      showToast.error("Failed to update comment");
-    } finally {
-      setIsSubmitting(false);
-    }
+    );
   };
 
   return (
@@ -86,12 +76,12 @@ export function CommentDialog({
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Comment"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Saving..." : "Save Comment"}
             </Button>
           </div>
         </form>

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { MessageSquare, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { SessionOverview } from "@/app/types/session.type";
-import { submitTeacherFeedback } from "@/lib/api";
+import { useSubmitTeacherFeedback } from "@/hooks/mutation/use-session-mutations";
 import { Textarea } from "@/components/ui/textarea";
 import FileUpload from "@/components/shared/file-upload";
 
@@ -28,8 +27,11 @@ export default function TeacherFeedbackDialog({
 }: TeacherFeedbackDialogProps) {
   const [feedback, setFeedback] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const { mutate: submitFeedback, isPending } = useSubmitTeacherFeedback();
+  const isSubmitting = isUploading || isPending;
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(files);
@@ -43,12 +45,12 @@ export default function TeacherFeedbackDialog({
   const handleSubmit = async () => {
     if (!feedback.trim()) return;
 
-    setIsSubmitting(true);
-    try {
-      let mediaUrls: string[] = [];
+    let mediaUrls: string[] = [];
 
-      // Upload files if any are selected using pre-signed URLs
-      if (selectedFiles.length > 0) {
+    // Upload files if any are selected using pre-signed URLs
+    if (selectedFiles.length > 0) {
+      setIsUploading(true);
+      try {
         const uploadPromises = selectedFiles.map(async (file) => {
           // Get pre-signed URL
           const getUrlRes = await fetch(
@@ -76,39 +78,39 @@ export default function TeacherFeedbackDialog({
           return s3Url;
         });
         mediaUrls = await Promise.all(uploadPromises);
+      } catch (error) {
+        console.error("Error uploading files:", error);
+        setIsUploading(false);
+        return;
       }
-
-      // Separate media URLs into images and videos
-      const images = mediaUrls.filter(url => 
-        /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
-      );
-      const videos = mediaUrls.filter(url => 
-        /\.(mp4|webm|mov)$/i.test(url)
-      );
-
-      // TODO: Get actual student ID - for now using placeholder
-      const success = await submitTeacherFeedback(
-        session.sessionId,
-        1, // placeholder student ID
-        feedback,
-        images.length > 0 ? images : undefined,
-        videos.length > 0 ? videos : undefined
-      );
-
-      if (success) {
-        setFeedback("");
-        setSelectedFiles([]);
-        setIsOpen(false);
-        showToast.success("Feedback submitted successfully!");
-      } else {
-        showToast.error("Failed to submit feedback. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      showToast.error("An error occurred while submitting feedback.");
-    } finally {
-      setIsSubmitting(false);
+      setIsUploading(false);
     }
+
+    // Separate media URLs into images and videos
+    const images = mediaUrls.filter((url) =>
+      /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+    );
+    const videos = mediaUrls.filter((url) =>
+      /\.(mp4|webm|mov)$/i.test(url)
+    );
+
+    // TODO: Get actual student ID - for now using placeholder
+    submitFeedback(
+      {
+        sessionId: session.sessionId,
+        studentId: 1, // placeholder student ID
+        feedback,
+        feedbackImages: images.length > 0 ? images : undefined,
+        feedbackVideos: videos.length > 0 ? videos : undefined,
+      },
+      {
+        onSuccess: () => {
+          setFeedback("");
+          setSelectedFiles([]);
+          setIsOpen(false);
+        },
+      }
+    );
   };
 
   return (

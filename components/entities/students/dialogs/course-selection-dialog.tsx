@@ -14,8 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
-import { searchCourses } from "@/lib/api";
-import { useDebouncedCallback } from "use-debounce";
+import { useSearchCourses } from "@/hooks/query/use-courses";
+import { useDebounce } from "use-debounce";
 import { Course } from "@/app/types/course.type";
 import { checkStudentHasWipSession } from "@/lib/api";
 import { showToast } from "@/lib/toast";
@@ -49,7 +49,9 @@ export default function CourseSelectionDialog({
     },
   });
 
-  const [searchResults, setSearchResults] = useState<Course[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery] = useDebounce(searchQuery, 300);
+  const { data: searchResults = [] } = useSearchCourses(debouncedQuery);
   const [selectedCourse, setSelectedCourse] = useState<Course>();
 
   // Reset form and sync state when dialog opens
@@ -58,31 +60,19 @@ export default function CourseSelectionDialog({
       if (courseData && courseData.id !== -1) {
         setValue("course", courseData.title);
         setSelectedCourse(courseData as Course);
+        setSearchQuery("");
       } else {
         reset();
         setSelectedCourse(undefined);
-        setSearchResults([]);
+        setSearchQuery("");
       }
     }
   }, [open, courseData, setValue, reset]);
 
-  const debouncedSearch = useDebouncedCallback(async (value: string) => {
-    if (value.length >= 2) {
-      try {
-        const results = await searchCourses(value);
-        setSearchResults(results);
-      } catch (err) {
-        console.error("Course search failed", err);
-      }
-    } else {
-      setSearchResults([]);
-    }
-  }, 300);
-
   const handleSelectCourse = (course: Course) => {
     setValue("course", course.title);
     setSelectedCourse(course);
-    setSearchResults([]);
+    setSearchQuery("");
   };
 
   const onSubmit = async () => {
@@ -134,7 +124,7 @@ export default function CourseSelectionDialog({
                     placeholder="Enter course name"
                     onChange={(e) => {
                       setSelectedCourse(undefined);
-                      debouncedSearch(e.target.value);
+                      setSearchQuery(e.target.value);
                     }}
                     autoComplete="off"
                     className="w-full"

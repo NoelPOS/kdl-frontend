@@ -112,3 +112,53 @@ export async function fetchAllCourses(accessToken?: string): Promise<Course[]> {
   const response = await api.get<Course[]>("/courses/all");
   return response.data;
 }
+
+// ─── Client-side filtered list (used by TanStack Query hooks) ─────────────────
+
+export async function getFilteredCoursesClient(
+  filter: CourseFilter = {},
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  courses: Course[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.query) params.set("query", filter.query);
+  if (filter.ageRange) params.set("ageRange", filter.ageRange);
+  if (filter.medium) params.set("medium", filter.medium);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await clientApi.get<{
+    courses: Course[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/courses/filter?${params.toString()}`);
+  return response.data;
+}
+
+// ─── Client-side mutations ─────────────────────────────────────────────────────
+
+export async function updateCourse(
+  id: string | number,
+  data: Partial<Omit<Course, "id">>
+): Promise<Course> {
+  const res = await clientApi.put<Course>(`/courses/${id}`, data);
+  return res.data;
+}
+
+export async function deleteCourse(id: string | number): Promise<void> {
+  await clientApi.delete(`/courses/${id}`);
+}

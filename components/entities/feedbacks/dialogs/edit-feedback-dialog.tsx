@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FeedbackItem } from "@/app/types/feedback.type";
 import { showToast } from "@/lib/toast";
+import { useUpdateSchedule, useVerifyScheduleFeedback } from "@/hooks/mutation/use-schedule-mutations";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,8 @@ export default function EditFeedbackDialog({
   feedback,
   onFeedbackUpdate,
 }: EditFeedbackDialogProps) {
+  const { mutateAsync: updateScheduleMutate, isPending: isUpdating } = useUpdateSchedule();
+  const { mutateAsync: verifyFeedbackMutate, isPending: isVerifying } = useVerifyScheduleFeedback();
   const [feedbackText, setFeedbackText] = useState("");
   const [originalFeedbackText, setOriginalFeedbackText] = useState("");
   const [mediaImages, setMediaImages] = useState<string[]>([]);
@@ -40,7 +43,8 @@ export default function EditFeedbackDialog({
   const [originalMediaImages, setOriginalMediaImages] = useState<string[]>([]);
   const [originalMediaVideos, setOriginalMediaVideos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const isSubmitting = isUploading || isUpdating || isVerifying;
 
   useEffect(() => {
     if (feedback && open) {
@@ -67,7 +71,7 @@ export default function EditFeedbackDialog({
       setOriginalMediaImages([]);
       setOriginalMediaVideos([]);
       setNewFiles([]);
-      setIsSubmitting(false);
+      setIsUploading(false);
     }
   }, [open]);
 
@@ -86,7 +90,7 @@ export default function EditFeedbackDialog({
   const handleSave = async () => {
     if (!feedback || !feedbackText.trim()) return;
 
-    setIsSubmitting(true);
+    setIsUploading(true);
     try {
       // Identify removed files
       const removedImages = originalMediaImages.filter(url => !mediaImages.includes(url));
@@ -98,9 +102,8 @@ export default function EditFeedbackDialog({
         console.log('Deleting removed files:', removedFiles);
         const deletePromises = removedFiles.map(async (url) => {
           try {
-            // Extract the key from the S3 URL
             const urlObj = new URL(url);
-            const key = urlObj.pathname.substring(1); // Remove leading '/'
+            const key = urlObj.pathname.substring(1);
             const response = await fetch("/api/s3-delete", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -120,7 +123,6 @@ export default function EditFeedbackDialog({
       let newMediaUrls: string[] = [];
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
-          // Get pre-signed URL
           const getUrlRes = await fetch(
             `/api/s3-upload-url?fileName=${encodeURIComponent(
               file.name
@@ -131,7 +133,6 @@ export default function EditFeedbackDialog({
           }
           const { url, publicUrl } = await getUrlRes.json();
 
-          // Upload directly to S3
           const uploadRes = await fetch(url, {
             method: "PUT",
             headers: { "Content-Type": file.type },
@@ -141,60 +142,52 @@ export default function EditFeedbackDialog({
             throw new Error(`Failed to upload ${file.name}`);
           }
 
-          // Return the public URL provided by the backend
           return publicUrl;
         });
         newMediaUrls = await Promise.all(uploadPromises);
       }
 
+      setIsUploading(false);
+
       // Combine existing media with new uploads
       const allMediaUrls = [...mediaImages, ...mediaVideos, ...newMediaUrls];
-      const finalImages = allMediaUrls.filter(url => 
+      const finalImages = allMediaUrls.filter(url =>
         /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
       );
-      const finalVideos = allMediaUrls.filter(url => 
+      const finalVideos = allMediaUrls.filter(url =>
         /\.(mp4|webm|mov)$/i.test(url)
       );
 
-      // Import the updateSchedule API function to update feedback and media
-      const { updateSchedule } = await import("@/lib/api/schedules");
-
-      // Call the API to update feedback field and media
-      const updatedSchedule = await updateSchedule(parseInt(feedback.scheduleId), {
-        feedback: feedbackText.trim(),
-        feedbackImages: finalImages,
-        feedbackVideos: finalVideos,
+      const updatedSchedule = await updateScheduleMutate({
+        scheduleId: parseInt(feedback.scheduleId),
+        data: {
+          feedback: feedbackText.trim(),
+          feedbackImages: finalImages,
+          feedbackVideos: finalVideos,
+        },
       }) as any;
 
-      // Update the feedback locally with the response from backend
       const updatedFeedback: FeedbackItem = {
         ...feedback,
         feedback: feedbackText.trim(),
         feedbackImages: finalImages,
         feedbackVideos: finalVideos,
-        verifyFb: false, // Keep it unverified
-        feedbackModifiedByName: updatedSchedule.feedbackModifiedByName || feedback.feedbackModifiedByName,
-        feedbackModifiedAt: updatedSchedule.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
+        verifyFb: false,
+        feedbackModifiedByName: updatedSchedule?.feedbackModifiedByName || feedback.feedbackModifiedByName,
+        feedbackModifiedAt: updatedSchedule?.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
       };
 
       onFeedbackUpdate(updatedFeedback);
-      showToast.success("Feedback saved successfully!");
     } catch (error) {
+      setIsUploading(false);
       console.error("Error saving feedback:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to save feedback. Please try again.";
-      showToast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleSaveAndVerify = async () => {
     if (!feedback || !feedbackText.trim()) return;
 
-    setIsSubmitting(true);
+    setIsUploading(true);
     try {
       // Identify removed files
       const removedImages = originalMediaImages.filter(url => !mediaImages.includes(url));
@@ -206,9 +199,8 @@ export default function EditFeedbackDialog({
         console.log('Deleting removed files:', removedFiles);
         const deletePromises = removedFiles.map(async (url) => {
           try {
-            // Extract the key from the S3 URL
             const urlObj = new URL(url);
-            const key = urlObj.pathname.substring(1); // Remove leading '/'
+            const key = urlObj.pathname.substring(1);
             const response = await fetch("/api/s3-delete", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -228,7 +220,6 @@ export default function EditFeedbackDialog({
       let newMediaUrls: string[] = [];
       if (newFiles.length > 0) {
         const uploadPromises = newFiles.map(async (file) => {
-          // Get pre-signed URL
           const getUrlRes = await fetch(
             `/api/s3-upload-url?fileName=${encodeURIComponent(
               file.name
@@ -239,7 +230,6 @@ export default function EditFeedbackDialog({
           }
           const { url, publicUrl } = await getUrlRes.json();
 
-          // Upload directly to S3
           const uploadRes = await fetch(url, {
             method: "PUT",
             headers: { "Content-Type": file.type },
@@ -249,55 +239,46 @@ export default function EditFeedbackDialog({
             throw new Error(`Failed to upload ${file.name}`);
           }
 
-          // Return the public URL provided by the backend
           return publicUrl;
         });
         newMediaUrls = await Promise.all(uploadPromises);
       }
 
-      // Continue with the rest of the logic
+      setIsUploading(false);
+
       // Combine existing media with new uploads
       const allMediaUrls = [...mediaImages, ...mediaVideos, ...newMediaUrls];
-      const finalImages = allMediaUrls.filter(url => 
+      const finalImages = allMediaUrls.filter(url =>
         /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
       );
-      const finalVideos = allMediaUrls.filter(url => 
+      const finalVideos = allMediaUrls.filter(url =>
         /\.(mp4|webm|mov)$/i.test(url)
       );
 
-      // Import the verifyScheduleFeedback API function
-      const { verifyScheduleFeedback } = await import("@/lib/api/schedules");
-
-      // Call the API to update and verify feedback
-      const updatedSchedule = await verifyScheduleFeedback(parseInt(feedback.scheduleId), {
-        feedback: feedbackText.trim(),
-        feedbackImages: finalImages,
-        feedbackVideos: finalVideos,
-        verifyFb: true,
+      const updatedSchedule = await verifyFeedbackMutate({
+        scheduleId: parseInt(feedback.scheduleId),
+        data: {
+          feedback: feedbackText.trim(),
+          feedbackImages: finalImages,
+          feedbackVideos: finalVideos,
+          verifyFb: true,
+        },
       }) as any;
 
-      // Update the feedback locally with the response from backend
       const updatedFeedback: FeedbackItem = {
         ...feedback,
         feedback: feedbackText.trim(),
         feedbackImages: finalImages,
         feedbackVideos: finalVideos,
         verifyFb: true,
-        feedbackModifiedByName: updatedSchedule.feedbackModifiedByName || feedback.feedbackModifiedByName,
-        feedbackModifiedAt: updatedSchedule.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
+        feedbackModifiedByName: updatedSchedule?.feedbackModifiedByName || feedback.feedbackModifiedByName,
+        feedbackModifiedAt: updatedSchedule?.feedbackModifiedAt ? new Date(updatedSchedule.feedbackModifiedAt).toISOString() : feedback.feedbackModifiedAt,
       };
 
       onFeedbackUpdate(updatedFeedback);
-      showToast.success("Feedback saved and verified successfully!");
     } catch (error) {
+      setIsUploading(false);
       console.error("Error saving and verifying feedback:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to save and verify feedback. Please try again.";
-      showToast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

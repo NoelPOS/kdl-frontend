@@ -48,3 +48,24 @@ export async function fetchActiveDiscounts(
   const response = await api.get<Discount[]>("/discounts");
   return response.data;
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export async function getDiscounts(): Promise<Discount[]> {
+  const response = await clientApi.get<Discount[]>("/discounts");
+  return response.data;
+}
+
+// ─── Client-side mutations ─────────────────────────────────────────────────────
+
+export async function updateDiscount(
+  id: string | number,
+  data: Partial<Omit<Discount, "id">>
+): Promise<Discount> {
+  const res = await clientApi.put<Discount>(`/discounts/${id}`, data);
+  return res.data;
+}
+
+export async function deleteDiscount(id: string | number): Promise<void> {
+  await clientApi.delete(`/discounts/${id}`);
+}

@@ -236,3 +236,51 @@ export async function getFilteredSchedules(
     lastUpdated: res.lastFetched
   };
 }
+
+// ─── Client-side functions (used by TanStack Query hooks) ─────────────────────
+
+export async function getTodaySchedulesClient(): Promise<ClassSchedule[]> {
+  const res = await clientApi.get<ClassSchedule[]>("/schedules/today");
+  return res.data;
+}
+
+export async function getFilteredSchedulesClient(
+  data: ScheduleFilter,
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  schedules: ClassSchedule[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (data.startDate) params.set("startDate", data.startDate);
+  if (data.endDate) params.set("endDate", data.endDate);
+  if (data.studentName) params.set("studentName", data.studentName);
+  if (data.teacherName) params.set("teacherName", data.teacherName);
+  if (data.courseName) params.set("courseName", data.courseName);
+  if (data.attendanceStatus) params.set("attendanceStatus", data.attendanceStatus);
+  if (data.classStatus) params.set("classStatus", data.classStatus);
+  if (data.room) params.set("room", data.room);
+  if (data.sort) params.set("sort", data.sort);
+  if (data.classOption) params.set("classOption", data.classOption);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const res = await clientApi.get<{
+    schedules: ClassSchedule[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/schedules/filter?${params.toString()}`);
+  return res.data;
+}
