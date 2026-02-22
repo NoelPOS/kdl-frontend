@@ -1,134 +1,119 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
-import { useRef } from "react";
-import { addNewDiscount } from "@/lib/api";
-import { useRouter } from "next/navigation";
-import { showToast } from "@/lib/toast";
+import { EntityDialog } from "@/components/shared/entity-dialog/entity-dialog";
+import { FormFieldGroup } from "@/components/shared/form-fields/form-field-group";
+import { useCreateDiscount } from "@/hooks/mutation/use-discount-mutations";
 
-export type FormData = {
+type FormData = {
   title: string;
   amount: number;
   usage: string;
 };
 
 export function AddNewDiscount() {
-  const router = useRouter();
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const { mutate: createDiscount, isPending } = useCreateDiscount();
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({
-    defaultValues: {
-      title: "",
-      amount: 0,
-      usage: "",
-    },
+    defaultValues: { title: "", amount: 0, usage: "" },
   });
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      await addNewDiscount(data);
-      showToast.success("Discount added successfully!");
-      reset(); // Reset form fields
-      closeRef.current?.click(); // Close dialog
-      router.refresh(); // Refresh data
-    } catch (error) {
-      console.error("Error adding discount:", error);
-      showToast.error("Failed to add discount. Please try again.");
-    }
+  const onSubmit = (data: FormData) => {
+    createDiscount(data, {
+      onSuccess: () => {
+        reset();
+        setOpen(false);
+      },
+    });
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Discount/Fees
-        </Button>
-      </DialogTrigger>
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <Plus className="h-4 w-4 mr-2" />
+        Add Discount/Fees
+      </Button>
 
-      <DialogContent className="sm:max-w-[500px] p-8">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">
-            Add New Field
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="title" className="text-sm text-gray-500">
-              Discount Title
-            </Label>
-            <Input
-              id="title"
-              placeholder="Enter discount title"
-              {...register("title", { required: true })}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="amount" className="text-sm text-gray-500">
-              Amount
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              step="100"
-              placeholder="e.g., 50.00"
-              {...register("amount", { required: true, valueAsNumber: true })}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="usage" className="text-sm text-gray-500">
-              Description
-            </Label>
-            <Input
-              id="usage"
-              type="text"
-              placeholder="description of discount"
-              {...register("usage", { required: true })}
-            />
-          </div>
-
-          <DialogFooter className="gap-2 mt-6">
-            <DialogClose asChild>
-              <Button
-                ref={closeRef}
-                type="button"
-                variant="outline"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-            </DialogClose>
+      <EntityDialog
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title="Add New Discount"
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              form="add-discount-form"
+              disabled={isPending}
               className="bg-yellow-500 hover:bg-yellow-600 text-white"
             >
-              {isSubmitting ? "Adding..." : "Add Discount"}
+              {isPending ? "Adding..." : "Add Discount"}
             </Button>
-          </DialogFooter>
+          </>
+        }
+      >
+        <form
+          id="add-discount-form"
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
+          <FormFieldGroup
+            label="Discount Title"
+            required
+            error={errors.title?.message}
+          >
+            <Input
+              placeholder="Enter discount title"
+              {...register("title", { required: "Title is required" })}
+            />
+          </FormFieldGroup>
+
+          <FormFieldGroup
+            label="Amount"
+            required
+            error={errors.amount?.message}
+          >
+            <Input
+              type="number"
+              step="100"
+              placeholder="e.g., 500"
+              {...register("amount", {
+                required: "Amount is required",
+                valueAsNumber: true,
+              })}
+            />
+          </FormFieldGroup>
+
+          <FormFieldGroup
+            label="Description"
+            required
+            error={errors.usage?.message}
+          >
+            <Input
+              placeholder="Description of discount"
+              {...register("usage", { required: "Description is required" })}
+            />
+          </FormFieldGroup>
         </form>
-      </DialogContent>
-    </Dialog>
+      </EntityDialog>
+    </>
   );
 }

@@ -76,3 +76,34 @@ export async function fetchAllRegistrars(accessToken?: string): Promise<Registra
   const response = await api.get<Registrar[]>("/registrars/all");
   return response.data;
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export interface RegistrarListFilters {
+  query?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getRegistrars(filters: RegistrarListFilters = {}): Promise<{
+  registrars: Registrar[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const response = await clientApi.get<{
+    registrars: Registrar[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>("/registrars/search", { params: filters });
+  return response.data;
+}

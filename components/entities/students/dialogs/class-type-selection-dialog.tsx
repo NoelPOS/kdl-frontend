@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getCourseTypes } from "@/lib/api";
+import { useCourseTypes } from "@/hooks/query/use-courses";
 import { ClassOption, ComfirmClassScheduleData } from "@/app/types/course.type";
 import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
 import {
@@ -82,7 +82,9 @@ export default function ClassTypeSelectionDialog({
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [courseOptions, setCourseOptions] = useState<ClassOption[]>([]);
+
+  // Fetch course types using hook
+  const { data: courseOptions = [] } = useCourseTypes();
 
   // Refs for time inputs
   const fixedStartTimeRef = useRef<HTMLInputElement>(null);
@@ -100,22 +102,6 @@ export default function ClassTypeSelectionDialog({
   }, [courseOptions, classTypeId]);
 
   const classType = selectedCourseOption?.classMode;
-
-  // Load class options
-  useEffect(() => {
-    const fetchCourseOptions = async () => {
-      try {
-        const response = await getCourseTypes();
-        setCourseOptions(response);
-      } catch (error) {
-        console.error("Error fetching course types:", error);
-      }
-    };
-
-    if (open) {
-      fetchCourseOptions();
-    }
-  }, [open]);
 
   // Handle day selection for 12 times fixed
   const toggleDay = (day: string) => {

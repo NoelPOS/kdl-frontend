@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getTeacherCourses, removeCourseFromTeacher } from "@/lib/api";
+import { getTeacherCourses } from "@/lib/api";
+import { useRemoveCourseFromTeacher } from "@/hooks/mutation/use-teacher-mutations";
 import { Course } from "@/app/types/course.type";
 import { CourseCard } from "@/components/entities/courses/cards/course-card";
 import { Pagination } from "@/components/ui/pagination";
@@ -35,7 +36,8 @@ export default function TeacherCoursesListContent({
     id: number;
     name: string;
   } | null>(null);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const { mutate: removeCourse, isPending: isRemoving } =
+    useRemoveCourseFromTeacher();
 
   const currentPage = parseInt(searchParams.page || "1");
   const searchQuery = searchParams.query;
@@ -103,21 +105,19 @@ export default function TeacherCoursesListContent({
     setRemoveDialogOpen(true);
   };
 
-  const handleConfirmRemove = async () => {
+  const handleConfirmRemove = () => {
     if (!courseToRemove) return;
 
-    setIsRemoving(true);
-    try {
-      await removeCourseFromTeacher(teacherId, courseToRemove.id);
-      setRemoveDialogOpen(false);
-      setCourseToRemove(null);
-      fetchCourses();
-    } catch (error) {
-      console.error("Failed to remove course:", error);
-      alert("Failed to remove course");
-    } finally {
-      setIsRemoving(false);
-    }
+    removeCourse(
+      { teacherId, courseId: courseToRemove.id },
+      {
+        onSuccess: () => {
+          setRemoveDialogOpen(false);
+          setCourseToRemove(null);
+          fetchCourses();
+        },
+      }
+    );
   };
 
   return (

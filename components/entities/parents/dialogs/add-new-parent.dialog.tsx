@@ -14,8 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
-import { useRef, useState } from "react";
-import { addNewParent } from "@/lib/api";
+import { useState } from "react";
+import { useCreateParent } from "@/hooks/mutation/use-parent-mutations";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -29,13 +29,14 @@ export type ParentFormData = {
 };
 
 export default function AddNewParent() {
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const { mutateAsync: createParent } = useCreateParent();
   const {
     register,
     handleSubmit,
-    setValue,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<ParentFormData>({
     defaultValues: {
@@ -85,24 +86,19 @@ export default function AddNewParent() {
         showToast.dismiss(toastId);
         showToast.success("Image uploaded");
       }
-      toastId = showToast.loading("Creating parent...");
-      await addNewParent({
+      await createParent({
         ...data,
         profilePicture: imageUrl,
         profileKey: key,
-      });
-      showToast.dismiss(toastId);
-      showToast.success("Parent created successfully");
-      closeRef.current?.click();
+      } as any);
+      reset();
+      setImagePreview("");
+      setImageFile(null);
+      setOpen(false);
       router.refresh();
     } catch (error) {
-      showToast.dismiss();
-      const errorMsg =
-        typeof error === "object" && error && "message" in error
-          ? (error as any).message
-          : String(error);
-      showToast.error("Error creating parent", errorMsg);
       console.error("Error creating parent:", error);
+      // Hook's onError already handles the toast
     }
   };
 
@@ -119,7 +115,7 @@ export default function AddNewParent() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus className="h-4 w-4 mr-2" />
@@ -242,7 +238,6 @@ export default function AddNewParent() {
           <DialogFooter className="flex justify-end gap-2 mt-8">
             <DialogClose asChild>
               <Button
-                ref={closeRef}
                 type="button"
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-500 hover:text-white rounded-2xl w-[5rem]"

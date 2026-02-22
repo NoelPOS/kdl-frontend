@@ -12,9 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { completeSession } from "@/lib/api";
+import { useCompleteSession } from "@/hooks/mutation/use-session-mutations";
 import { useRouter } from "next/navigation";
-import { showToast } from "@/lib/toast";
 
 interface CompleteSessionDialogProps {
   sessionId: number;
@@ -26,30 +25,16 @@ export function CompleteSessionDialog({
   sessionTitle,
 }: CompleteSessionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { mutate: completeSession, isPending } = useCompleteSession();
 
-  const handleComplete = async () => {
-    setIsLoading(true);
-    const toastId = showToast.loading("Completing session...");
-    try {
-      const success = await completeSession(sessionId);
-      showToast.dismiss(toastId);
-      if (success) {
-        showToast.success("Session completed successfully!");
-        router.refresh(); // Refresh the page to show updated data
+  const handleComplete = () => {
+    completeSession(sessionId, {
+      onSuccess: () => {
+        router.refresh();
         setIsOpen(false);
-      } else {
-        showToast.error("Failed to complete session. Please try again.");
-        console.error("Failed to complete session");
-      }
-    } catch (error) {
-      showToast.dismiss(toastId);
-      showToast.error("Error completing session. Please try again.");
-      console.error("Error completing session:", error);
-    } finally {
-      setIsLoading(false);
-    }
+      },
+    });
   };
 
   return (
@@ -76,16 +61,16 @@ export function CompleteSessionDialog({
           <Button
             variant="outline"
             onClick={() => setIsOpen(false)}
-            disabled={isLoading}
+            disabled={isPending}
           >
             Cancel
           </Button>
           <Button
             onClick={handleComplete}
-            disabled={isLoading}
+            disabled={isPending}
             className="bg-yellow-600 hover:bg-yellow-700"
           >
-            {isLoading ? "Completing..." : "Complete Session"}
+            {isPending ? "Completing..." : "Complete Session"}
           </Button>
         </DialogFooter>
       </DialogContent>

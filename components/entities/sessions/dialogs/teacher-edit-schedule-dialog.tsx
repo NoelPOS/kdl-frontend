@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FormData } from "@/app/types/schedule.type";
-import { updateSchedule } from "@/lib/api";
-import { showToast } from "@/lib/toast";
+import { useUpdateSchedule } from "@/hooks/mutation/use-schedule-mutations";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -24,11 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  BookOpen,
   MessageSquare,
   Image as ImageIcon,
 } from "lucide-react";
@@ -67,10 +60,13 @@ export default function TeacherEditScheduleDialog({
 
   const [feedback, setFeedback] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [hasPreviousFeedback, setHasPreviousFeedback] = useState(false);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
+
+  const { mutate: updateSchedule, isPending } = useUpdateSchedule();
+  const isSubmitting = isUploading || isPending;
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(files);
@@ -82,13 +78,11 @@ export default function TeacherEditScheduleDialog({
       const existingFeedback = initialData.feedback || "";
       setFeedback(existingFeedback);
       setHasPreviousFeedback(!!existingFeedback.trim());
-      // Set existing images and videos
       setExistingImages(initialData.feedbackImages || []);
       setExistingVideos(initialData.feedbackVideos || []);
     }
   }, [initialData]);
 
-  // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
       setFormData({
@@ -109,8 +103,8 @@ export default function TeacherEditScheduleDialog({
       });
       setFeedback("");
       setSelectedFiles([]);
-      setIsSubmitting(false);
-      setHasPreviousFeedback(false); // Reset feedback state
+      setIsUploading(false);
+      setHasPreviousFeedback(false);
       setExistingImages([]);
       setExistingVideos([]);
     }
@@ -120,13 +114,11 @@ export default function TeacherEditScheduleDialog({
     e.preventDefault();
     if (!formData.scheduleId) return;
 
-    setIsSubmitting(true);
-    try {
-      // Upload new files if any using pre-signed URLs
-      let mediaUrls: string[] = [];
-      if (!hasPreviousFeedback && selectedFiles.length > 0) {
+    let mediaUrls: string[] = [];
+    if (!hasPreviousFeedback && selectedFiles.length > 0) {
+      setIsUploading(true);
+      try {
         const uploadPromises = selectedFiles.map(async (file) => {
-          // Get pre-signed URL
           const getUrlRes = await fetch(
             `/api/s3-upload-url?fileName=${encodeURIComponent(
               file.name
@@ -137,7 +129,6 @@ export default function TeacherEditScheduleDialog({
           }
           const { url, publicUrl } = await getUrlRes.json();
 
-          // Upload directly to S3
           const uploadRes = await fetch(url, {
             method: "PUT",
             headers: { "Content-Type": file.type },
@@ -147,67 +138,63 @@ export default function TeacherEditScheduleDialog({
             throw new Error(`Failed to upload ${file.name}`);
           }
 
-          // Return the public URL provided by the backend
           return publicUrl;
         });
         mediaUrls = await Promise.all(uploadPromises);
+      } catch (error) {
+        console.error("Error uploading files:", error);
+        setIsUploading(false);
+        return;
       }
-
-      // Separate media URLs into images and videos
-      const images = mediaUrls.filter(url => 
-        /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
-      );
-      const videos = mediaUrls.filter(url => 
-        /\.(mp4|webm|mov)$/i.test(url)
-      );
-
-      // Prepare update data
-      const updateData: {
-        attendance: string;
-        feedback?: string;
-        feedbackDate?: string;
-        feedbackImages?: string[];
-        feedbackVideos?: string[];
-      } = {
-        attendance: formData.status || "pending",
-      };
-
-      // Only include feedback in update if it hasn't been provided before
-      if (!hasPreviousFeedback && feedback.trim()) {
-        updateData.feedback = feedback;
-        updateData.feedbackDate = new Date().toISOString();
-        if (images.length > 0) {
-          updateData.feedbackImages = images;
-        }
-        if (videos.length > 0) {
-          updateData.feedbackVideos = videos;
-        }
-      }
-
-      const updatedSchedule = await updateSchedule(
-        formData.scheduleId,
-        updateData
-      );
-
-      // Update the form data with the new values
-      const updatedFormData = {
-        ...formData,
-        status: formData.status,
-        feedback: hasPreviousFeedback ? formData.feedback : feedback, // Keep existing feedback if already provided
-        feedbackImages: images.length > 0 ? images : undefined,
-        feedbackVideos: videos.length > 0 ? videos : undefined,
-      };
-
-      onScheduleUpdate(updatedFormData);
-      onOpenChange(false);
-      showToast.success("Schedule updated successfully!");
-    } catch (error) {
-      console.error("Error updating schedule:", error);
-      showToast.error("Failed to update schedule. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setIsUploading(false);
     }
+
+    const images = mediaUrls.filter((url) =>
+      /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+    );
+    const videos = mediaUrls.filter((url) =>
+      /\.(mp4|webm|mov)$/i.test(url)
+    );
+
+    const updateData: {
+      attendance: string;
+      feedback?: string;
+      feedbackDate?: string;
+      feedbackImages?: string[];
+      feedbackVideos?: string[];
+    } = {
+      attendance: formData.status || "pending",
+    };
+
+    if (!hasPreviousFeedback && feedback.trim()) {
+      updateData.feedback = feedback;
+      updateData.feedbackDate = new Date().toISOString();
+      if (images.length > 0) {
+        updateData.feedbackImages = images;
+      }
+      if (videos.length > 0) {
+        updateData.feedbackVideos = videos;
+      }
+    }
+
+    updateSchedule(
+      { scheduleId: formData.scheduleId, data: updateData },
+      {
+        onSuccess: () => {
+          const updatedFormData = {
+            ...formData,
+            status: formData.status,
+            feedback: hasPreviousFeedback ? formData.feedback : feedback,
+            feedbackImages: images.length > 0 ? images : undefined,
+            feedbackVideos: videos.length > 0 ? videos : undefined,
+          };
+          onScheduleUpdate(updatedFormData);
+          onOpenChange(false);
+        },
+      }
+    );
   };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -219,63 +206,6 @@ export default function TeacherEditScheduleDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Read-only Session Information */}
-          {/* <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Date
-                </Label>
-                <Input value={formData.date} disabled className="bg-gray-100" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Time
-                </Label>
-                <Input
-                  value={`${formData.starttime} - ${formData.endtime}`}
-                  disabled
-                  className="bg-gray-100"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Course
-                </Label>
-                <Input
-                  value={formData.course}
-                  disabled
-                  className="bg-gray-100"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Room
-                </Label>
-                <Input value={formData.room} disabled className="bg-gray-100" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Student
-              </Label>
-              <Input
-                value={`${formData.student} (${formData.nickname})`}
-                disabled
-                className="bg-gray-100"
-              />
-            </div>
-          </div> */}
-
           {/* Editable Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -326,32 +256,31 @@ export default function TeacherEditScheduleDialog({
               </Label>
 
               {hasPreviousFeedback ? (
-                // Show existing feedback as read-only
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 border rounded-md">
                     <p className="text-sm text-gray-700">{feedback}</p>
                   </div>
-                  
-                  {/* Show existing media attachments */}
+
                   {(existingImages.length > 0 || existingVideos.length > 0) && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <ImageIcon className="h-4 w-4" />
-                        <span>Attached media ({existingImages.length + existingVideos.length} files)</span>
+                        <span>
+                          Attached media ({existingImages.length + existingVideos.length} files)
+                        </span>
                       </div>
-                      <MediaPreview 
+                      <MediaPreview
                         images={existingImages}
                         videos={existingVideos}
                       />
                     </div>
                   )}
-                  
+
                   <p className="text-xs text-gray-500">
                     Feedback has already been provided and cannot be modified.
                   </p>
                 </div>
               ) : (
-                // Show editable feedback field
                 <>
                   <Textarea
                     id="feedback"
@@ -369,7 +298,6 @@ export default function TeacherEditScheduleDialog({
               )}
             </div>
 
-            {/* File Upload - only show if feedback hasn't been provided */}
             {!hasPreviousFeedback && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-900">

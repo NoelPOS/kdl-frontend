@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
-import { getAllRooms } from "@/lib/api";
+import { useRoomList } from "@/hooks/query/use-rooms";
 import { Room } from "@/app/types/room.type";
 
 export type FormData = {
@@ -50,20 +50,8 @@ export function AddSchedule() {
     },
   });
 
-  const [rooms, setRooms] = useState<Room[]>([]);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const roomList = await getAllRooms();
-        setRooms(roomList);
-      } catch (error) {
-        console.error("Failed to fetch rooms:", error);
-      }
-    };
-
-    fetchRooms();
-  }, []);
+  // Fetch rooms using hook
+  const { data: rooms = [] } = useRoomList();
 
   const { ref: dateRHFRef } = register("date");
   const { ref: starttimeRHFRef } = register("starttime");

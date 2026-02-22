@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { DAYS_OF_WEEK, generateCalendarDays } from "@/lib/utils";
-import { getCourseTypes } from "@/lib/api";
+import { useCourseTypes } from "@/hooks/query/use-courses";
 import { ClassOption, ComfirmClassScheduleData } from "@/app/types/course.type";
 import {
   Calendar,
@@ -126,7 +126,9 @@ export function ClassScheduleDialog({
   // State for calendar selection (camp class)
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [courseOptions, setCourseOptions] = useState<ClassOption[]>([]);
+
+  // Fetch course types using hook
+  const { data: courseOptions = [] } = useCourseTypes();
 
   // Refs for time inputs
   const fixedStartTimeRef = useRef<HTMLInputElement>(null);
@@ -243,15 +245,6 @@ export function ClassScheduleDialog({
       onBack();
     }
   };
-
-  useEffect(() => {
-    const fetchCourseOptions = async () => {
-      const response = await getCourseTypes();
-      setCourseOptions(response);
-    };
-
-    fetchCourseOptions();
-  }, []);
 
   return (
     <Dialog open={open}>

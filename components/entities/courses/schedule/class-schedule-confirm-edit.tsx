@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getTeacherByCourseId, getAllRooms } from "@/lib/api";
+import { useTeachersByCourse } from "@/hooks/query/use-teachers";
+import { useRoomList } from "@/hooks/query/use-rooms";
 import { EditScheduleFormData } from "@/app/types/course.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
@@ -146,52 +147,40 @@ export function EditScheduleDialog({
     }
   }, [initialData, reset, open, courseName, teachers, setValue]);
 
+  // Fetch teachers for this course using hook
+  const { data: teachersData = [] } = useTeachersByCourse(
+    courseId,
+    { enabled: open }
+  );
+
+  // Fetch rooms using hook
+  const { data: roomsData = [] } = useRoomList();
+
+  // Update component state when query data changes
   useEffect(() => {
-    const fetchTeachers = async () => {
-      if (!open) return;
-      try {
-        const teacherList = await getTeacherByCourseId(courseId);
-        setTeachers(teacherList);
+    if (!open) return;
+    setTeachers(teachersData);
 
-        // If we have initial data with a teacher name but no teacherId, find and set it
-        const currentTeacher = watch("teacher");
-        const currentTeacherId = watch("teacherId");
+    // If we have initial data with a teacher name but no teacherId, find and set it
+    const currentTeacher = watch("teacher");
+    const currentTeacherId = watch("teacherId");
 
-        if (currentTeacher && !currentTeacherId) {
-          const matchingTeacher = teacherList.find(
-            (t) => t.name === currentTeacher
-          );
-          if (matchingTeacher) {
-            setValue("teacherId", matchingTeacher.id);
-          }
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Failed to fetch teachers:", error);
-        }
-        showToast.error("Failed to load teachers. Please try again.");
+    if (currentTeacher && !currentTeacherId) {
+      const matchingTeacher = teachersData.find(
+        (t) => t.name === currentTeacher
+      );
+      if (matchingTeacher) {
+        setValue("teacherId", matchingTeacher.id);
       }
-    };
+    }
+  }, [teachersData, open, watch, setValue]);
 
-    fetchTeachers();
-  }, [open, initialData?.course, courseId, watch, setValue]);
-
+  // Update rooms state when query data changes
   useEffect(() => {
-    const fetchRooms = async () => {
-      if (!open) return;
-      try {
-        const roomList = await getAllRooms();
-        setRooms(roomList);
-      } catch (error) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Failed to fetch rooms:", error);
-        }
-        showToast.error("Failed to load rooms. Please try again.");
-      }
-    };
-
-    fetchRooms();
-  }, [open]);
+    if (open) {
+      setRooms(roomsData);
+    }
+  }, [roomsData, open]);
 
   const starttimeRef = useRef<HTMLInputElement>(null);
   const endtimeRef = useRef<HTMLInputElement>(null);

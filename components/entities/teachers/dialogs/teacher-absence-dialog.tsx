@@ -12,7 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TeacherAbsence } from "@/app/types/teacher.type";
-import { createTeacherAbsence, updateTeacherAbsence } from "@/lib/api";
+import {
+  useCreateTeacherAbsence,
+  useUpdateTeacherAbsence,
+} from "@/hooks/mutation/use-teacher-mutations";
 import { showToast } from "@/lib/toast";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
@@ -31,10 +34,15 @@ export function TeacherAbsenceDialog({
   absence,
   onSaved,
 }: TeacherAbsenceDialogProps) {
-  const [isSaving, setIsSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [reason, setReason] = useState("");
   const isEditing = !!absence;
+
+  const { mutate: createAbsence, isPending: isCreating } =
+    useCreateTeacherAbsence();
+  const { mutate: updateAbsence, isPending: isUpdating } =
+    useUpdateTeacherAbsence();
+  const isSaving = isCreating || isUpdating;
 
   useEffect(() => {
     if (open) {
@@ -48,41 +56,37 @@ export function TeacherAbsenceDialog({
     }
   }, [open, absence]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedDate) {
       showToast.error("Please select a date");
       return;
     }
 
-    setIsSaving(true);
-    try {
-      // Fix: Use local date to avoid timezone shift (toISOString uses UTC)
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      
-      if (isEditing && absence) {
-        await updateTeacherAbsence(teacherId, absence.id, {
-          absenceDate: dateString,
-          reason: reason || undefined,
-        });
-        showToast.success("Absence updated!");
-      } else {
-        await createTeacherAbsence(teacherId, {
-          absenceDate: dateString,
-          reason: reason || undefined,
-        });
-        showToast.success("Absence added!");
-      }
-      onSaved();
-    } catch (error) {
-      console.error("Failed to save absence:", error);
-      showToast.error("Failed to save absence");
-    } finally {
-      setIsSaving(false);
+    // Fix: Use local date to avoid timezone shift (toISOString uses UTC)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+    const day = String(selectedDate.getDate()).padStart(2, "0");
+    const dateString = `${year}-${month}-${day}`;
+
+    if (isEditing && absence) {
+      updateAbsence(
+        {
+          teacherId,
+          absenceId: absence.id,
+          data: { absenceDate: dateString, reason: reason || undefined },
+        },
+        { onSuccess: onSaved }
+      );
+    } else {
+      createAbsence(
+        {
+          teacherId,
+          data: { absenceDate: dateString, reason: reason || undefined },
+        },
+        { onSuccess: onSaved }
+      );
     }
   };
 
@@ -98,10 +102,7 @@ export function TeacherAbsenceDialog({
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Date *</Label>
-            <Calendar22
-              date={selectedDate}
-              onChange={setSelectedDate}
-            />
+            <Calendar22 date={selectedDate} onChange={setSelectedDate} />
           </div>
 
           <div className="space-y-2">
@@ -122,8 +123,8 @@ export function TeacherAbsenceDialog({
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSaving}
               className="bg-yellow-500 hover:bg-yellow-600 text-white"
             >
@@ -135,6 +136,3 @@ export function TeacherAbsenceDialog({
     </Dialog>
   );
 }
-
-
-

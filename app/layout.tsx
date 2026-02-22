@@ -6,6 +6,7 @@ import ClientAuthProvider from "@/components/auth/client-auth-provider";
 import AuthGuard from "@/components/auth/auth-guard";
 import NProgressProvider from "@/components/layout/nprogress-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +34,11 @@ const RootLayout = ({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NProgressProvider />
-        <ClientAuthProvider>
-          <AuthGuard>{children}</AuthGuard>
-        </ClientAuthProvider>
+        <QueryProvider>
+          <ClientAuthProvider>
+            <AuthGuard>{children}</AuthGuard>
+          </ClientAuthProvider>
+        </QueryProvider>
         <Toaster />
       </body>
     </html>

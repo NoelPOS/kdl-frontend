@@ -17,7 +17,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Registrar } from "@/app/types/registrar.type";
-import { updateRegistrarById, deleteRegistrarById } from "@/lib/api";
+import {
+  useUpdateRegistrar,
+  useDeleteRegistrar,
+} from "@/hooks/mutation/use-registrar-mutations";
 import { showToast } from "@/lib/toast";
 
 interface RegistrarFormData {
@@ -31,9 +34,13 @@ export default function RegistrarDetailClient({
   registrar: Partial<Registrar>;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { mutate: updateRegistrar, isPending: isUpdating } = useUpdateRegistrar(
+    Number(registrar.id || 0)
+  );
+  const { mutate: deleteRegistrar, isPending: isDeleting } =
+    useDeleteRegistrar();
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +78,7 @@ export default function RegistrarDetailClient({
       return;
     }
 
-    setIsLoading(true);
+    setIsUploading(true);
 
     let newImageUrl = registrar.profilePicture;
     let newProfileKey = registrar.profileKey;
@@ -105,46 +112,26 @@ export default function RegistrarDetailClient({
       }
     }
 
-    try {
-      const updateData: Partial<Registrar> = {
-        ...data,
-        profilePicture: newImageUrl,
-        profileKey: newProfileKey,
-      };
+    setIsUploading(false);
 
-      await updateRegistrarById(Number(registrar.id), updateData);
-      showToast.success("Registrar updated successfully!");
-    } catch (error) {
-      console.error("Error updating registrar:", error);
-      showToast.error("Failed to update registrar. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    const updateData: Partial<Registrar> = {
+      ...data,
+      profilePicture: newImageUrl,
+      profileKey: newProfileKey,
+    };
+
+    updateRegistrar(updateData);
   };
 
-  const handleDelete = async () => {
-    if (!registrar.id) {
-      showToast.error("Registrar ID is required");
-      return;
-    }
-
-    setIsDeleting(true);
+  const handleDelete = () => {
     setIsDeleteDialogOpen(false);
-
-    try {
-      const result = await deleteRegistrarById(Number(registrar.id));
-      console.log("Delete result:", result);
-      showToast.success("Registrar deleted successfully!");
-      // Navigate back to registrars list page
-      setTimeout(() => {
-        router.push("/registrars");
-      }, 1500);
-    } catch (error) {
-      console.error("Error deleting registrar:", error);
-      showToast.error("Failed to delete registrar. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteRegistrar(Number(registrar.id!), {
+      onSuccess: () => {
+        setTimeout(() => {
+          router.push("/registrars");
+        }, 1500);
+      },
+    });
   };
 
   return (
@@ -232,17 +219,17 @@ export default function RegistrarDetailClient({
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading || registrar.role === "none"}
+            disabled={isUploading || isUpdating || registrar.role === "none"}
             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white mb-3"
           >
-            {isLoading ? "Updating..." : "Update Registrar"}
+            {isUploading || isUpdating ? "Updating..." : "Update Registrar"}
           </Button>
-          
+
           {registrar.role !== "none" && (
             <Button
               type="button"
               onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={isDeleting || isLoading}
+              disabled={isDeleting || isUploading || isUpdating}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
               {isDeleting ? "Deleting..." : "Delete Registrar"}

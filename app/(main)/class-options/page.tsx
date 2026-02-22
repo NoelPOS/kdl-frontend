@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import PageHeader from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, ChevronDown, PowerOff } from "lucide-react";
-import { getAllClassOptions, createClassOption, updateClassOption } from "@/lib/api";
+import { getAllClassOptions } from "@/lib/api";
+import { useCreateClassOption, useUpdateClassOption } from "@/hooks/mutation/use-class-option-mutations";
 import { ClassOption, CreateClassOptionDto, UpdateClassOptionDto, ClassOptionType } from "@/app/types/class-option.type";
 import { showToast } from "@/lib/toast";
 import {
@@ -20,6 +21,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function ClassOptionsPage() {
+  const { mutate: createClassOption, isPending: isCreating } = useCreateClassOption();
+  const { mutate: updateClassOption, isPending: isUpdating } = useUpdateClassOption();
+  const submitting = isCreating || isUpdating;
   const [classOptions, setClassOptions] = useState<ClassOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,7 +36,6 @@ export default function ClassOptionsPage() {
     effectiveStartDate: new Date().toISOString().split("T")[0],
     optionType: "check",
   });
-  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -66,7 +69,7 @@ export default function ClassOptionsPage() {
     setDialogOpen(true);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.classMode.trim()) {
       showToast.error("Class mode name is required");
       return;
@@ -80,19 +83,13 @@ export default function ClassOptionsPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      await createClassOption(formData);
-      showToast.success("Class option created successfully");
-      setDialogOpen(false);
-      resetForm();
-      fetchData();
-    } catch (error) {
-      console.error("Failed to save class option:", error);
-      showToast.error("Failed to create class option");
-    } finally {
-      setSubmitting(false);
-    }
+    createClassOption(formData, {
+      onSuccess: () => {
+        setDialogOpen(false);
+        resetForm();
+        fetchData();
+      },
+    });
   };
 
   const handleDeactivateClick = (option: ClassOption) => {
@@ -100,20 +97,20 @@ export default function ClassOptionsPage() {
     setDeactivateDialogOpen(true);
   };
 
-  const handleConfirmDeactivate = async () => {
+  const handleConfirmDeactivate = () => {
     if (!deactivatingOption) return;
 
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      await updateClassOption(deactivatingOption.id, { effectiveEndDate: today });
-      showToast.success("Class option deactivated successfully");
-      setDeactivateDialogOpen(false);
-      setDeactivatingOption(null);
-      fetchData();
-    } catch (error) {
-      console.error("Failed to deactivate class option:", error);
-      showToast.error("Failed to deactivate class option");
-    }
+    const today = new Date().toISOString().split("T")[0];
+    updateClassOption(
+      { id: deactivatingOption.id, data: { effectiveEndDate: today } },
+      {
+        onSuccess: () => {
+          setDeactivateDialogOpen(false);
+          setDeactivatingOption(null);
+          fetchData();
+        },
+      }
+    );
   };
 
   const formatDate = (dateString: string | null) => {

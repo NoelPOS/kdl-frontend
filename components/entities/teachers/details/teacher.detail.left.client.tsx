@@ -17,7 +17,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Teacher } from "@/app/types/teacher.type";
-import { updateTeacherById, deleteTeacherById } from "@/lib/api";
+import {
+  useUpdateTeacher,
+  useDeleteTeacher,
+} from "@/hooks/mutation/use-teacher-mutations";
 import { showToast } from "@/lib/toast";
 
 interface TeacherFormData {
@@ -34,9 +37,12 @@ export default function TeacherDetailClient({
   teacher: Partial<Teacher>;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { mutate: updateTeacher, isPending: isUpdating } = useUpdateTeacher(
+    Number(teacher.id || 0)
+  );
+  const { mutate: deleteTeacher, isPending: isDeleting } = useDeleteTeacher();
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +83,7 @@ export default function TeacherDetailClient({
       return;
     }
 
-    setIsLoading(true);
+    setIsUploading(true);
 
     let newImageUrl = teacher.profilePicture;
     let newProfileKey = teacher.profileKey;
@@ -111,45 +117,26 @@ export default function TeacherDetailClient({
       }
     }
 
-    try {
-      const updateData: Partial<Teacher> = {
-        ...data,
-        profilePicture: newImageUrl,
-        profileKey: newProfileKey,
-      };
+    setIsUploading(false);
 
-      await updateTeacherById(Number(teacher.id), updateData);
-      showToast.success("Teacher updated successfully!");
-    } catch (error) {
-      console.error("Error updating teacher:", error);
-      showToast.error("Failed to update teacher. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    const updateData: Partial<Teacher> = {
+      ...data,
+      profilePicture: newImageUrl,
+      profileKey: newProfileKey,
+    };
+
+    updateTeacher(updateData);
   };
 
-  const handleDelete = async () => {
-    if (!teacher.id) {
-      showToast.error("Teacher ID is required");
-      return;
-    }
-
-    setIsDeleting(true);
+  const handleDelete = () => {
     setIsDeleteDialogOpen(false);
-
-    try {
-      await deleteTeacherById(Number(teacher.id));
-      showToast.success("Teacher deleted successfully!");
-      // Navigate back to teachers list page
-      setTimeout(() => {
-        router.push("/teachers");
-      }, 1500);
-    } catch (error) {
-      console.error("Error deleting teacher:", error);
-      showToast.error("Failed to delete teacher. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteTeacher(Number(teacher.id!), {
+      onSuccess: () => {
+        setTimeout(() => {
+          router.push("/teachers");
+        }, 1500);
+      },
+    });
   };
 
   return (
@@ -284,17 +271,17 @@ export default function TeacherDetailClient({
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading || teacher.role === "none"}
+            disabled={isUploading || isUpdating || teacher.role === "none"}
             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white mb-3"
           >
-            {isLoading ? "Updating..." : "Update Teacher"}
+            {isUploading || isUpdating ? "Updating..." : "Update Teacher"}
           </Button>
-          
+
           {teacher.role !== "none" && (
             <Button
               type="button"
               onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={isDeleting || isLoading}
+              disabled={isDeleting || isUploading || isUpdating}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
               {isDeleting ? "Deleting..." : "Delete Teacher"}

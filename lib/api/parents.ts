@@ -154,3 +154,36 @@ export async function fetchAllParents(accessToken?: string): Promise<Parent[]> {
   const response = await api.get<Parent[]>("/parents/all");
   return response.data;
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export interface ParentListFilters {
+  query?: string;
+  child?: string;
+  address?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getParents(filters: ParentListFilters = {}): Promise<{
+  parents: Parent[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const response = await clientApi.get<{
+    parents: Parent[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>("/parents/search", { params: filters });
+  return response.data;
+}

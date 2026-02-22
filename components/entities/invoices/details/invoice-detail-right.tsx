@@ -29,7 +29,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Invoice } from "@/app/types/invoice.type";
-import { cancelInvoice, confirmPayment } from "@/lib/api/invoices";
+import {
+  useCancelInvoice,
+  useConfirmPayment,
+} from "@/hooks/mutation/use-invoice-mutations";
 import { generateReceiptPDF } from "@/lib/pdf-utils";
 import { generateSimpleReceiptPDF } from "@/lib/simple-pdf-utils";
 
@@ -41,21 +44,19 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
   const [isDownloadPromptOpen, setIsDownloadPromptOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleConfirmPayment = async (invoiceId: number) => {
-    try {
-      const toastId = showToast.loading("Confirming payment...");
-      await confirmPayment(invoiceId, paymentMethod);
-      showToast.dismiss(toastId);
-      showToast.success("Payment confirmed successfully!");
-      setIsPaymentConfirmOpen(false);
-      // Show download receipt prompt
-      setIsDownloadPromptOpen(true);
-    } catch (error) {
-      console.error("Error confirming payment:", error);
-      showToast.error(
-        "Error processing payment confirmation. Please try again."
-      );
-    }
+  const { mutate: cancelInvoice, isPending: isCancelling } = useCancelInvoice();
+  const { mutate: confirmPayment, isPending: isConfirming } = useConfirmPayment();
+
+  const handleConfirmPayment = (invoiceId: number) => {
+    confirmPayment(
+      { invoiceId, paymentMethod },
+      {
+        onSuccess: () => {
+          setIsPaymentConfirmOpen(false);
+          setIsDownloadPromptOpen(true);
+        },
+      }
+    );
   };
 
   const handleDownloadReceipt = async () => {
@@ -82,20 +83,13 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
     router.push("/invoices");
   };
 
-  const handleCancelInvoice = async (invoiceId: number) => {
-    try {
-      const toastId = showToast.loading("Cancelling invoice...");
-      const allUpdatesSuccessful = await cancelInvoice(invoiceId);
-      if (allUpdatesSuccessful) {
-        showToast.dismiss(toastId);
-        showToast.success("Invoice cancelled successfully!");
+  const handleCancelInvoice = (invoiceId: number) => {
+    cancelInvoice(invoiceId, {
+      onSuccess: () => {
         setIsCancelOpen(false);
         router.push("/create-invoice");
-      }
-    } catch (error) {
-      console.error("Error cancelling invoice:", error);
-      showToast.error("Error cancelling invoice. Please try again.");
-    }
+      },
+    });
   };
   return (
     <div className="flex flex-col py-5 px-10 w-full h-screen ">
@@ -222,9 +216,10 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
                     </DialogClose>
                     <Button
                       onClick={() => handleCancelInvoice(invoice.id)}
+                      disabled={isCancelling}
                       className="bg-red-500 hover:bg-red-600 text-white"
                     >
-                      Yes
+                      {isCancelling ? "Cancelling..." : "Yes"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -270,9 +265,10 @@ const InvoiceDetailRight = ({ invoice }: { invoice: Invoice }) => {
                     </DialogClose>
                     <Button
                       onClick={() => handleConfirmPayment(invoice.id)}
+                      disabled={isConfirming}
                       className="bg-yellow-500 hover:bg-yellow-600 text-white"
                     >
-                      Confirm
+                      {isConfirming ? "Confirming..." : "Confirm"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

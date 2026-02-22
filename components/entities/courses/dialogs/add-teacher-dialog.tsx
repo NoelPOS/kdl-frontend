@@ -15,7 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
-import { getTeacherByCourseId, getAllRooms } from "@/lib/api";
+import { useTeachersByCourse } from "@/hooks/query/use-teachers";
+import { useRoomList } from "@/hooks/query/use-rooms";
 import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
 
@@ -55,39 +56,14 @@ export function AddTeacher({
     },
   });
 
-  const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  // Fetch teachers for this course using hooks
+  const { data: teachers = [] } = useTeachersByCourse(
+    courseId && courseId > 0 ? Number(courseId) : undefined,
+    { enabled: open && !!courseId && courseId > 0 }
+  );
 
-  useEffect(() => {
-    if (!open) return;
-
-    const fetchTeachers = async () => {
-      try {
-        const teacherList = await getTeacherByCourseId(Number(courseId));
-        setTeachers(teacherList);
-      } catch (error) {
-        console.error("Failed to fetch teachers for course:", error);
-      }
-    };
-
-    fetchTeachers();
-  }, [open, courseId]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const fetchRooms = async () => {
-      try {
-        const roomList = await getAllRooms();
-        setRooms(roomList);
-      } catch (error) {
-        console.error("Failed to fetch rooms:", error);
-        showToast.error("Failed to fetch rooms", "Please try again later.");
-      }
-    };
-
-    fetchRooms();
-  }, [open]);
+  // Fetch all rooms using hook
+  const { data: rooms = [] } = useRoomList();
 
   const onSubmit = (data: FormData) => {
     // Validate required fields

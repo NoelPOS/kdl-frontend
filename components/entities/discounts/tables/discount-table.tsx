@@ -1,50 +1,25 @@
-import { Discount } from "@/app/types/discount.type";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { Discount } from "@/app/types/discount.type";
+import { DataTable, type Column } from "@/components/shared/data-table/data-table";
+
+const columns: Column<Discount>[] = [
+  {
+    key: "_no",
+    header: "No.",
+    className: "w-16",
+    render: (_row, index) => index + 1,
+  },
+  { key: "title", header: "Title" },
+  { key: "amount", header: "Amount" },
+  { key: "usage", header: "Description" },
+];
 
 export function DiscountTable({ discounts }: { discounts: Discount[] }) {
   return (
-    <Table className="bg-white table-fixed rounded-2xl ">
-      <TableHeader>
-        <TableRow>
-          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold w-16">
-            No.
-          </TableHead>
-          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold ">
-            Title
-          </TableHead>
-          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
-            Amount
-          </TableHead>
-          <TableHead className="border-2 border-gray-300 h-20 text-center whitespace-normal font-semibold">
-            Description
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {discounts.map((discount, index) => (
-          <TableRow key={discount.id}>
-            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {index + 1}
-            </TableCell>
-            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {discount.title}
-            </TableCell>
-            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {discount.amount}
-            </TableCell>
-            <TableCell className="border-2 border-gray-300 h-20 text-center whitespace-normal">
-              {discount.usage}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable<Discount>
+      data={discounts}
+      columns={columns}
+      keyExtractor={(d) => d.id}
+      emptyMessage="No discounts found."
+    />
   );
 }

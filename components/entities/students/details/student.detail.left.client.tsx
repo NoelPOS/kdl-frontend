@@ -12,7 +12,8 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Student } from "@/app/types/student.type";
 import { Parent } from "@/app/types/parent.type";
-import { updateStudentById, searchParents } from "@/lib/api";
+import { useSearchParents } from "@/hooks/query/use-parents";
+import { useUpdateStudent } from "@/hooks/mutation/use-student-mutations";
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
@@ -43,22 +44,42 @@ export default function StudentDetailClient({
   console.log("Student is here", student)
   const router = useRouter();
   const [localStudent, setLocalStudent] = useState<Partial<Student>>(student);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const { mutate: updateStudent, isPending: isUpdating } = useUpdateStudent(
+    Number(localStudent.id || 0)
+  );
   const [imagePreview, setImagePreview] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Parent search states
-  const [parentSearchResults, setParentSearchResults] = useState<Parent[]>([]);
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
   const [parentQuery, setParentQuery] = useState(localStudent.parent || "");
   const [showParentResults, setShowParentResults] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false); // Track user interaction
   const [debouncedParentQuery] = useDebounce(parentQuery, 300);
+
+  // Use the search parents hook
+  const { data: parentSearchResults = [] } = useSearchParents(
+    debouncedParentQuery,
+    { enabled: hasUserInteracted && debouncedParentQuery.length >= 2 }
+  );
+
+  // Update show results based on search results
+  useEffect(() => {
+    if (hasUserInteracted && debouncedParentQuery.length >= 2 && parentSearchResults.length > 0) {
+      setShowParentResults(true);
+    } else {
+      setShowParentResults(false);
+      if (debouncedParentQuery.length === 0) {
+        setSelectedParent(null);
+      }
+    }
+  }, [debouncedParentQuery, parentSearchResults, hasUserInteracted]);
 
   // Update parent query when localStudent changes
   useEffect(() => {
@@ -116,32 +137,6 @@ export default function StudentDetailClient({
 
   const adConcentValue = watch("adConcent");
 
-  // Effect to handle debounced parent search
-  useEffect(() => {
-    const performParentSearch = async () => {
-      // Only search if user has interacted with the field and query is long enough
-      if (hasUserInteracted && debouncedParentQuery.length >= 2) {
-        try {
-          const results = await searchParents(debouncedParentQuery);
-          setParentSearchResults(results || []);
-          setShowParentResults(true);
-        } catch (error) {
-          console.error("Parent search failed:", error);
-          setParentSearchResults([]);
-          setShowParentResults(false);
-        }
-      } else {
-        setParentSearchResults([]);
-        setShowParentResults(false);
-        if (debouncedParentQuery.length === 0) {
-          setSelectedParent(null);
-        }
-      }
-    };
-
-    performParentSearch();
-  }, [debouncedParentQuery, hasUserInteracted]);
-
   // Parent search handlers
   const handleParentSearch = (query: string) => {
     setHasUserInteracted(true); // Mark that user has interacted
@@ -155,7 +150,6 @@ export default function StudentDetailClient({
     setParentQuery(parent.name); // Update the controlled input state
     setValue("parent", parent.name); // Update the form state
     setShowParentResults(false);
-    setParentSearchResults([]);
   };
 
   const handleParentInputBlur = () => {
@@ -182,12 +176,9 @@ export default function StudentDetailClient({
   };
 
   const onSubmit = async (data: StudentFormData) => {
-    if (!localStudent.id) {
-      setMessage({ type: "error", text: "Student ID is required" });
-      return;
-    }
+    if (!localStudent.id) return;
 
-    setIsLoading(true);
+    setIsUploading(true);
     setMessage(null);
 
     let newImageUrl = localStudent.profilePicture;
@@ -225,60 +216,44 @@ export default function StudentDetailClient({
       }
     }
 
-    try {
-      const { parent, ...rest } = data;
-      const updateData: Partial<Student> = {
-        ...rest,
-        allergic: data.allergic
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-        doNotEat: data.doNotEat
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-        profilePicture: newImageUrl,
-        profileKey: newProfileKey,
-        parentId: selectedParent ? selectedParent.id : undefined,
-      };
-      console.log("Update Data is here", updateData);
+    setIsUploading(false);
 
-      await updateStudentById(Number(localStudent.id), updateData);
-      
-      // Create optimistic update data
-      const optimisticUpdate: Partial<Student> = {
-        ...localStudent,
-        ...updateData,
-        // Ensure proper parent name display
-        parent: selectedParent ? selectedParent.name : data.parent,
-      };
+    const { parent, ...rest } = data;
+    const updateData: Partial<Student> = {
+      ...rest,
+      allergic: data.allergic
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+      doNotEat: data.doNotEat
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+      profilePicture: newImageUrl,
+      profileKey: newProfileKey,
+      parentId: selectedParent ? selectedParent.id : undefined,
+    };
+    console.log("Update Data is here", updateData);
 
-      // Update local state immediately (optimistic update)
-      setLocalStudent(optimisticUpdate);
-      
-      // Clear image file and preview since it's now uploaded
-      setImageFile(null);
-      setImagePreview("");
-      
-      // Notify parent component of the update
-      if (onStudentUpdate) {
-        onStudentUpdate(optimisticUpdate);
-      }
-      
-      // Refresh the page to get updated data from server
-      router.refresh();
-      
-      setMessage({ type: "success", text: "Student updated successfully!" });
-    } catch (error) {
-      console.error("Error updating student:", error);
-      // Error is handled by global error handler, but we can still show local feedback
-      setMessage({
-        type: "error",
-        text: "Failed to update student. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Create optimistic update data
+    const optimisticUpdate: Partial<Student> = {
+      ...localStudent,
+      ...updateData,
+      parent: selectedParent ? selectedParent.name : data.parent,
+    };
+
+    updateStudent(updateData, {
+      onSuccess: () => {
+        // Update local state immediately
+        setLocalStudent(optimisticUpdate);
+        setImageFile(null);
+        setImagePreview("");
+        if (onStudentUpdate) {
+          onStudentUpdate(optimisticUpdate);
+        }
+        router.refresh();
+      },
+    });
   };
 
   return (
@@ -517,10 +492,10 @@ export default function StudentDetailClient({
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isUploading || isUpdating}
             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
           >
-            {isLoading ? "Updating..." : "Update Student"}
+            {isUploading || isUpdating ? "Updating..." : "Update Student"}
           </Button>
         </div>
       </form>
