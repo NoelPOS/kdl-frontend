@@ -12,9 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
-import { cancelSession } from "@/lib/api";
+import { useCancelSession } from "@/hooks/mutation/use-session-mutations";
 import { useRouter } from "next/navigation";
-import { showToast } from "@/lib/toast";
 
 interface CancelSessionDialogProps {
   sessionId: number;
@@ -26,30 +25,16 @@ export function CancelSessionDialog({
   sessionTitle,
 }: CancelSessionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { mutate: cancelSession, isPending } = useCancelSession();
 
-  const handleCancel = async () => {
-    setIsLoading(true);
-    const toastId = showToast.loading("Cancelling session...");
-    try {
-      const success = await cancelSession(sessionId);
-      showToast.dismiss(toastId);
-      if (success) {
-        showToast.success("Session cancelled successfully!");
+  const handleCancel = () => {
+    cancelSession(sessionId, {
+      onSuccess: () => {
         router.refresh();
         setIsOpen(false);
-      } else {
-        showToast.error("Failed to cancel session. Please try again.");
-        console.error("Failed to cancel session");
-      }
-    } catch (error) {
-      showToast.dismiss(toastId);
-      showToast.error("Error cancelling session. Please try again.");
-      console.error("Error cancelling session:", error);
-    } finally {
-      setIsLoading(false);
-    }
+      },
+    });
   };
 
   return (
@@ -75,16 +60,16 @@ export function CancelSessionDialog({
           <Button
             variant="outline"
             onClick={() => setIsOpen(false)}
-            disabled={isLoading}
+            disabled={isPending}
           >
             Cancel
           </Button>
           <Button
             onClick={handleCancel}
-            disabled={isLoading}
+            disabled={isPending}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
-            {isLoading ? "Cancelling..." : "Cancel Session"}
+            {isPending ? "Cancelling..." : "Cancel Session"}
           </Button>
         </DialogFooter>
       </DialogContent>

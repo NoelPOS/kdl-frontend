@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   getTeacherByCourseId,
-  updateSchedule,
   checkScheduleConflict,
   getAllRooms,
 } from "@/lib/api";
+import { useUpdateSchedule } from "@/hooks/mutation/use-schedule-mutations";
 import { ClassSchedule, FormData } from "@/app/types/schedule.type";
 import { Teacher } from "@/app/types/teacher.type";
 import { Room } from "@/app/types/room.type";
@@ -55,6 +55,8 @@ export function EditSchedule({
   onScheduleUpdate,
 }: EditScheduleProps) {
   const router = useRouter();
+  const { mutate: updateSchedule, isPending } = useUpdateSchedule();
+
   const {
     register,
     handleSubmit,
@@ -66,14 +68,12 @@ export function EditSchedule({
     defaultValues: initialData,
   });
 
-  // Watch form values for validation
   const startTime = watch("starttime");
   const endTime = watch("endtime");
   const selectedDate = watch("date");
   const courseName = watch("course");
   const selectedStatus = watch("status");
 
-  // Check if current course is TBD
   const isTBDCourse = courseName === "TBD";
 
   const { ref: dateRHFRef } = register("date", {
@@ -86,7 +86,6 @@ export function EditSchedule({
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
 
-  // Validation functions
   const validateStartTime = (value: string) => {
     if (!value) return "Start time is required";
     if (!isWithinBusinessHours(value)) {
@@ -112,16 +111,24 @@ export function EditSchedule({
   const onSubmit = useCallback(
     async (data: FormData) => {
       console.log("Submitting data:", data.scheduleId);
-      
+
       try {
         let warningMessage = "none";
-        const teacherId = teachers.find((t) => t.name === data.teacher)?.id || 0;
-        const currentScheduleId = Number(data.scheduleId) || initialData?.scheduleId || 0;
-        
-        // Check for all conflicts (room, teacher, student + teacher availability)
+        const teacherId =
+          teachers.find((t) => t.name === data.teacher)?.id || 0;
+        const currentScheduleId =
+          Number(data.scheduleId) || initialData?.scheduleId || 0;
+
         try {
-          console.log("DEBUG excludeId:", currentScheduleId, "data.scheduleId:", data.scheduleId, "initialData?.scheduleId:", initialData?.scheduleId);
-          
+          console.log(
+            "DEBUG excludeId:",
+            currentScheduleId,
+            "data.scheduleId:",
+            data.scheduleId,
+            "initialData?.scheduleId:",
+            initialData?.scheduleId
+          );
+
           const conflictResult = await checkScheduleConflict({
             date: data.date,
             startTime: data.starttime,
@@ -163,40 +170,42 @@ export function EditSchedule({
           warning: warningMessage,
         };
         console.log("Update data:", updateData);
-        await updateSchedule(Number(data.scheduleId), updateData);
 
-        // Construct updated FormData for direct state update
-        const updatedFormData: FormData = {
-          scheduleId: Number(data.scheduleId),
-          courseId: initialData?.courseId ?? 0,
-          date: data.date,
-          starttime: data.starttime,
-          endtime: data.endtime,
-          course: data.course || "",
-          teacher: data.teacher || "",
-          student: data.student || "",
-          room: data.room || "",
-          nickname: data.nickname || "",
-          remark: data.remark || "",
-          status: data.status || "",
-          warning: warningMessage || "hello world",
-          // Add any other required FormData fields here
-        };
-        if (onScheduleUpdate) {
-          onScheduleUpdate(updatedFormData);
-        }
+        updateSchedule(
+          { scheduleId: Number(data.scheduleId), data: updateData },
+          {
+            onSuccess: () => {
+              const updatedFormData: FormData = {
+                scheduleId: Number(data.scheduleId),
+                courseId: initialData?.courseId ?? 0,
+                date: data.date,
+                starttime: data.starttime,
+                endtime: data.endtime,
+                course: data.course || "",
+                teacher: data.teacher || "",
+                student: data.student || "",
+                room: data.room || "",
+                nickname: data.nickname || "",
+                remark: data.remark || "",
+                status: data.status || "",
+                warning: warningMessage || "hello world",
+              };
+              if (onScheduleUpdate) {
+                onScheduleUpdate(updatedFormData);
+              }
 
-        router.refresh();
+              router.refresh();
 
-        if (warningMessage && warningMessage !== "none") {
-          showToast.warning(`Schedule updated with warning: ${warningMessage}`);
-        } else {
-          showToast.success("Schedule updated successfully!");
-        }
-        onOpenChange(false);
+              if (warningMessage && warningMessage !== "none") {
+                showToast.warning(
+                  `Schedule updated with warning: ${warningMessage}`
+                );
+              }
+              onOpenChange(false);
+            },
+          }
+        );
       } catch (error) {
-        // Error is automatically handled by global error handler
-        // No need for custom error handling logic here
         console.error("Failed to update schedule", error);
       }
     },
@@ -208,10 +217,10 @@ export function EditSchedule({
       initialData?.scheduleId,
       initialData?.student,
       router,
+      updateSchedule,
     ]
   );
 
-  // Memoized teacher fetching to prevent unnecessary API calls
   const fetchTeachers = useCallback(async () => {
     console.log("Fetching teachers for course ID:", initialData?.courseId);
     try {
@@ -239,9 +248,11 @@ export function EditSchedule({
     }
   }, [initialData, reset]);
 
-  // Auto-select first teacher if current teacher is empty/TBD and teachers are loaded
   useEffect(() => {
-    if (teachers.length > 0 && (!watch("teacher") || watch("teacher") === "TBD")) {
+    if (
+      teachers.length > 0 &&
+      (!watch("teacher") || watch("teacher") === "TBD")
+    ) {
       console.log("Auto-selecting first teacher:", teachers[0].name);
       setValue("teacher", teachers[0].name);
     }
@@ -252,8 +263,7 @@ export function EditSchedule({
       try {
         const roomList = await getAllRooms();
         setRooms(roomList);
-        
-        // Auto-select first room if current room is empty/TBD and rooms are loaded
+
         if (roomList.length > 0 && (!watch("room") || watch("room") === "TBD")) {
           console.log("Auto-selecting first room:", roomList[0].name);
           setValue("room", roomList[0].name);
@@ -268,7 +278,6 @@ export function EditSchedule({
     }
   }, [open, setValue, watch]);
 
-  // Memoize the teacher options to prevent unnecessary re-renders
   const teacherOptions = useMemo(
     () => (
       <>
@@ -284,6 +293,8 @@ export function EditSchedule({
     ),
     [teachers]
   );
+
+  const isBusy = isSubmitting || isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
@@ -305,7 +316,6 @@ export function EditSchedule({
                   setValue("date", date ? date.toLocaleDateString("en-CA") : "")
                 }
               />
-
               {errors.date && (
                 <span className="text-red-500 text-sm">
                   {errors.date.message}
@@ -388,7 +398,6 @@ export function EditSchedule({
             {/* Room */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="room">Room</Label>
-
               <div className="relative">
                 <select
                   id="room"
@@ -440,10 +449,11 @@ export function EditSchedule({
                   className="border-black w-full border rounded-md py-1.5 px-2"
                   style={{ fontSize: "0.875rem" }}
                   onChange={(e) => {
-                    // Prevent selecting cancelled for TBD courses
                     if (e.target.value === "cancelled" && isTBDCourse) {
-                      showToast.error("Cannot cancel TBD schedules. TBD schedules cannot be cancelled.");
-                      e.target.value = selectedStatus || ""; // Reset to previous value
+                      showToast.error(
+                        "Cannot cancel TBD schedules. TBD schedules cannot be cancelled."
+                      );
+                      e.target.value = selectedStatus || "";
                       return;
                     }
                     setValue("status", e.target.value);
@@ -454,15 +464,15 @@ export function EditSchedule({
                   </option>
                   <option value="confirmed">Confirmed</option>
                   <option value="completed">Completed</option>
-                  <option 
-                    value="cancelled" 
+                  <option
+                    value="cancelled"
                     disabled={isTBDCourse}
-                    style={{ 
-                      color: isTBDCourse ? '#9ca3af' : 'inherit',
-                      cursor: isTBDCourse ? 'not-allowed' : 'pointer'
+                    style={{
+                      color: isTBDCourse ? "#9ca3af" : "inherit",
+                      cursor: isTBDCourse ? "not-allowed" : "pointer",
                     }}
                   >
-                    Cancelled {isTBDCourse ? '(Not available for TBD)' : ''}
+                    Cancelled {isTBDCourse ? "(Not available for TBD)" : ""}
                   </option>
                   <option value="pending">Pending</option>
                   <option value="absent">Absent</option>
@@ -483,7 +493,7 @@ export function EditSchedule({
                 type="button"
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-500 hover:text-white rounded-2xl w-[5rem]"
-                disabled={isSubmitting}
+                disabled={isBusy}
               >
                 Cancel
               </Button>
@@ -491,9 +501,9 @@ export function EditSchedule({
             <Button
               type="submit"
               className="bg-yellow-500 text-white hover:bg-yellow-400 rounded-2xl w-[5rem]"
-              disabled={isSubmitting}
+              disabled={isBusy}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isBusy ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </form>

@@ -17,7 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Loader2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { searchStudents, createPackage } from "@/lib/api";
+import { searchStudents } from "@/lib/api";
+import { useCreatePackage } from "@/hooks/mutation/use-session-mutations";
 import { Student } from "@/app/types/student.type";
 import { useRouter } from "next/navigation";
 
@@ -33,16 +34,14 @@ interface AddBlankCoursesFormData {
 export default function AddBlankCoursesDialog() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const { mutate: createPackage, isPending } = useCreatePackage();
 
-  // Search states
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [activeSearchField, setActiveSearchField] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Debounce the search query
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
-  // Effect to handle debounced search
   useEffect(() => {
     const performSearch = async () => {
       if (debouncedSearchQuery.trim() && activeSearchField) {
@@ -82,16 +81,13 @@ export default function AddBlankCoursesDialog() {
     },
   });
 
-  // Watch the selected package
   const coursePackage = watch("coursePackage");
 
-  // Handle search for different fields
   const handleSearch = (query: string, field: string) => {
     setActiveSearchField(field);
     setSearchQuery(query);
   };
 
-  // Handle student selection from dropdown
   const handleSelectStudent = (student: Student) => {
     setValue("selectedStudentId", parseInt(student.id));
     setValue("studentName", student.name);
@@ -103,7 +99,7 @@ export default function AddBlankCoursesDialog() {
     setSearchQuery("");
   };
 
-  const onSubmit = async (data: AddBlankCoursesFormData) => {
+  const onSubmit = (data: AddBlankCoursesFormData) => {
     if (!data.selectedStudentId) {
       showToast.error("Please select a student.");
       return;
@@ -113,28 +109,23 @@ export default function AddBlankCoursesDialog() {
       showToast.error("Please select a course package.");
       return;
     }
-    try {
-      // Prepare payload for createPackage
-      const payload = {
+
+    createPackage(
+      {
         studentId: data.selectedStudentId,
         courseName: data.coursePackage,
         classOption: data.coursePackage,
-      };
-      await createPackage(payload);
-      showToast.success(`Successfully created ${data.coursePackage} for ${data.studentName}`);
-
-      // Close dialog and reset form
-      setIsOpen(false);
-      reset();
-      setSearchQuery("");
-      setSearchResults([]);
-
-      // Refresh the page to show new sessions
-      router.refresh();
-    } catch (error) {
-      console.error("Error creating package:", error);
-      showToast.error("Error creating package. Please try again.");
-    }
+      },
+      {
+        onSuccess: () => {
+          setIsOpen(false);
+          reset();
+          setSearchQuery("");
+          setSearchResults([]);
+          router.refresh();
+        },
+      }
+    );
   };
 
   const handleClose = () => {
@@ -262,7 +253,6 @@ export default function AddBlankCoursesDialog() {
             )}
           </div>
 
-          {/* Number of Courses Input */}
           {/* Course Package Select */}
           <div className="space-y-2">
             <Label htmlFor="coursePackage">
@@ -271,7 +261,9 @@ export default function AddBlankCoursesDialog() {
             <div className="relative">
               <select
                 id="coursePackage"
-                {...register("coursePackage", { required: "Please select a package" })}
+                {...register("coursePackage", {
+                  required: "Please select a package",
+                })}
                 className="w-full border rounded-md px-3 py-2 pr-10 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select a package...</option>
@@ -282,7 +274,9 @@ export default function AddBlankCoursesDialog() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
             {errors.coursePackage && (
-              <p className="text-red-500 text-sm">{errors.coursePackage.message}</p>
+              <p className="text-red-500 text-sm">
+                {errors.coursePackage.message}
+              </p>
             )}
           </div>
 
@@ -291,16 +285,16 @@ export default function AddBlankCoursesDialog() {
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50"
-              disabled={isSubmitting}
+              disabled={isPending}
             >
-              {isSubmitting ? (
+              {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Creating Package...

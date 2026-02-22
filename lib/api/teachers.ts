@@ -208,3 +208,43 @@ export async function checkTeacherAvailability(
   );
   return response.data;
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export interface TeacherListFilters {
+  query?: string;
+  status?: string;
+  course?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function getTeachers(filters: TeacherListFilters = {}): Promise<{
+  teachers: Teacher[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filters.query) params.set("query", filters.query);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.course) params.set("course", filters.course);
+  params.set("page", (filters.page ?? 1).toString());
+  params.set("limit", (filters.limit ?? 10).toString());
+
+  const response = await clientApi.get<{
+    teachers: Teacher[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/teachers?${params.toString()}`);
+  return response.data;
+}

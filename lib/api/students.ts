@@ -101,3 +101,37 @@ export async function fetchInactiveStudents(
   const response = await api.get<Student[]>("/students/inactive");
   return response.data;
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export interface StudentListFilters {
+  query?: string;
+  active?: string;
+  course?: string;
+  courseType?: "fixed" | "camp" | "check" | "all" | "";
+  page?: number;
+  limit?: number;
+}
+
+export async function getStudents(filters: StudentListFilters = {}): Promise<{
+  students: Student[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const response = await clientApi.get<{
+    students: Student[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>("/students", { params: filters });
+  return response.data;
+}

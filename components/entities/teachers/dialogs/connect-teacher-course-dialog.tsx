@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
-import { searchCourses, assignCoursesToTeacher } from "@/lib/api";
+import { searchCourses } from "@/lib/api";
+import { useAssignCoursesToTeacher } from "@/hooks/mutation/use-teacher-mutations";
 import { Course } from "@/app/types/course.type";
 
 interface CourseFormData {
@@ -38,6 +39,7 @@ export function ConnectTeacherCourseDialog({
   onSuccess,
 }: ConnectTeacherCourseDialogProps) {
   const [open, setOpen] = useState(false);
+  const { mutateAsync: assignCourses } = useAssignCoursesToTeacher();
 
   const {
     control,
@@ -102,7 +104,6 @@ export function ConnectTeacherCourseDialog({
   };
 
   const onSubmit = async (data: FormData) => {
-    // Validate that all courses have required fields
     const isValid = data.courses.every(
       (course) => course.title !== "" && course.id !== ""
     );
@@ -112,42 +113,24 @@ export function ConnectTeacherCourseDialog({
       return;
     }
 
-    const toastId = showToast.loading("Connecting courses to teacher...");
-
     try {
-      // Assign courses to the teacher using the existing function
       const courseIds = data.courses.map((course) => parseInt(course.id));
-      await assignCoursesToTeacher(teacherId, courseIds);
+      await assignCourses({ teacherId, courseIds });
 
-      // Reset form
       reset({
-        courses: [
-          {
-            title: "",
-            id: "",
-          } as CourseFormData,
-        ],
+        courses: [{ title: "", id: "" } as CourseFormData],
       });
-
-      showToast.dismiss(toastId);
-      showToast.success("Courses connected successfully!");
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      showToast.dismiss(toastId);
       console.error("Failed to connect courses:", error);
-      showToast.error("Failed to connect courses. Please try again.");
+      // Hook's onError already handles the toast
     }
   };
 
   const handleCancel = () => {
     reset({
-      courses: [
-        {
-          title: "",
-          id: "",
-        } as CourseFormData,
-      ],
+      courses: [{ title: "", id: "" } as CourseFormData],
     });
     setOpen(false);
   };

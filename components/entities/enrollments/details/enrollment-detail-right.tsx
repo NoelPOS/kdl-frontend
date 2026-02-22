@@ -39,7 +39,7 @@ import {
   Enrollment,
   InvoiceSubmission,
 } from "@/app/types/enrollment.type";
-import { addNewInvoice } from "@/lib/api";
+import { useCreateInvoice } from "@/hooks/mutation/use-invoice-mutations";
 import { formatDateLocal } from "@/lib/utils";
 
 interface FormData {
@@ -62,6 +62,8 @@ const EnrollmentDetailRightMultiple = ({
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [isDynamicDiscount, setIsDynamicDiscount] = useState(false);
   const router = useRouter();
+  const { mutate: createInvoice, isPending: isCreatingInvoice } =
+    useCreateInvoice();
 
   // Function to check transaction type based on sessionId
   const checkType = (
@@ -159,18 +161,16 @@ const EnrollmentDetailRightMultiple = ({
     setDiscountRows((prev) => prev.filter((row) => row.id !== discountId));
   };
 
-  const handleCreateInvoice = async () => {
+  const handleCreateInvoice = () => {
     if (sessions.length === 0) {
       showToast.error("No sessions available to create invoice.");
       return;
     }
 
-    const toastId = showToast.loading("Creating invoice...");
-
     const firstSession = sessions[0];
 
     // Create invoice items for all sessions
-    const sessionItems = sessions.map((session, index) => ({
+    const sessionItems = sessions.map((session) => ({
       description: `${session.course_title} - ${session.student_name}`,
       amount: Number(session.classoption_tuitionfee),
     }));
@@ -212,18 +212,13 @@ const EnrollmentDetailRightMultiple = ({
       ],
     };
 
-    try {
-      const result = await addNewInvoice(invoiceData);
-      showToast.dismiss(toastId);
-      showToast.success("Invoice created successfully!");
-      router.replace(
-        `/invoice/${result.id}/student/${firstSession.student_id}`
-      );
-    } catch (error) {
-      showToast.dismiss(toastId);
-      console.error("Error creating invoice:", error);
-      showToast.error("Failed to create invoice. Please try again.");
-    }
+    createInvoice(invoiceData, {
+      onSuccess: (result) => {
+        router.replace(
+          `/invoice/${result.id}/student/${firstSession.student_id}`
+        );
+      },
+    });
   };
 
   return (
@@ -516,9 +511,10 @@ const EnrollmentDetailRightMultiple = ({
           <Button
             variant="outline"
             onClick={handleCreateInvoice}
+            disabled={isCreatingInvoice}
             className="bg-yellow-500 hover:bg-yellow-600 text-white "
           >
-            Create Invoice
+            {isCreatingInvoice ? "Creating..." : "Create Invoice"}
           </Button>
         </div>
       </div>

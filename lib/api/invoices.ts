@@ -125,3 +125,40 @@ export async function fetchAllInvoices(
   );
   return response.data;
 }
+
+// ─── Client-side list (used by TanStack Query hooks) ──────────────────────────
+
+export async function getInvoices(
+  filter: InvoiceFilter = {},
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  invoices: Invoice[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (filter.documentId) params.set("documentId", filter.documentId);
+  if (filter.student) params.set("student", filter.student);
+  if (filter.course) params.set("course", filter.course);
+  if (filter.receiptDone) params.set("receiptDone", filter.receiptDone);
+  params.set("page", page.toString());
+  params.set("limit", limit.toString());
+
+  const response = await clientApi.get<{
+    invoices: Invoice[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalCount: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>(`/invoices?${params.toString()}`);
+  return response.data;
+}

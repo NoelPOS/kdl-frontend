@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { showToast } from "@/lib/toast";
 import {
   Dialog,
   DialogContent,
@@ -23,16 +22,11 @@ import {
 } from "@/components/ui/select";
 import { Loader2, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  fetchCourses,
-  fetchTeachers,
-  getCourseTypes,
-  updateSession,
-  createBulkSchedules,
-} from "@/lib/api";
+import { useUpdateSession } from "@/hooks/mutation/use-session-mutations";
+import { useCourseList } from "@/hooks/query/use-courses";
+import { useAllTeachers } from "@/hooks/query/use-teachers";
+import { useCourseTypes } from "@/hooks/query/use-courses";
 import { SessionOverview } from "@/app/types/session.type";
-import { Course, ClassOption } from "@/app/types/course.type";
-import { Teacher } from "@/app/types/teacher.type";
 import { generateScheduleRows } from "@/lib/utils";
 
 interface AssignCourseFormData {
@@ -52,11 +46,16 @@ export default function AssignCourseDialog({
 }: AssignCourseDialogProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [classOptions, setClassOptions] = useState<ClassOption[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const { mutate: updateSession, isPending: isLoading } = useUpdateSession(session.sessionId);
+
+  // Fetch data using hooks — only enabled when dialog is open
+  const { data: coursesData } = useCourseList({ enabled: isOpen } as any);
+  const { data: teachersData } = useAllTeachers();
+  const { data: classOptionsData } = useCourseTypes();
+
+  const courses = coursesData?.courses ?? [];
+  const teachers = teachersData ?? [];
+  const classOptions = classOptionsData ?? [];
 
   const {
     register,
@@ -69,81 +68,21 @@ export default function AssignCourseDialog({
 
   const watchedCourseId = watch("courseId");
 
-  // Load initial data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [coursesData, teachersData] = await Promise.all([
-          fetchCourses(),
-          fetchTeachers(),
-        ]);
-        setCourses(coursesData.courses);
-        setTeachers(teachersData.teachers);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      }
-    };
-
-    if (isOpen) {
-      loadData();
-    }
-  }, [isOpen]);
-
-  // Load class options when dialog opens
-  useEffect(() => {
-    const loadClassOptions = async () => {
-      try {
-        const options = await getCourseTypes();
-        setClassOptions(options);
-      } catch (error) {
-        console.error("Error loading class options:", error);
-        setClassOptions([]);
-      }
-    };
-
-    if (isOpen) {
-      loadClassOptions();
-    }
-  }, [isOpen]);
-
-  const onSubmit = async (data: AssignCourseFormData) => {
-    setIsLoading(true);
-
-    try {
-      console.log("=== Assigning Course to TBC Session ===");
-      console.log("Session ID:", session.sessionId);
-      console.log("Course ID:", data.courseId);
-      console.log("Teacher ID:", data.teacherId);
-      console.log("Class Option ID:", data.classOptionId);
-      console.log("=====================================");
-
-      // 1. Update the session with new course, teacher, and class option
-      await updateSession(session.sessionId, {
+  const onSubmit = (data: AssignCourseFormData) => {
+    updateSession(
+      {
         courseId: data.courseId,
         teacherId: data.teacherId,
         classOptionId: data.classOptionId,
-      });
-
-      // 2. For now, we'll skip automatic schedule creation and just update the session
-      // The user can manually create schedules later using the existing schedule system
-      // TODO: Implement automatic schedule creation based on class option requirements
-
-      console.log("Course assigned successfully!");
-      const selectedCourse = courses.find((c) => c.id === data.courseId);
-      showToast.success(
-        `Successfully assigned ${selectedCourse?.title} to the student session!`
-      );
-
-      // Close dialog and refresh
-      setIsOpen(false);
-      reset();
-      router.refresh();
-    } catch (error) {
-      console.error("Error assigning course:", error);
-      showToast.error("Error assigning course. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          setIsOpen(false);
+          reset();
+          router.refresh();
+        },
+      }
+    );
   };
 
   const handleClose = () => {

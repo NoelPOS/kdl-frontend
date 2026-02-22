@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Trash2 } from "lucide-react";
 
-import { searchStudents, connectParentToStudent } from "@/lib/api";
+import { searchStudents } from "@/lib/api";
+import { useConnectParentToStudent } from "@/hooks/mutation/use-parent-mutations";
 import { Student } from "@/app/types/student.type";
 
 interface StudentFormData {
@@ -40,6 +41,7 @@ export function ConnectParentStudentDialog({
   onSuccess,
 }: ConnectParentStudentDialogProps) {
   const [open, setOpen] = useState(false);
+  const { mutateAsync: connectParent } = useConnectParentToStudent();
 
   const {
     control,
@@ -73,12 +75,11 @@ export function ConnectParentStudentDialog({
   const handleSelectStudent = (index: number, student: Student) => {
     setValue(`students.${index}.name`, student.name);
     setValue(`students.${index}.nickname`, student.nickname);
-    setValue(`students.${index}.id`, student.id); // Keep using id for logic
+    setValue(`students.${index}.id`, student.id);
 
-    // Set the display ID for showing studentId
     setDisplayIds((prev) => ({
       ...prev,
-      [index]: student.studentId || student.id, // Show studentId if available, fallback to id
+      [index]: student.studentId || student.id,
     }));
 
     setSearchResults([]);
@@ -118,7 +119,6 @@ export function ConnectParentStudentDialog({
   };
 
   const onSubmit = async (data: FormData) => {
-    // Validate that all students have required fields
     const isValid = data.students.every(
       (student) =>
         student.name !== "" && student.nickname !== "" && student.id !== ""
@@ -129,49 +129,29 @@ export function ConnectParentStudentDialog({
       return;
     }
 
-    const toastId = showToast.loading("Connecting students to parent...");
-
     try {
-      // Connect each student to the parent
       for (const student of data.students) {
-        await connectParentToStudent({
+        await connectParent({
           parentId,
           studentId: parseInt(student.id),
-          isPrimary: false, // Always false when connecting from parent side
+          isPrimary: false,
         });
       }
 
-      // Reset form
       reset({
-        students: [
-          {
-            name: "",
-            nickname: "",
-            id: "",
-          } as StudentFormData,
-        ],
+        students: [{ name: "", nickname: "", id: "" } as StudentFormData],
       });
-
-      showToast.dismiss(toastId);
-      showToast.success("Students connected successfully!");
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      showToast.dismiss(toastId);
       console.error("Failed to connect students:", error);
-      showToast.error("Failed to connect students. Please try again.");
+      // Hook's onError already handles the toast
     }
   };
 
   const handleCancel = () => {
     reset({
-      students: [
-        {
-          name: "",
-          nickname: "",
-          id: "",
-        } as StudentFormData,
-      ],
+      students: [{ name: "", nickname: "", id: "" } as StudentFormData],
     });
     setOpen(false);
   };
