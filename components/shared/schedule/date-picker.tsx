@@ -28,7 +28,7 @@ export function Calendar22({ label, date, onChange }: Calendar22Props) {
           {label}
         </Label>
       )}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"

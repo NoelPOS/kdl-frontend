@@ -153,4 +153,9 @@ export const queryKeys = {
     all: () => ["today"] as const,
     schedule: (date: string) => ["today", "schedule", date] as const,
   },
+
+  coursePackages: {
+    all: () => ["course-packages"] as const,
+    lists: () => ["course-packages", "list"] as const,
+  },
 } as const;

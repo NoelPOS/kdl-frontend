@@ -87,10 +87,12 @@ export function generateScheduleRows(
       if (sessionCount === 0 && classType.classMode.includes("12 times")) sessionCount = 12;
       if (sessionCount === 0) sessionCount = 12; // Fallback default
 
-      // Generate dates for the next N sessions
-      const today = new Date();
+      // Generate dates for the next N sessions, starting from fixedStartDate (or today)
+      const startFrom = classSchedule.fixedStartDate
+        ? new Date(classSchedule.fixedStartDate + 'T00:00:00')
+        : new Date();
       const sessionDates: string[] = [];
-      const currentDate = new Date(today);
+      const currentDate = new Date(startFrom);
 
       while (sessionDates.length < sessionCount) {
         const dayOfWeek = DAYS_OF_WEEK.find(

@@ -26,3 +26,12 @@ export type TeacherAvailability = {
   available: boolean;
   reason?: string;
 };
+
+export type TeacherAvailabilitySlot = {
+  id: number;
+  teacherId: number;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+};

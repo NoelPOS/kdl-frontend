@@ -102,55 +102,57 @@ export function EditWorkingDaysDialog({
             </RadioGroup>
           </div>
 
-          {/* Working Days */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Working Days</Label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={selectWeekdays}
-                >
-                  Weekdays
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={selectAll}
-                >
-                  All
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAll}
-                >
-                  Clear
-                </Button>
+          {/* Working Days - Only show for full-time teachers */}
+          {teacherType === "full-time" && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Working Days</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={selectWeekdays}
+                  >
+                    Weekdays
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAll}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAll}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {DAYS_OF_WEEK.map((day) => (
+                  <div key={day} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={day}
+                      checked={selectedDays.includes(day)}
+                      onCheckedChange={(checked) =>
+                        handleDayToggle(day, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={day} className="cursor-pointer">
+                      {day}
+                    </Label>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {DAYS_OF_WEEK.map((day) => (
-                <div key={day} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={day}
-                    checked={selectedDays.includes(day)}
-                    onCheckedChange={(checked) =>
-                      handleDayToggle(day, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={day} className="cursor-pointer">
-                    {day}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
         <DialogFooter>

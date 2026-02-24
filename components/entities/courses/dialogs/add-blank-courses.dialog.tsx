@@ -19,6 +19,7 @@ import { Plus, Search, Loader2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchStudents } from "@/lib/api";
 import { useCreatePackage } from "@/hooks/mutation/use-session-mutations";
+import { useCoursePackages } from "@/hooks/query/use-course-packages";
 import { Student } from "@/app/types/student.type";
 import { useRouter } from "next/navigation";
 
@@ -28,13 +29,15 @@ interface AddBlankCoursesFormData {
   studentNickname: string;
   studentId: string;
   studentIdDisplay?: string;
-  coursePackage: string;
+  packageId: string;
+  price: string;
 }
 
 export default function AddBlankCoursesDialog() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const { mutate: createPackage, isPending } = useCreatePackage();
+  const { data: coursePackages = [], isLoading: isLoadingPackages } = useCoursePackages();
 
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [activeSearchField, setActiveSearchField] = useState<string>("");
@@ -77,11 +80,13 @@ export default function AddBlankCoursesDialog() {
       studentNickname: "",
       studentId: "",
       studentIdDisplay: "",
-      coursePackage: "",
+      packageId: "",
+      price: "",
     },
   });
 
-  const coursePackage = watch("coursePackage");
+  const packageId = watch("packageId");
+  const selectedPackage = coursePackages.find((p) => p.id.toString() === packageId);
 
   const handleSearch = (query: string, field: string) => {
     setActiveSearchField(field);
@@ -105,16 +110,22 @@ export default function AddBlankCoursesDialog() {
       return;
     }
 
-    if (!data.coursePackage) {
+    if (!data.packageId) {
       showToast.error("Please select a course package.");
+      return;
+    }
+
+    const priceNum = parseFloat(data.price);
+    if (!data.price || isNaN(priceNum) || priceNum <= 0) {
+      showToast.error("Please enter a valid price.");
       return;
     }
 
     createPackage(
       {
         studentId: data.selectedStudentId,
-        courseName: data.coursePackage,
-        classOption: data.coursePackage,
+        packageId: parseInt(data.packageId),
+        price: priceNum,
       },
       {
         onSuccess: () => {
@@ -152,7 +163,7 @@ export default function AddBlankCoursesDialog() {
         <DialogHeader>
           <DialogTitle>Add Course Package to Student</DialogTitle>
           <DialogDescription>
-            Select a student and choose a course package to add to their account.
+            Select a student, choose a package template, and set the price for this assignment.
           </DialogDescription>
         </DialogHeader>
 
@@ -255,28 +266,59 @@ export default function AddBlankCoursesDialog() {
 
           {/* Course Package Select */}
           <div className="space-y-2">
-            <Label htmlFor="coursePackage">
+            <Label htmlFor="packageId">
               Course Package <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <select
-                id="coursePackage"
-                {...register("coursePackage", {
+                id="packageId"
+                {...register("packageId", {
                   required: "Please select a package",
                 })}
                 className="w-full border rounded-md px-3 py-2 pr-10 appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoadingPackages}
               >
-                <option value="">Select a package...</option>
-                <option value="2 courses package">2 courses package</option>
-                <option value="4 courses package">4 courses package</option>
-                <option value="10 courses package">10 courses package</option>
+                <option value="">
+                  {isLoadingPackages ? "Loading packages..." : "Select a package..."}
+                </option>
+                {coursePackages.map((pkg) => (
+                  <option key={pkg.id} value={pkg.id.toString()}>
+                    {pkg.name} ({pkg.numberOfCourses} classes)
+                  </option>
+                ))}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
-            {errors.coursePackage && (
-              <p className="text-red-500 text-sm">
-                {errors.coursePackage.message}
+            {errors.packageId && (
+              <p className="text-red-500 text-sm">{errors.packageId.message}</p>
+            )}
+            {selectedPackage && (
+              <p className="text-sm text-gray-500">
+                This package includes {selectedPackage.numberOfCourses} TBC class slots.
               </p>
+            )}
+          </div>
+
+          {/* Price Input */}
+          <div className="space-y-2">
+            <Label htmlFor="price">
+              Price <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              min="1"
+              {...register("price", {
+                required: "Please enter a price",
+              })}
+              placeholder="e.g. 5000"
+            />
+            <p className="text-xs text-gray-500">
+              Enter the custom price for this package assignment. This will be used when generating the invoice.
+            </p>
+            {errors.price && (
+              <p className="text-red-500 text-sm">{errors.price.message}</p>
             )}
           </div>
 
