@@ -6,6 +6,7 @@ import { TeacherCoursesFilter } from "../filters/teacher-courses-filter";
 import TeacherCoursesList from "../lists/teacher-courses-list";
 import { TeacherAvailabilityTab } from "./teacher-availability-tab";
 import { Teacher } from "@/app/types/teacher.type";
+import { useRouter } from "next/navigation";
 
 interface TeacherDetailRightProps {
   teacherId: number;
@@ -22,9 +23,10 @@ export function TeacherDetailRight({
   searchParams,
 }: TeacherDetailRightProps) {
   const [activeTab, setActiveTab] = useState<"courses" | "availability">("courses");
+  const router = useRouter();
 
   const handleConnectionSuccess = () => {
-    window.location.reload();
+    router.refresh();
   };
 
   return (
@@ -74,7 +76,7 @@ export function TeacherDetailRight({
         <div className="p-6 pt-0">
           <TeacherAvailabilityTab
             teacher={teacher}
-            onTeacherUpdate={() => window.location.reload()}
+            onTeacherUpdate={() => router.refresh()}
           />
         </div>
       )}

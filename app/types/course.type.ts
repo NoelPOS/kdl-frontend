@@ -18,6 +18,7 @@ export type ComfirmClassScheduleData = {
   fixedDays?: string[];
   fixedStartTime?: string;
   fixedEndTime?: string;
+  fixedStartDate?: string; // Optional start date (YYYY-MM-DD); defaults to today if not set
   // For camp class - new structure
   campDates?: string[];
   campStartTime?: string;

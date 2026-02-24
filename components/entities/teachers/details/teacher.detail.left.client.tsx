@@ -280,9 +280,10 @@ export default function TeacherDetailClient({
           {teacher.role !== "none" && (
             <Button
               type="button"
+              variant="outline"
               onClick={() => setIsDeleteDialogOpen(true)}
               disabled={isDeleting || isUploading || isUpdating}
-              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              className="w-full border-red-500 text-red-600 hover:bg-red-50"
             >
               {isDeleting ? "Deleting..." : "Delete Teacher"}
             </Button>

@@ -22,6 +22,7 @@ import {
   TimeInput,
   ClassTypeSelect,
 } from "@/components/shared/schedule";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 import {
   getTimeValidationRules,
   BUSINESS_HOURS,
@@ -85,6 +86,7 @@ type FormData = {
   fixedDays?: string[];
   fixedStartTime?: string;
   fixedEndTime?: string;
+  fixedStartDate?: string; // Optional start date for fixed schedule (YYYY-MM-DD)
   // For camp class - new structure
   campDates?: string[];
   campStartTime?: string;
@@ -217,6 +219,7 @@ export function ClassScheduleDialog({
         fixedDays: selectedDays,
         fixedStartTime: currentFormData.fixedStartTime,
         fixedEndTime: currentFormData.fixedEndTime,
+        fixedStartDate: currentFormData.fixedStartDate || undefined,
         campDates: selectedDates,
         campStartTime: currentFormData.campStartTime,
         campEndTime: currentFormData.campEndTime,
@@ -289,6 +292,34 @@ export function ClassScheduleDialog({
                         : undefined
                     }
                   />
+
+                  {/* Start Date picker (optional) */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Start Date{" "}
+                      <span className="text-gray-400 font-normal">(optional — defaults to today)</span>
+                    </label>
+                    <Calendar22
+                      date={
+                        watch("fixedStartDate")
+                          ? new Date(watch("fixedStartDate") as string)
+                          : undefined
+                      }
+                      onChange={(date) => {
+                        if (date) {
+                          // Format to YYYY-MM-DD for consistency and backend compatibility
+                          const offset = date.getTimezoneOffset();
+                          const adjustedDate = new Date(date.getTime() - (offset*60*1000));
+                          setValue("fixedStartDate", adjustedDate.toISOString().split('T')[0]);
+                        } else {
+                          setValue("fixedStartDate", "");
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-gray-500">
+                      The schedule will start counting from this date to find the nearest selected days. Accepts past and future dates.
+                    </p>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <TimeInput

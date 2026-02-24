@@ -75,9 +75,9 @@ export function CourseCard({
           ) : (
             onRemove && (
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
-                className="w-full mt-auto"
+                className="w-full mt-auto border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemove();

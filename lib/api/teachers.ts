@@ -1,4 +1,4 @@
-import { Teacher, TeacherAbsence, TeacherAvailability } from "@/app/types/teacher.type";
+import { Teacher, TeacherAbsence, TeacherAvailability, TeacherAvailabilitySlot } from "@/app/types/teacher.type";
 import { Course } from "@/app/types/course.type";
 import { clientApi, createServerApi } from "./config";
 
@@ -207,6 +207,35 @@ export async function checkTeacherAvailability(
     `/teachers/${teacherId}/availability?${params.toString()}`
   );
   return response.data;
+}
+
+// ==================== TEACHER AVAILABILITY SLOTS API (part-time) ====================
+
+export async function getTeacherAvailabilitySlots(
+  teacherId: number
+): Promise<TeacherAvailabilitySlot[]> {
+  const response = await clientApi.get<TeacherAvailabilitySlot[]>(
+    `/teachers/${teacherId}/availability-slots`
+  );
+  return response.data;
+}
+
+export async function createTeacherAvailabilitySlot(
+  teacherId: number,
+  data: { dayOfWeek: string; startTime: string; endTime: string }
+): Promise<TeacherAvailabilitySlot> {
+  const response = await clientApi.post<TeacherAvailabilitySlot>(
+    `/teachers/${teacherId}/availability-slots`,
+    data
+  );
+  return response.data;
+}
+
+export async function deleteTeacherAvailabilitySlot(
+  teacherId: number,
+  slotId: number
+): Promise<void> {
+  await clientApi.delete(`/teachers/${teacherId}/availability-slots/${slotId}`);
 }
 
 // ─── Client-side list (used by TanStack Query hooks) ──────────────────────────

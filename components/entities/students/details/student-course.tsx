@@ -53,12 +53,12 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
             <div className="flex flex-wrap gap-2">
               <span
                 className={`px-2 py-1 rounded-md text-xs font-medium ${
-                  course.payment === "Unpaid"
+                  course.payment?.toLowerCase() === "unpaid"
                     ? "bg-yellow-400 text-yellow-900"
                     : "bg-blue-400 text-blue-900"
                 }`}
               >
-                Payment: {course.payment}
+                Payment: {course.payment?.toUpperCase() || "UNPAID"}
               </span>
             </div>
 
@@ -97,7 +97,7 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
                   studentId={Number(params.id)}
                   studentData={student}
                   trigger={
-                    <Button className="bg-green-500 hover:bg-green-600 text-white w-full">
+                    <Button className="bg-blue-500 hover:bg-blue-600 text-white w-full">
                       <BookOpen className="h-4 w-4 mr-2" />
                       Assign Course
                     </Button>
@@ -134,7 +134,8 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
                         studentData={student}
                         trigger={
                           <Button 
-                            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                            variant="outline"
+                            className="w-full bg-white border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
                           >
                             Swap Schedule
                           </Button>
