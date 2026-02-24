@@ -1,3 +1,5 @@
+"use client";
+
 import type { Discount } from "@/app/types/discount.type";
 import { DataTable, type Column } from "@/components/shared/data-table/data-table";
 
