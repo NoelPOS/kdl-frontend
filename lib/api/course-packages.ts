@@ -4,6 +4,8 @@ export interface CoursePackage {
   id: number;
   name: string;
   numberOfCourses: number;
+  effectiveStartDate: string;
+  effectiveEndDate: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -11,11 +13,13 @@ export interface CoursePackage {
 export interface CreateCoursePackageData {
   name: string;
   numberOfCourses: number;
+  effectiveStartDate: string;
+  effectiveEndDate?: string;
 }
 
+/** Only effectiveEndDate is mutable after creation. */
 export interface UpdateCoursePackageData {
-  name?: string;
-  numberOfCourses?: number;
+  effectiveEndDate: string;
 }
 
 export async function getCoursePackages(): Promise<CoursePackage[]> {
@@ -29,7 +33,7 @@ export async function createCoursePackage(data: CreateCoursePackageData): Promis
 }
 
 export async function updateCoursePackage(id: number, data: UpdateCoursePackageData): Promise<CoursePackage> {
-  const res = await clientApi.put<CoursePackage>(`/course-packages/${id}`, data);
+  const res = await clientApi.patch<CoursePackage>(`/course-packages/${id}`, data);
   return res.data;
 }
 

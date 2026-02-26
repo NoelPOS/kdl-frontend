@@ -28,6 +28,7 @@ type NotificationFilterFormData = {
   search?: string;
   type?: string;
   status?: string;
+  workflowStatus?: string;
 };
 
 const TYPE_OPTIONS = [
@@ -41,6 +42,14 @@ const STATUS_OPTIONS = [
   { value: "all", label: "All Status" },
   { value: "unread", label: "Unread" },
   { value: "read", label: "Read" },
+];
+
+const WORKFLOW_STATUS_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "incoming", label: "Incoming" },
+  { value: "wip", label: "In Progress" },
+  { value: "resolved", label: "Resolved" },
+  { value: "ignored", label: "Ignored" },
 ];
 
 interface NotificationFilterFormProps {
@@ -62,6 +71,7 @@ export function NotificationFilterForm({
       search: initialFilters?.search || "",
       type: initialFilters?.type || "all",
       status: initialFilters?.status || "all",
+      workflowStatus: initialFilters?.workflowStatus || "all",
     },
   });
 
@@ -81,6 +91,7 @@ export function NotificationFilterForm({
       search: "",
       type: "all",
       status: "all",
+      workflowStatus: "all",
     });
     onFilter({
       startDate: "",
@@ -88,6 +99,7 @@ export function NotificationFilterForm({
       search: "",
       type: "all",
       status: "all",
+      workflowStatus: "all",
     });
   }, [reset, onFilter]);
 
@@ -100,6 +112,7 @@ export function NotificationFilterForm({
         if (!value) return false;
         if (key === 'type' && value === 'all') return false;
         if (key === 'status' && value === 'all') return false;
+        if (key === 'workflowStatus' && value === 'all') return false;
         return value.toString().trim() !== "";
     }
   ).length;
@@ -243,6 +256,26 @@ export function NotificationFilterForm({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Workflow Status */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="workflowStatus">Workflow Status</Label>
+                <Select
+                  value={watch("workflowStatus")}
+                  onValueChange={(v) => setValue("workflowStatus", v)}
+                >
+                  <SelectTrigger id="workflowStatus" className="w-full">
+                    <SelectValue placeholder="Select workflow status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WORKFLOW_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
             </div>

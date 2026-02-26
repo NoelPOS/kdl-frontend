@@ -6,8 +6,11 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
-  data: any;
+  data: any; // contains: studentId, sessionId, studentName, parentName, parentPhone, parentLine
   isRead: boolean;
+  workflowStatus: 'incoming' | 'wip' | 'resolved' | 'ignored';
+  wipBy: string | null;
+  remark: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,6 +35,7 @@ export interface NotificationFilters {
   type?: string;
   isRead?: boolean;
   search?: string;
+  workflowStatus?: string;
 }
 
 export interface NotificationApi {
@@ -39,6 +43,7 @@ export interface NotificationApi {
   getUnreadCount: () => Promise<UnreadCountResponse>;
   markAsRead: (id: number) => Promise<Notification>;
   markAllAsRead: () => Promise<{ success: boolean }>;
+  updateWorkflowStatus: (id: number, workflowStatus: 'incoming' | 'wip' | 'resolved' | 'ignored', wipBy?: string, remark?: string) => Promise<Notification>;
 }
 
 export const notificationApi: NotificationApi = {
@@ -51,6 +56,7 @@ export const notificationApi: NotificationApi = {
       if (filters.type) params.type = filters.type;
       if (filters.isRead !== undefined) params.isRead = filters.isRead;
       if (filters.search) params.search = filters.search;
+      if (filters.workflowStatus) params.workflowStatus = filters.workflowStatus;
     }
 
     const response = await api.get<NotificationsResponse>('/notifications', {
@@ -71,6 +77,20 @@ export const notificationApi: NotificationApi = {
 
   markAllAsRead: async () => {
     const response = await api.patch<{ success: boolean }>('/notifications/read-all');
+    return response.data;
+  },
+
+  updateWorkflowStatus: async (
+    id: number,
+    workflowStatus: 'incoming' | 'wip' | 'resolved' | 'ignored',
+    wipBy?: string,
+    remark?: string,
+  ) => {
+    const response = await api.patch<Notification>(`/notifications/${id}/workflow-status`, {
+      workflowStatus,
+      wipBy,
+      remark,
+    });
     return response.data;
   },
 };

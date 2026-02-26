@@ -99,7 +99,7 @@ export function generateScheduleRows(
           (d) => d.dayIndex === currentDate.getDay()
         );
         if (dayOfWeek && selectedDays.includes(dayOfWeek.key)) {
-          sessionDates.push(currentDate.toISOString().split("T")[0]);
+          sessionDates.push(formatDateLocal(currentDate));
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }

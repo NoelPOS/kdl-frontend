@@ -3,9 +3,7 @@ import { queryKeys } from "@/lib/query-keys";
 import {
   createCoursePackage,
   updateCoursePackage,
-  deleteCoursePackage,
   CreateCoursePackageData,
-  UpdateCoursePackageData,
 } from "@/lib/api/course-packages";
 import { showToast } from "@/lib/toast";
 
@@ -23,31 +21,20 @@ export function useCreateCoursePackage() {
   });
 }
 
-export function useUpdateCoursePackage() {
+/** Deactivates a package version by setting its effectiveEndDate to today. */
+export function useDeactivateCoursePackage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCoursePackageData }) =>
-      updateCoursePackage(id, data),
+    mutationFn: (id: number) =>
+      updateCoursePackage(id, {
+        effectiveEndDate: new Date().toISOString().split("T")[0],
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.coursePackages.all() });
-      showToast.success("Course package updated successfully");
+      showToast.success("Course package deactivated");
     },
     onError: () => {
-      showToast.error("Failed to update course package");
-    },
-  });
-}
-
-export function useDeleteCoursePackage() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => deleteCoursePackage(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.coursePackages.all() });
-      showToast.success("Course package deleted successfully");
-    },
-    onError: () => {
-      showToast.error("Failed to delete course package");
+      showToast.error("Failed to deactivate course package");
     },
   });
 }
