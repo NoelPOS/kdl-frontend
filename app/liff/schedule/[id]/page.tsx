@@ -99,6 +99,7 @@ export default function ScheduleDetailPage() {
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ lineUserId: profile?.userId }),
         }
       );
 
@@ -132,6 +133,7 @@ export default function ScheduleDetailPage() {
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ lineUserId: profile?.userId }),
         }
       );
 
