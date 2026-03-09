@@ -58,8 +58,8 @@ function LiffLayoutContent({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-green-50 to-white">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading KDL Portal...</p>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-green-500 border-t-transparent mb-5"></div>
+          <p className="text-gray-500 text-sm font-medium">Loading KDL Portal...</p>
         </div>
       </div>
     );
@@ -67,7 +67,7 @@ function LiffLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Render page content
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F7F8FA]">
       {children}
     </div>
   );

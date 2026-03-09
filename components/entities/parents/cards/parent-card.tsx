@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 export function ParentCard({ parent }: { parent: Parent }) {
   const router = useRouter();
   return (
-    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px]">
+    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200">
       <div className="flex flex-col items-center text-center mb-4">
         <Avatar className="h-16 w-16 mb-3">
           <AvatarImage src={parent.profilePicture} alt={parent.name} />
@@ -33,7 +33,7 @@ export function ParentCard({ parent }: { parent: Parent }) {
         </div>
       </div>
       <Button
-        className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer"
+        className="w-full bg-blue-500 hover:bg-blue-600 cursor-pointer shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
         onClick={() => router.push(`/parent/${parent.id}`)}
       >
         Details

@@ -116,13 +116,13 @@ export default function CoursesPage() {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'wip':
-        return 'bg-blue-100';
+        return 'bg-white border border-blue-100';
       case 'completed':
-        return 'bg-gray-100';
+        return 'bg-white border border-gray-200';
       case 'paid':
-        return 'bg-green-100';
+        return 'bg-white border border-green-200';
       default:
-        return 'bg-gray-100';
+        return 'bg-white border border-gray-200';
     }
   };
 
@@ -138,9 +138,9 @@ export default function CoursesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-[#F7F8FA] pb-20">
       {/* Student Header */}
-      <div className="bg-white px-6 pt-6 pb-4">
+      <div className="bg-white px-6 pt-6 pb-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
         <button
           onClick={() => router.back()}
           className="mb-4 text-gray-600 hover:text-gray-900"
@@ -149,7 +149,7 @@ export default function CoursesPage() {
         </button>
 
         <div className="flex items-center gap-4 mb-2">
-          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 ring-2 ring-white ring-offset-1 shadow-sm">
             {student?.profilePicture ? (
               <Image
                 src={student.profilePicture}
@@ -167,7 +167,7 @@ export default function CoursesPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               {student?.name || 'Student'}
             </h1>
-            <p className="text-gray-600">{student?.studentId}</p>
+            <p className="text-gray-500 text-sm font-mono">{student?.studentId}</p>
           </div>
         </div>
 
@@ -178,7 +178,7 @@ export default function CoursesPage() {
 
       {/* Courses Section */}
       <div className="px-6 py-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Courses</h2>
+        <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-4">Courses</h2>
 
         {sessions.length === 0 ? (
           <div className="text-center py-12">
@@ -196,7 +196,7 @@ export default function CoursesPage() {
                 <button
                   key={session.id}
                   onClick={() => handleCourseClick(session.id)}
-                  className={`${getStatusColor(session.status)} rounded-2xl p-4 text-left transition-all hover:shadow-lg active:scale-95`}
+                  className={`${getStatusColor(session.status)} rounded-2xl p-4 text-left transition-all shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 active:scale-[0.98] duration-200`}
                 >
                   {/* Course Title */}
                   <h3 className="font-bold text-gray-900 mb-3 leading-tight min-h-[2.5rem]">
@@ -234,11 +234,11 @@ export default function CoursesPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
         <div className="flex justify-around items-center py-3">
           <button 
             onClick={() => router.push(`/liff/my-courses?studentId=${studentId}`)}
-            className="flex flex-col items-center gap-1 text-yellow-500"
+            className="flex flex-col items-center gap-1 text-green-500"
           >
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />

@@ -42,10 +42,10 @@ export default function LiffRootPage() {
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-green-100/60 to-white">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
-        <p className="text-gray-600 font-medium">Redirecting to verification...</p>
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-green-500 border-t-transparent mb-5"></div>
+        <p className="text-gray-500 text-sm font-medium tracking-wide">Redirecting to verification...</p>
       </div>
     </div>
   );

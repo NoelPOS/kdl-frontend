@@ -159,7 +159,7 @@ export function SidebarDetail() {
           <SidebarMenuButton
             asChild
             isActive={pathname2 === item.title}
-            className="group relative h-10 px-3 text-gray-700 hover:scale-105  transition-all duration-200 hover:border hover:border-yellow-500 hover:text-yellow-500 data-[active=true]:text-yellow-500 data-[active=true]:bg-transparent data-[active=true]:font-medium"
+            className="group relative h-10 px-3 text-gray-700 hover:scale-105  transition-all duration-200 hover:border hover:border-yellow-500 hover:text-yellow-500 data-[active=true]:text-yellow-500 data-[active=true]:bg-transparent data-[active=true]:font-medium data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:pl-[calc(0.75rem-2px)]"
           >
             <Link href={item.url} className="flex items-center gap-3">
               <item.icon className="h-4 w-4" />

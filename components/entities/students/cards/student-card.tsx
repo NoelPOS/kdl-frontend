@@ -41,7 +41,7 @@ export function StudentCard({ student }: StudentCardProps) {
       student.doNotEat.some((item) => item.trim() !== ""));
 
   return (
-    <div className="bg-blue-100 rounded-lg p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px] h-full flex flex-col">
+    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 relative w-full max-w-xs min-w-[240px] h-full flex flex-col shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200">
       <>
         {/* Only show Pizza icon if student has allergies or dietary restrictions */}
         {hasAllergiesOrDietaryRestrictions && (
@@ -62,7 +62,7 @@ export function StudentCard({ student }: StudentCardProps) {
 
       {pizzaHovered && hasAllergiesOrDietaryRestrictions && (
         <div
-          className="absolute inset-0 bg-blue-100 rounded-lg border border-blue-100 p-4 flex flex-col z-50"
+          className="absolute inset-0 bg-blue-50 rounded-xl border border-blue-100 p-4 flex flex-col z-50"
           onMouseLeave={() => setPizzaHovered(false)}
         >
           <div
@@ -163,7 +163,7 @@ export function StudentCard({ student }: StudentCardProps) {
       </div>
 
       <Button
-        className="w-full bg-blue-400 hover:bg-blue-500 cursor-pointer mt-auto"
+        className="w-full bg-blue-500 hover:bg-blue-600 cursor-pointer mt-auto shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
         onClick={() => router.push(`/student/${student.id}`)}
       >
         Details

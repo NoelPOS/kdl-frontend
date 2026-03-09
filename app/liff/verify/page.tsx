@@ -38,10 +38,10 @@ export default function LiffLoginPage() {
   // Show loading state while LIFF is initializing
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-100/60 to-white p-4">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-600 font-medium">Initializing LINE...</p>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-green-500 border-t-transparent mb-5"></div>
+          <p className="text-gray-500 text-sm font-medium">Initializing LINE...</p>
         </div>
       </div>
     );
@@ -50,8 +50,8 @@ export default function LiffLoginPage() {
   // Show error if LIFF initialization failed
   if (liffError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-100/60 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-[var(--shadow-xl)] p-8 max-w-md w-full text-center">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <span className="text-3xl">❌</span>
@@ -72,8 +72,8 @@ export default function LiffLoginPage() {
   // Show error if not logged in to LINE
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-yellow-50 to-white p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-yellow-100/60 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-[var(--shadow-xl)] p-8 max-w-md w-full text-center">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
               <span className="text-3xl">⚠️</span>
@@ -91,8 +91,8 @@ export default function LiffLoginPage() {
   // Show error if profile is not available
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-100/60 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-[var(--shadow-xl)] p-8 max-w-md w-full text-center">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <span className="text-3xl">❌</span>
@@ -108,7 +108,7 @@ export default function LiffLoginPage() {
             </ul>
             <button
               onClick={() => window.location.reload()}
-              className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-lg"
+              className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.10)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-150"
             >
               Retry
             </button>
@@ -172,8 +172,8 @@ export default function LiffLoginPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-100/60 to-white p-4">
+        <div className="bg-white rounded-2xl shadow-[var(--shadow-xl)] p-8 max-w-md w-full text-center">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,8 +194,8 @@ export default function LiffLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-100/60 to-white p-4">
+      <div className="bg-white rounded-2xl shadow-[var(--shadow-xl)] p-8 max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mb-4">
@@ -261,7 +261,7 @@ export default function LiffLoginPage() {
                 id="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:border-green-400 bg-gray-50 text-sm transition-all"
                 placeholder="your@email.com"
                 required={useEmail}
               />
@@ -279,7 +279,7 @@ export default function LiffLoginPage() {
                 id="phone"
                 value={formData.contactNo}
                 onChange={(e) => setFormData({ ...formData, contactNo: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:border-green-400 bg-gray-50 text-sm transition-all"
                 placeholder="0812345678"
                 required={!useEmail}
               />
@@ -299,7 +299,7 @@ export default function LiffLoginPage() {
               id="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:border-green-400 bg-gray-50 text-sm transition-all"
               placeholder="Enter your password"
               required
             />
@@ -310,7 +310,7 @@ export default function LiffLoginPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3">
               <p className="text-sm text-red-600">⚠️ {error}</p>
             </div>
           )}
@@ -319,7 +319,7 @@ export default function LiffLoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.10)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">

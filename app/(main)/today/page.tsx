@@ -47,7 +47,7 @@ export default async function TodayPage() {
   const hasCourses = Object.values(grouped).length > 0;
 
   return (
-    <div className="p-6 bg-white h-screen">
+    <div className="p-6 bg-[#F7F8FA] h-screen">
       <div className="max-w-full mx-auto">
         <PageHeader title={formattedDate} lastUpdated={lastUpdated} className="mb-6">
           <TriggerDailyNotificationButton />

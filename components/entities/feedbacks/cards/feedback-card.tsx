@@ -51,7 +51,7 @@ export default function FeedbackCard({
 
   return (
     <>
-      <Card className="bg-blue-50 border-blue-200 hover:shadow-md transition-shadow">
+      <Card className="bg-blue-50 border-blue-100 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200">
         <CardContent className="p-4 space-y-4">
           {/* Header with student info and date/teacher info */}
           <div className="flex items-start justify-between">
@@ -96,7 +96,7 @@ export default function FeedbackCard({
           <div className="text-sm font-medium text-gray-800 mt-1">
             {currentFeedback.courseTitle}
           </div>
-          <div className="bg-white rounded-md p-4 shadow-sm">
+          <div className="bg-white rounded-lg p-4 shadow-[var(--shadow-sm)]">
             <div className="text-sm font-semibold text-gray-700 mb-2">
               Feedback
             </div>
@@ -119,7 +119,7 @@ export default function FeedbackCard({
             <Button
               size="sm"
               onClick={() => setIsEditDialogOpen(true)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 flex items-center gap-2"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 flex items-center gap-2 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
             >
               <Edit className="h-4 w-4" />
               Edit

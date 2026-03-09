@@ -72,9 +72,9 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-[#F7F8FA] pb-20">
       {/* Header */}
-         <div className="bg-white px-6 pt-6 pb-4 border-b">
+         <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
         <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
       </div>
 
@@ -88,7 +88,7 @@ export default function PaymentsPage() {
           invoices.map((invoice) => (
             <div 
               key={invoice.id} 
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3"
+              className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col gap-3"
             >
               {/* Header row: Doc ID + Status */}
               <div className="flex justify-between items-start">
@@ -97,11 +97,11 @@ export default function PaymentsPage() {
                     <span className="font-semibold text-gray-900">{invoice.documentId}</span>
                  </div>
                  {invoice.receiptDone ? (
-                   <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                   <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5 text-xs font-medium flex items-center gap-1">
                      <CheckCircle className="w-3 h-3" /> Paid
                    </span>
                  ) : (
-                   <span className="bg-red-50 text-red-600 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                   <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 text-xs font-medium flex items-center gap-1">
                      <Clock className="w-3 h-3" /> Unpaid
                    </span>
                  )}
@@ -125,7 +125,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
         <div className="flex justify-around items-center py-3">
           <button 
             onClick={() => router.push('/liff/children')}
@@ -146,7 +146,7 @@ export default function PaymentsPage() {
             <span className="text-xs">Calendar</span>
           </button>
            <button 
-            className="flex flex-col items-center gap-1 text-yellow-500"
+            className="flex flex-col items-center gap-1 text-green-500"
           >
             <CreditCard className="w-6 h-6" />
             <span className="text-xs font-medium">Payments</span>

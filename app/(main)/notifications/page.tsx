@@ -236,19 +236,19 @@ export default function NotificationsPage() {
           </Card>
         ) : (
           <>
-            <div className="w-full overflow-x-auto bg-white rounded-lg shadow-sm border" style={{ maxWidth: '100vw' }}>
+            <div className="w-full overflow-x-auto bg-white rounded-xl shadow-[var(--shadow-sm)] border border-gray-200" style={{ maxWidth: '100vw' }}>
               <div className="overflow-x-auto">
                 <Table className="min-w-max w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[50px] font-semibold">No.</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[130px] font-semibold">Status</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Type</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[300px] font-semibold">Message</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Date</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Student Name</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[120px] font-semibold">Contact</TableHead>
-                      <TableHead className="border h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Action</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[50px] font-semibold">No.</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[130px] font-semibold">Status</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Type</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[300px] font-semibold">Message</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Date</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Student Name</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[120px] font-semibold">Contact</TableHead>
+                      <TableHead className="border border-gray-200 bg-muted/30 h-30 text-center whitespace-nowrap min-w-[150px] font-semibold">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -263,10 +263,10 @@ export default function NotificationsPage() {
                         )}
                         onClick={() => handleNotificationClick(notification)}
                       >
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2">
                           {(currentPage - 1) * PAGE_SIZE + index + 1}
                         </TableCell>
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2">
                           {notification.workflowStatus === 'incoming' && (
                             <Badge className="bg-blue-500 hover:bg-blue-600">Incoming</Badge>
                           )}
@@ -285,19 +285,19 @@ export default function NotificationsPage() {
                             <Badge variant="secondary">Ignored</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2 font-medium">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2 font-medium">
                           {notification.title}
                         </TableCell>
-                        <TableCell className="border h-30 text-center px-2 text-muted-foreground max-w-md whitespace-normal">
+                        <TableCell className="border border-gray-200 h-30 text-center px-2 text-muted-foreground max-w-md whitespace-normal">
                           {notification.message}
                         </TableCell>
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2 text-muted-foreground">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2 text-muted-foreground">
                           {format(new Date(notification.createdAt), 'MMM d, yyyy HH:mm')}
                         </TableCell>
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2">
                           {notification.data?.studentName ?? '—'}
                         </TableCell>
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -310,7 +310,7 @@ export default function NotificationsPage() {
                             Contact
                           </Button>
                         </TableCell>
-                        <TableCell className="border h-30 text-center whitespace-nowrap px-2">
+                        <TableCell className="border border-gray-200 h-30 text-center whitespace-nowrap px-2">
                           {(notification.workflowStatus === 'incoming' || notification.workflowStatus === 'wip') && (
                             <div className="flex items-center justify-center gap-1">
                               <Button

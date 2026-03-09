@@ -244,7 +244,7 @@ export default function SchedulesPage() {
     }
 
     return (
-      <div className="bg-white p-4 mb-4">
+      <div className="bg-white p-4 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
         {/* Month navigation */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -335,7 +335,7 @@ export default function SchedulesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-green-500 border-t-transparent mb-5"></div>
           <p className="text-gray-600">Loading schedules...</p>
         </div>
       </div>
@@ -345,9 +345,9 @@ export default function SchedulesPage() {
   const filteredSchedules = getFilteredSchedules();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-[#F7F8FA] pb-20">
       {/* Student Header */}
-      <div className="bg-white px-6 pt-6 pb-4">
+      <div className="bg-white px-6 pt-6 pb-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
         <button
           onClick={() => router.back()}
           className="mb-4 text-gray-600 hover:text-gray-900"
@@ -356,7 +356,7 @@ export default function SchedulesPage() {
         </button>
 
         <div className="flex items-center gap-4 mb-2">
-          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 ring-2 ring-white ring-offset-1 shadow-sm">
             {student?.profilePicture ? (
               <Image
                 src={student.profilePicture}
@@ -399,7 +399,7 @@ export default function SchedulesPage() {
       {renderCalendar()}
 
       {/* Tabs */}
-      <div className="bg-white px-6 py-3 flex gap-6 border-b sticky top-0 z-10">
+      <div className="bg-white px-6 py-3 flex gap-6 border-b border-gray-100 sticky top-0 z-10 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
         <button
           onClick={() => {
             setActiveTab('upcoming');
@@ -407,13 +407,13 @@ export default function SchedulesPage() {
           }}
           className={`pb-2 font-medium transition-colors relative ${
             activeTab === 'upcoming'
-              ? 'text-yellow-500'
+              ? 'text-green-500'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Upcoming
           {activeTab === 'upcoming' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-500"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500"></div>
           )}
         </button>
         <button
@@ -476,11 +476,11 @@ export default function SchedulesPage() {
                 <button
                   key={schedule.schedule_id}
                   onClick={() => handleScheduleClick(schedule.schedule_id)}
-                  className="w-full bg-blue-50 rounded-lg p-4 text-left transition-all hover:shadow-lg active:scale-95 border border-blue-100"
+                  className="w-full bg-white rounded-2xl p-4 text-left transition-all shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 active:scale-[0.98] duration-200 border border-gray-100"
                 >
                   <div className="flex gap-4">
                     {/* Date Badge */}
-                    <div className="flex flex-col items-center justify-center bg-white rounded-lg p-3 min-w-[60px]">
+                    <div className="flex flex-col items-center justify-center bg-blue-50 rounded-xl p-3 min-w-[60px]">
                       <div className="text-2xl font-bold text-blue-600">{day}</div>
                       <div className="text-xs text-gray-600 uppercase">{month}</div>
                     </div>
@@ -529,7 +529,7 @@ export default function SchedulesPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
         <div className="flex justify-around items-center py-3">
           <button 
             onClick={() => router.push(`/liff/my-courses?studentId=${studentId}`)}
@@ -540,7 +540,7 @@ export default function SchedulesPage() {
             </svg>
             <span className="text-xs">Courses</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-yellow-500">
+          <button className="flex flex-col items-center gap-1 text-green-500">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

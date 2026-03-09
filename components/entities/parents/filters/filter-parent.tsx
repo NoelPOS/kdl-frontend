@@ -128,7 +128,7 @@ export default function ParentFilter() {
   }, [reset, router, pathname]);
 
   return (
-    <div className="mb-5 border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div className="mb-5 border border-gray-200 rounded-xl bg-white shadow-[var(--shadow-sm)]">
       {/* Filter Header */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -253,7 +253,7 @@ export default function ParentFilter() {
           <div className="flex justify-end gap-2 mt-4">
             <Button
               type="submit"
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-6"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
             >
               Apply Filters
             </Button>

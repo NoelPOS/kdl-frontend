@@ -118,7 +118,7 @@ export function NotificationFilterForm({
   ).length;
 
   return (
-    <div className="mb-5 border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div className="mb-5 border border-gray-200 rounded-xl bg-white shadow-[var(--shadow-sm)]">
       {/* Filter Header */}
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -283,7 +283,7 @@ export function NotificationFilterForm({
             <div className="flex justify-end gap-2 mt-4">
               <Button
                 type="submit"
-                className="bg-yellow-500 text-white hover:bg-yellow-600 px-6"
+                className="bg-yellow-500 text-white hover:bg-yellow-600 px-6 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
                 disabled={loading}
               >
                 {loading ? "Filtering..." : "Apply Filters"}

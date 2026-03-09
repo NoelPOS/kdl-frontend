@@ -16,7 +16,7 @@ export default function PageHeader({
   return (
     <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 ${className}`}>
       <div className="min-w-0 flex-1">
-        <div className="text-2xl sm:text-3xl font-medium truncate">{title}</div>
+        <div className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{title}</div>
         <LastUpdated 
           timestamp={lastUpdated} 
           className="mt-1" 
