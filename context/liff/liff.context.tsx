@@ -61,6 +61,28 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const initializeLiff = async () => {
+    // Dev mode: skip LINE auth entirely so LIFF pages can be reviewed in a browser
+    if (process.env.NEXT_PUBLIC_LIFF_DEV_MODE === 'true') {
+      console.log('🔧 LIFF DEV MODE: Skipping LINE authentication');
+      setIsInitialized(true);
+      setIsLoggedIn(true);
+      setProfile({
+        userId: 'dev_user_001',
+        displayName: 'Dev Parent',
+        pictureUrl: undefined,
+        statusMessage: undefined,
+      });
+      setParentProfile({
+        id: 2257,
+        name: 'Dev Parent',
+        email: 'dev@test.com',
+        contactNo: '0000000000',
+        lineId: 'dev_user_001',
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
@@ -157,6 +179,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Login with LINE
    */
   const login = () => {
+    if (process.env.NEXT_PUBLIC_LIFF_DEV_MODE === 'true') return;
     if (!isInitialized) return;
     liff.login();
   };
@@ -165,6 +188,12 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Logout from LINE
    */
   const logout = () => {
+    if (process.env.NEXT_PUBLIC_LIFF_DEV_MODE === 'true') {
+      setIsLoggedIn(false);
+      setProfile(null);
+      setParentProfile(null);
+      return;
+    }
     if (!isInitialized) return;
     liff.logout();
     setIsLoggedIn(false);
@@ -176,6 +205,7 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Refresh parent profile (call after verification)
    */
   const refreshParentProfile = async () => {
+    if (process.env.NEXT_PUBLIC_LIFF_DEV_MODE === 'true') return;
     if (!profile) {
       console.log('⚠️ No profile available to refresh');
       return;

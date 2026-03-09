@@ -43,9 +43,9 @@ interface DataTableProps<T> {
 }
 
 const DEFAULT_CELL_CLS =
-  "border-2 border-gray-300 h-16 text-center whitespace-normal px-3";
+  "border border-gray-200 h-16 text-center whitespace-normal px-3";
 const DEFAULT_HEAD_CLS =
-  "border-2 border-gray-300 h-16 text-center whitespace-normal font-semibold";
+  "border border-gray-200 h-16 text-center whitespace-normal font-semibold bg-muted/30";
 
 /** Generic bordered data table that matches the existing project table style. */
 export function DataTable<T>({

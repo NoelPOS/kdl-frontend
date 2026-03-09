@@ -33,7 +33,7 @@ export default function ResponsiveDetailLayout({
         <Button
           variant="outline"
           size="icon"
-          className="h-12 w-12 bg-yellow-500 hover:bg-yellow-600 shadow-lg hover:shadow-xl transition-all duration-200 border-none"
+          className="h-12 w-12 bg-yellow-500 hover:bg-yellow-600 shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-all duration-200 border-none"
           onClick={() => setIsMobileDetailOpen(true)}
         >
           <MenuIcon className="h-6 w-6 text-white" />

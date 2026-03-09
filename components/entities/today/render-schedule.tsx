@@ -109,7 +109,7 @@ const RenderSchedule: React.FC<RenderScheduleProps> = ({ scheduleData }) => {
 
   return (
     <>
-      <div className="bg-gray-50 rounded-lg border p-2 sm:p-4 mb-6 overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 mb-6 overflow-x-auto shadow-[var(--shadow-sm)]">
         {/* Time Headers  */}
         <TimeHeaders numCols={numCols} timeHeaders={timeHeaders} />
 

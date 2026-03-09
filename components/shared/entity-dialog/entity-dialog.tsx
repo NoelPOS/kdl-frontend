@@ -56,7 +56,7 @@ export function EntityDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className={cn("p-8", sizeClasses[size], contentClassName)}>
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">
+          <DialogTitle className="text-2xl font-bold text-center tracking-tight">
             {title}
           </DialogTitle>
           {description && (

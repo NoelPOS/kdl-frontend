@@ -82,7 +82,7 @@ export default function ChildrenPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F8FA]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
           <p className="text-gray-600">Loading children...</p>
@@ -92,12 +92,12 @@ export default function ChildrenPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-20">
+    <div className="min-h-screen bg-[#F7F8FA] pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
         <div className="px-6 py-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
               <span className="text-2xl">👨‍👩‍👧‍👦</span>
             </div>
             <div>
@@ -115,7 +115,7 @@ export default function ChildrenPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name or ID..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/40 focus:border-green-400 bg-gray-50 text-sm transition-all"
             />
             <svg
               className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -149,7 +149,7 @@ export default function ChildrenPage() {
               <button
                 key={child.id}
                 onClick={() => handleSelectChild(child.studentId)}
-                className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 overflow-hidden"
+                className="rounded-2xl bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 overflow-hidden"
               >
                 {/* Profile Picture */}
                 <div className="relative aspect-square bg-gradient-to-br from-green-100 to-blue-100">
@@ -195,7 +195,7 @@ export default function ChildrenPage() {
       </div>
 
       {/* Info Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         <p className="text-xs text-center text-gray-500">
           Select a child to view their courses and schedules
         </p>

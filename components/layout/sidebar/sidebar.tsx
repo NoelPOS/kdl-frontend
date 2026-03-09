@@ -33,8 +33,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarTrigger>
       </div>
 
-      <Sidebar className="border-r border-gray-200" {...props}>
-        <SidebarHeader className="p-6 border-b border-gray-200">
+      <Sidebar className="border-r border-gray-200 shadow-[2px_0_12px_oklch(0_0_0/0.04)]" {...props}>
+        <SidebarHeader className="p-6 border-b border-gray-200 bg-gradient-to-b from-gray-50/80 to-transparent">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <Avatar className="h-12 w-12 shrink-0">

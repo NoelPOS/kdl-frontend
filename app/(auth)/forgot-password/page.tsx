@@ -149,7 +149,7 @@ function ForgotPassword() {
       <Button
         type="submit"
         disabled={requestForm.formState.isSubmitting}
-        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
       >
         {requestForm.formState.isSubmitting ? "Sending..." : "Send Reset Code"}
       </Button>
@@ -202,7 +202,7 @@ function ForgotPassword() {
       <Button
         type="submit"
         disabled={verifyForm.formState.isSubmitting}
-        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
       >
         {verifyForm.formState.isSubmitting ? "Verifying..." : "Verify Code"}
       </Button>
@@ -282,7 +282,7 @@ function ForgotPassword() {
       <Button
         type="submit"
         disabled={resetForm.formState.isSubmitting}
-        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
       >
         {resetForm.formState.isSubmitting ? "Resetting..." : "Reset Password"}
       </Button>
@@ -308,7 +308,7 @@ function ForgotPassword() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F8FA] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Image
@@ -320,7 +320,7 @@ function ForgotPassword() {
           />
         </div>
 
-        <div className="bg-white py-8 px-6 shadow rounded-lg">
+        <div className="bg-white py-8 px-6 shadow-[var(--shadow-md)] rounded-2xl">
           {currentStep === "request" && renderRequestStep()}
           {currentStep === "verify" && renderVerifyStep()}
           {currentStep === "reset" && renderResetStep()}

@@ -21,10 +21,6 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     if (!profile?.userId) return;
 
-    if (!confirm('Are you sure you want to log out? You will need to verify your account again to access the portal.')) {
-      return;
-    }
-
     try {
       setIsUnlinking(true);
 
@@ -108,7 +104,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F8FA]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
           <p className="text-gray-600">Loading settings...</p>
@@ -118,16 +114,16 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-[#F7F8FA] pb-20">
       {/* Header */}
-      <div className="bg-white px-6 pt-6 pb-4 border-b">
+      <div className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
       </div>
 
       <div className="p-6 space-y-6">
         {/* Profile Card */}
         {parentProfile && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Account</h2>
             
             <div className="flex items-center gap-4 mb-4">
@@ -171,7 +167,7 @@ export default function SettingsPage() {
         {/* Change Password Button */}
         <button
           onClick={() => setShowChangePassword(true)}
-          className="w-full bg-white border border-gray-200 text-gray-700 font-medium py-4 rounded-xl shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-4"
+          className="w-full bg-white border border-gray-100 text-gray-700 font-medium py-4 rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.05)] hover:bg-gray-50 active:bg-gray-100 transition-colors duration-100 flex items-center justify-center gap-2 mb-4"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -181,9 +177,9 @@ export default function SettingsPage() {
 
         {/* Logout Button */}
         <button
-          onClick={handleLogout}
+          onClick={() => setIsUnlinking(true)}
           disabled={isUnlinking}
-          className="w-full bg-white border border-red-200 text-red-600 font-medium py-4 rounded-xl shadow-sm hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-white border border-red-200 text-red-500 font-medium py-4 rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.05)] hover:bg-red-50 active:bg-red-100 transition-colors duration-100 flex items-center justify-center gap-2"
         >
           {isUnlinking ? (
              <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
@@ -196,6 +192,16 @@ export default function SettingsPage() {
             </>
           )}
         </button>
+
+        {isUnlinking && (
+          <div className="flex items-center justify-between gap-2 mt-2 px-1">
+            <p className="text-sm text-gray-600">Are you sure?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setIsUnlinking(false)} className="text-xs text-gray-500 px-3 py-1 border border-gray-300 rounded-lg">Cancel</button>
+              <button onClick={handleLogout} className="text-xs text-red-500 px-3 py-1 border border-red-200 rounded-lg bg-red-50">Confirm</button>
+            </div>
+          </div>
+        )}
         
         <p className="text-xs text-center text-gray-500">
           Unlinking will return you to the verification screen. You can re-link with a different email later.
@@ -256,7 +262,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.07)]">
         <div className="flex justify-around items-center py-3">
           <button 
             onClick={() => router.push('/liff/children')}
@@ -285,7 +291,7 @@ export default function SettingsPage() {
             </svg>
             <span className="text-xs">Payments</span>
           </button>
-          <button className="flex flex-col items-center gap-1 text-yellow-500">
+          <button className="flex flex-col items-center gap-1 text-green-500">
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12-0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
             </svg>

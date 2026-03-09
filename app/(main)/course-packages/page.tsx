@@ -193,7 +193,7 @@ export default function CoursePackagesPage() {
       </Dialog>
 
       {/* Info Banner */}
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
         <p className="text-sm text-blue-800">
           <strong>Versioning:</strong> When you create a new package with the same name as an existing active one,
           the old version is automatically expired. Historical sessions referencing the old version remain intact.
@@ -215,22 +215,22 @@ export default function CoursePackagesPage() {
           <Table className="min-w-max w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[50px]">
+                <TableHead className="border h-20 border-gray-200 bg-muted/30 text-center font-semibold whitespace-nowrap min-w-[50px]">
                   No.
                 </TableHead>
-                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[200px]">
+                <TableHead className="border h-20 border-gray-200 bg-muted/30 text-center font-semibold whitespace-nowrap min-w-[200px]">
                   Package Name
                 </TableHead>
-                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[130px]">
+                <TableHead className="border h-20 border-gray-200 bg-muted/30 text-center font-semibold whitespace-nowrap min-w-[130px]">
                   No. of Classes
                 </TableHead>
-                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[220px]">
+                <TableHead className="border h-20 border-gray-200 bg-muted/30 text-center font-semibold whitespace-nowrap min-w-[220px]">
                   Effective Period
                 </TableHead>
-                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[100px]">
+                <TableHead className="border h-20 border-gray-200 bg-muted/30 text-center font-semibold whitespace-nowrap min-w-[100px]">
                   Status
                 </TableHead>
-                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[100px]">
+                <TableHead className="border h-20 border-gray-200 bg-muted/30 text-center font-semibold whitespace-nowrap min-w-[100px]">
                   Actions
                 </TableHead>
               </TableRow>
@@ -241,16 +241,16 @@ export default function CoursePackagesPage() {
                   key={pkg.id}
                   className={isExpired(pkg) ? "bg-gray-50 opacity-60" : ""}
                 >
-                  <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[50px]">
+                  <TableCell className="border h-20 border-gray-200 text-center whitespace-nowrap px-2 min-w-[50px]">
                     {index + 1}
                   </TableCell>
-                  <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[200px]">
+                  <TableCell className="border h-20 border-gray-200 text-center whitespace-nowrap px-2 min-w-[200px]">
                     {pkg.name}
                   </TableCell>
-                  <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[130px]">
+                  <TableCell className="border h-20 border-gray-200 text-center whitespace-nowrap px-2 min-w-[130px]">
                     {pkg.numberOfCourses}
                   </TableCell>
-                  <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[220px]">
+                  <TableCell className="border h-20 border-gray-200 text-center whitespace-nowrap px-2 min-w-[220px]">
                     <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
                       <Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                       {formatDate(pkg.effectiveStartDate)}
@@ -262,7 +262,7 @@ export default function CoursePackagesPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[100px]">
+                  <TableCell className="border h-20 border-gray-200 text-center whitespace-nowrap px-2 min-w-[100px]">
                     {isExpired(pkg) ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                         Expired
@@ -273,7 +273,7 @@ export default function CoursePackagesPage() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="border-2 h-20 border-gray-300 text-center px-2 min-w-[100px]">
+                  <TableCell className="border h-20 border-gray-200 text-center px-2 min-w-[100px]">
                     <div className="flex justify-center">
                       <Button
                         variant="ghost"

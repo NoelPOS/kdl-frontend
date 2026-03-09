@@ -38,7 +38,7 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
 
   if (error) {
     return (
-      <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+      <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
         <h3 className="text-red-800 font-medium mb-2">Unable to Load Analytics</h3>
         <p className="text-red-600">{error}</p>
       </div>
@@ -161,9 +161,9 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="border h-20 text-center whitespace-nowrap min-w-[80px]">Rank</TableHead>
-                    <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[200px]">Course</TableHead>
-                    <TableHead className="border h-20 text-center whitespace-nowrap font-semibold min-w-[120px]">
+                    <TableHead className="border border-gray-200 h-20 text-center whitespace-nowrap min-w-[80px]">Rank</TableHead>
+                    <TableHead className="border border-gray-200 h-20 text-center whitespace-nowrap font-semibold min-w-[200px]">Course</TableHead>
+                    <TableHead className="border border-gray-200 h-20 text-center whitespace-nowrap font-semibold min-w-[120px]">
                       {isTeacherView ? "Timeslots" : "Schedules"}
                     </TableHead>
                   </TableRow>
@@ -173,13 +173,13 @@ export default async function StatisticsContent({ startDate, endDate, teacherId,
                     .sort((a, b) => b.count - a.count)
                     .map((item, index) => (
                       <TableRow key={index} className="hover:bg-gray-50">
-                        <TableCell className="border h-20 text-center whitespace-nowrap px-2">
+                        <TableCell className="border border-gray-200 h-20 text-center whitespace-nowrap px-2">
                           {index + 1}
                         </TableCell>
-                        <TableCell className="border h-20 text-center whitespace-nowrap px-2 font-medium">
+                        <TableCell className="border border-gray-200 h-20 text-center whitespace-nowrap px-2 font-medium">
                           {item.subject}
                         </TableCell>
-                        <TableCell className="border h-20 text-center whitespace-nowrap px-2 font-semibold">
+                        <TableCell className="border border-gray-200 h-20 text-center whitespace-nowrap px-2 font-semibold">
                           {item.count}
                         </TableCell>
                       </TableRow>

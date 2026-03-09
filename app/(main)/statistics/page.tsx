@@ -60,7 +60,7 @@ export default async function StatisticsPage({
       <StatisticsFilter />
       
       {!hasAppliedFilters ? (
-        <div className="mt-6 bg-white rounded-lg p-12 text-center">
+        <div className="mt-6 bg-white rounded-xl p-12 text-center shadow-[var(--shadow-sm)] border border-gray-100">
           <p className="text-gray-500">Please select filters and click &quot;Apply Filters&quot; to view statistics.</p>
         </div>
       ) : (

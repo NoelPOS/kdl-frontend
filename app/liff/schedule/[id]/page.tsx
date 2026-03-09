@@ -232,9 +232,9 @@ export default function ScheduleDetailPage() {
   const { isUpcoming, isCompleted, isCancelled } = getScheduleStatus();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-[#F7F8FA] pb-24">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
         <div className="px-4 py-3">
           <button
             onClick={() => router.back()}
@@ -248,7 +248,7 @@ export default function ScheduleDetailPage() {
       {/* Content */}
       <div className="px-4 py-4 space-y-4">
         {/* Student Profile Card */}
-        <div className="bg-white rounded-lg p-4">
+        <div className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100">
           <div className="flex items-center gap-3">
             {schedule.student?.profilePicture ? (
               <Image
@@ -259,7 +259,7 @@ export default function ScheduleDetailPage() {
                 className="w-15 h-15 rounded-full object-cover"
               />
             ) : (
-              <div className="w-15 h-15 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="w-15 h-15 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
                 <User className="w-8 h-8 text-blue-600" />
               </div>
             )}
@@ -287,7 +287,7 @@ export default function ScheduleDetailPage() {
         </p>
 
         {/* Course Name */}
-        <div className="bg-white rounded-lg p-4">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
           <h3 className="text-lg font-bold text-gray-900">
             {schedule.course?.title}
           </h3>
@@ -295,19 +295,19 @@ export default function ScheduleDetailPage() {
 
         {/* Status Badge */}
         {isCancelled && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-3">
             <p className="text-sm font-medium text-red-900">⚠️ This class has been cancelled</p>
           </div>
         )}
 
         {isCompleted && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-3">
             <p className="text-sm font-medium text-green-900">✓ Class completed</p>
           </div>
         )}
 
         {/* Schedule Information */}
-        <div className="bg-white rounded-lg p-4 space-y-3">
+        <div className="bg-white rounded-2xl p-4 space-y-3 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
@@ -377,13 +377,12 @@ export default function ScheduleDetailPage() {
         </div>
 
         {/* Feedback Area */}
-        <div className="bg-white rounded-lg p-4">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
           <div className="flex items-start gap-2 mb-2">
             <MessageSquare className="w-5 h-5 text-gray-500 mt-0.5 flex-shrink-0" />
             <p className="text-sm font-semibold text-gray-700">Feedback</p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 min-h-[100px] border border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3 min-h-[100px] border border-gray-200">
+          <div className="bg-gray-50 rounded-xl p-3 min-h-[100px] border border-gray-100">
             {schedule.verifyFb ? (
               <div className="space-y-4">
                 {/* Feedback Text */}
@@ -426,7 +425,6 @@ export default function ScheduleDetailPage() {
             ) : (
               <p className="text-sm text-gray-500 italic">Feedback pending verification or not available</p>
             )}
-          </div>
           </div>
         </div>
       </div>

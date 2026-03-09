@@ -42,21 +42,21 @@ export default function TeacherSessionCard({
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "completed":
-        return "bg-blue-400 text-blue-900";
+        return "bg-blue-100 text-blue-800 border border-blue-200";
       case "wip":
       case "in-progress":
-        return "bg-orange-400 text-orange-900";
+        return "bg-orange-100 text-orange-800 border border-orange-200";
       case "pending":
-        return "bg-yellow-400 text-yellow-900";
+        return "bg-amber-100 text-amber-800 border border-amber-200";
       case "cancelled":
-        return "bg-red-400 text-red-900";
+        return "bg-red-100 text-red-800 border border-red-200";
       default:
         return "bg-gray-400 text-gray-900";
     }
   };
 
   return (
-    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[350px] max-h-[400px] w-[250px]">
+    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 relative flex flex-col shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200 min-h-[350px] max-h-[400px] w-[250px]">
       {!isHovered ? (
         <div className="flex flex-col h-full">
           <Info
@@ -72,7 +72,7 @@ export default function TeacherSessionCard({
             {/* Status badge */}
             <div className="flex flex-wrap gap-2">
               <span
-                className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                   session.status
                 )}`}
               >
@@ -98,7 +98,7 @@ export default function TeacherSessionCard({
 
           <div className="mt-auto pt-2 space-y-2">
             <Button
-              className="bg-blue-400 hover:bg-blue-500 text-white w-full"
+              className="bg-blue-500 hover:bg-blue-600 text-white w-full shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
               onClick={() => handleClick(session.sessionId)}
             >
               View Details
@@ -114,7 +114,7 @@ export default function TeacherSessionCard({
         </div>
       ) : (
         <div
-          className="absolute inset-0 bg-blue-50 rounded-lg border border-blue-100 p-4 flex flex-col"
+          className="absolute inset-0 bg-blue-50 rounded-xl border border-blue-100 p-4 flex flex-col"
           onMouseLeave={() => setIsHovered(false)}
         >
           <h3 className="font-semibold text-gray-900 text-sm mb-3">

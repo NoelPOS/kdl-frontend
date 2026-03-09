@@ -10,6 +10,7 @@ import { CoursePlusDialog } from "../dialogs/course-plus.dialog";
 import AssignCourseFlow from "../dialogs/assign-course-flow";
 import SwapScheduleFlow from "../dialogs/swap-schedule-flow";
 import { CommentDialog } from "../dialogs/comment.dialog";
+import EnrollmentWizard from "@/components/entities/enrollments/wizard/enrollment-wizard";
 
 interface StudentCourseProps {
   course: SessionOverview;
@@ -19,6 +20,7 @@ interface StudentCourseProps {
 export function StudentCourse({ course, student }: StudentCourseProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [currentComment, setCurrentComment] = useState(course.comment || "");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const router = useRouter();
   const params = useParams();
@@ -36,7 +38,7 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
   const isFreeTrial = course.courseTitle?.toLowerCase() === "free trial";
 
   return (
-    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[350px] max-h-[400px] w-[250px]">
+    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 relative flex flex-col shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200 min-h-[350px] max-h-[400px] w-[250px]">
       {!isHovered ? (
         <div className="flex flex-col h-full">
           <Info
@@ -52,10 +54,10 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
             {/* Payment and Status badges */}
             <div className="flex flex-wrap gap-2">
               <span
-                className={`px-2 py-1 rounded-md text-xs font-medium ${
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
                   course.payment?.toLowerCase() === "unpaid"
-                    ? "bg-yellow-400 text-yellow-900"
-                    : "bg-blue-400 text-blue-900"
+                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                    : "bg-blue-100 text-blue-800 border border-blue-200"
                 }`}
               >
                 Payment: {course.payment?.toUpperCase() || "UNPAID"}
@@ -92,16 +94,22 @@ export function StudentCourse({ course, student }: StudentCourseProps) {
             {/* Show different buttons based on whether it's a TBC course */}
             {isTBCCourse ? (
               <>
-                <AssignCourseFlow
-                  session={course}
-                  studentId={Number(params.id)}
+                <Button
+                  className="bg-blue-500 hover:bg-blue-600 text-white w-full"
+                  onClick={() => setWizardOpen(true)}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Assign Course
+                </Button>
+                <EnrollmentWizard
+                  open={wizardOpen}
+                  onOpenChange={setWizardOpen}
+                  mode="from-student"
+                  prefillStudentId={Number(params.id)}
+                  prefillStudentName={student?.name}
                   studentData={student}
-                  trigger={
-                    <Button className="bg-blue-500 hover:bg-blue-600 text-white w-full">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Assign Course
-                    </Button>
-                  }
+                  session={course}
+                  onSuccess={() => router.refresh()}
                 />
                 <CommentDialog
                   sessionId={course.sessionId}

@@ -43,7 +43,7 @@ export function CourseCard({
   };
 
   return (
-    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 relative flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200 h-55 w-full max-w-xs min-w-[240px]">
+    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 relative flex flex-col shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-200 h-55 w-full max-w-xs min-w-[240px]">
       {!isHovered ? (
         <>
           <Info
@@ -67,7 +67,7 @@ export function CourseCard({
           </div>
           {!isTeacher ? (
             <Button
-              className="w-full bg-blue-400 hover:bg-blue-500 mt-auto"
+              className="w-full bg-blue-500 hover:bg-blue-600 mt-auto shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150"
               onClick={handleAddStudent}
             >
               Add Student
