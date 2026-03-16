@@ -34,6 +34,7 @@ import {
 interface CreateFormData {
   name: string;
   numberOfCourses: string;
+  price: string;
   effectiveStartDate: string;
 }
 
@@ -62,6 +63,7 @@ export default function CoursePackagesPage() {
   const [form, setForm] = useState<CreateFormData>({
     name: "",
     numberOfCourses: "",
+    price: "",
     effectiveStartDate: new Date().toISOString().split("T")[0],
   });
 
@@ -69,16 +71,19 @@ export default function CoursePackagesPage() {
     setForm({
       name: "",
       numberOfCourses: "",
+      price: "",
       effectiveStartDate: new Date().toISOString().split("T")[0],
     });
 
   const handleCreate = () => {
     const n = parseInt(form.numberOfCourses);
+    const p = parseFloat(form.price);
     if (!form.name.trim()) { showToast.error("Name is required"); return; }
     if (!form.numberOfCourses || isNaN(n) || n < 1) { showToast.error("Number of classes must be at least 1"); return; }
+    if (!form.price || isNaN(p) || p < 0) { showToast.error("Please enter a valid price"); return; }
     if (!form.effectiveStartDate) { showToast.error("Effective start date is required"); return; }
     createPackage(
-      { name: form.name.trim(), numberOfCourses: n, effectiveStartDate: form.effectiveStartDate },
+      { name: form.name.trim(), numberOfCourses: n, price: p, effectiveStartDate: form.effectiveStartDate },
       { onSuccess: () => { setCreateDialogOpen(false); resetForm(); } }
     );
   };
@@ -138,6 +143,20 @@ export default function CoursePackagesPage() {
                 />
                 <p className="text-xs text-gray-500">
                   Number of TBC class slots created when this package is assigned to a student.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Price (THB) <span className="text-red-500">*</span></Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="e.g. 5000"
+                  value={form.price}
+                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                />
+                <p className="text-xs text-gray-500">
+                  This price will be used when generating invoices for this package.
                 </p>
               </div>
               <div className="space-y-2">
@@ -224,6 +243,9 @@ export default function CoursePackagesPage() {
                 <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[130px]">
                   No. of Classes
                 </TableHead>
+                <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[120px]">
+                  Price (THB)
+                </TableHead>
                 <TableHead className="border-2 h-20 border-gray-300 text-center font-semibold whitespace-nowrap min-w-[220px]">
                   Effective Period
                 </TableHead>
@@ -249,6 +271,9 @@ export default function CoursePackagesPage() {
                   </TableCell>
                   <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[130px]">
                     {pkg.numberOfCourses}
+                  </TableCell>
+                  <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[120px]">
+                    {pkg.price != null ? Number(pkg.price).toLocaleString() : <span className="text-gray-400">—</span>}
                   </TableCell>
                   <TableCell className="border-2 h-20 border-gray-300 text-center whitespace-nowrap px-2 min-w-[220px]">
                     <div className="flex items-center justify-center gap-1 text-sm text-gray-600">

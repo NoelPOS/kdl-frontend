@@ -4,6 +4,7 @@ export interface CoursePackage {
   id: number;
   name: string;
   numberOfCourses: number;
+  price: number | null;
   effectiveStartDate: string;
   effectiveEndDate: string | null;
   createdAt: string;
@@ -13,6 +14,7 @@ export interface CoursePackage {
 export interface CreateCoursePackageData {
   name: string;
   numberOfCourses: number;
+  price: number;
   effectiveStartDate: string;
   effectiveEndDate?: string;
 }
