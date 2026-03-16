@@ -61,7 +61,7 @@ const menuItems: MenuItem[] = [
     title: "Course Packages",
     icon: Package,
     url: "/course-packages",
-    roles: [UserRole.ADMIN, UserRole.REGISTRAR],
+    roles: [UserRole.ADMIN],
   },
   {
     title: "students",
@@ -109,7 +109,7 @@ const menuItems: MenuItem[] = [
     title: "notifications",
     icon: Bell,
     url: "/notifications",
-    roles: [UserRole.ADMIN, UserRole.REGISTRAR, UserRole.TEACHER],
+    roles: [UserRole.ADMIN, UserRole.REGISTRAR],
   },
   {
     title: "feedback",

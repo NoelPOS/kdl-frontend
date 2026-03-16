@@ -111,7 +111,6 @@ export function useCreatePackage() {
     mutationFn: (data: {
       studentId: number;
       packageId: number;
-      price: number;
     }) => createPackage(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all() });

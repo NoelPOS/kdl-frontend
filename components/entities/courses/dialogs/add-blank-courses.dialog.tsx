@@ -30,7 +30,6 @@ interface AddBlankCoursesFormData {
   studentId: string;
   studentIdDisplay?: string;
   packageId: string;
-  price: string;
 }
 
 export default function AddBlankCoursesDialog() {
@@ -81,7 +80,6 @@ export default function AddBlankCoursesDialog() {
       studentId: "",
       studentIdDisplay: "",
       packageId: "",
-      price: "",
     },
   });
 
@@ -115,17 +113,10 @@ export default function AddBlankCoursesDialog() {
       return;
     }
 
-    const priceNum = parseFloat(data.price);
-    if (!data.price || isNaN(priceNum) || priceNum <= 0) {
-      showToast.error("Please enter a valid price.");
-      return;
-    }
-
     createPackage(
       {
         studentId: data.selectedStudentId,
         packageId: parseInt(data.packageId),
-        price: priceNum,
       },
       {
         onSuccess: () => {
@@ -163,7 +154,7 @@ export default function AddBlankCoursesDialog() {
         <DialogHeader>
           <DialogTitle>Add Course Package to Student</DialogTitle>
           <DialogDescription>
-            Select a student, choose a package template, and set the price for this assignment.
+            Select a student and choose a package template to assign.
           </DialogDescription>
         </DialogHeader>
 
@@ -293,32 +284,14 @@ export default function AddBlankCoursesDialog() {
               <p className="text-red-500 text-sm">{errors.packageId.message}</p>
             )}
             {selectedPackage && (
-              <p className="text-sm text-gray-500">
-                This package includes {selectedPackage.numberOfCourses} TBC class slots.
-              </p>
-            )}
-          </div>
-
-          {/* Price Input */}
-          <div className="space-y-2">
-            <Label htmlFor="price">
-              Price <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="1"
-              {...register("price", {
-                required: "Please enter a price",
-              })}
-              placeholder="e.g. 5000"
-            />
-            <p className="text-xs text-gray-500">
-              Enter the custom price for this package assignment. This will be used when generating the invoice.
-            </p>
-            {errors.price && (
-              <p className="text-red-500 text-sm">{errors.price.message}</p>
+              <div className="text-sm text-gray-500 space-y-1">
+                <p>This package includes {selectedPackage.numberOfCourses} TBC class slots.</p>
+                {selectedPackage.price != null ? (
+                  <p>Price: <span className="font-medium text-gray-900">{Number(selectedPackage.price).toLocaleString()} THB</span></p>
+                ) : (
+                  <p className="text-amber-600">No price set on this package. Please configure it in Course Packages first.</p>
+                )}
+              </div>
             )}
           </div>
 

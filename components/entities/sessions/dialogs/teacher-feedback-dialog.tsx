@@ -94,11 +94,10 @@ export default function TeacherFeedbackDialog({
       /\.(mp4|webm|mov)$/i.test(url)
     );
 
-    // TODO: Get actual student ID - for now using placeholder
     submitFeedback(
       {
         sessionId: session.sessionId,
-        studentId: 1, // placeholder student ID
+        studentId: session.studentId,
         feedback,
         feedbackImages: images.length > 0 ? images : undefined,
         feedbackVideos: videos.length > 0 ? videos : undefined,

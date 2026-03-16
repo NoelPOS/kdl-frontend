@@ -17,10 +17,11 @@ export default async function TeacherSessionDetails({
   // Get all schedules for this session (all students)
   const schedules = await getSchedulesBySession(Number(sessionId), accessToken);
 
-  // Mock session data for feedback dialog
+  // Build session data for feedback dialog
   const sessionData = {
     sessionId: Number(sessionId),
-    courseId: 0, // Mock ID since we don't have it easily available here
+    studentId: Number(schedules[0]?.student_id) || 0,
+    courseId: 0,
     courseTitle: schedules[0]?.course_title || "Course",
     mode: "8 Classes",
     completedCount: 0,

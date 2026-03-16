@@ -73,7 +73,7 @@ export async function getStudentSession(
 }
 
 // Create package API
-export async function createPackage(data: { studentId: number; packageId: number; price: number }): Promise<{ success: boolean }> {
+export async function createPackage(data: { studentId: number; packageId: number }): Promise<{ success: boolean }> {
   const res = await clientApi.post<{ success: boolean }>("/sessions/package", data);
   return res.data;
 }
