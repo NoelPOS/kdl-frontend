@@ -36,6 +36,7 @@ interface Schedule {
   session_mode: string;
   teacher_name: string;
   student_id: string;
+  student_studentId?: string;
   student_name: string;
   student_nickname: string;
   student_profilePicture: string;
@@ -88,6 +89,7 @@ export default function SchedulesPage() {
         // Map snake_case fields to student object
         setStudent({
           id: data[0].student_id,
+          studentId: data[0].student_studentId || data[0].student_id,
           name: data[0].student_name,
           nickname: data[0].student_nickname,
           profilePicture: data[0].student_profilePicture,
@@ -374,38 +376,30 @@ export default function SchedulesPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               {student?.name || 'Student'}
             </h1>
-            <p className="text-gray-600">{student?.studentId}</p>
+            <div className="bg-green-100/50 rounded-lg px-3 py-1 mt-1 inline-block">
+              <p className="text-xs font-mono text-green-700">
+                ID: {student?.studentId || 'N/A'}
+              </p>
+            </div>
           </div>
         </div>
 
         <p className="text-xs text-gray-500">
           Data last updated at {lastUpdate}
         </p>
-
-        {courseName && (
-          <div className="mt-3 bg-blue-50 rounded-lg p-3">
-            <p className="text-sm font-medium text-blue-900">{courseName}</p>
-            <p className="text-xs text-blue-600 mt-1">
-              {activeTab === 'upcoming' 
-                ? `${filteredSchedules.length} upcoming ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
-                : `${filteredSchedules.length} past ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
-              }
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Calendar View */}
       {renderCalendar()}
 
       {/* Tabs */}
-      <div className="bg-white px-6 py-3 flex gap-6 border-b sticky top-0 z-10">
+      <div className="bg-white flex border-b sticky top-0 z-10">
         <button
           onClick={() => {
             setActiveTab('upcoming');
             setSelectedDate(null);
           }}
-          className={`pb-2 font-medium transition-colors relative ${
+          className={`flex-1 py-3 font-medium transition-colors relative ${
             activeTab === 'upcoming'
               ? 'text-yellow-500'
               : 'text-gray-500 hover:text-gray-700'
@@ -421,7 +415,7 @@ export default function SchedulesPage() {
             setActiveTab('completed');
             setSelectedDate(null);
           }}
-          className={`pb-2 font-medium transition-colors relative ${
+          className={`flex-1 py-3 font-medium transition-colors relative ${
             activeTab === 'completed'
               ? 'text-gray-600'
               : 'text-gray-500 hover:text-gray-700'
@@ -434,8 +428,19 @@ export default function SchedulesPage() {
         </button>
       </div>
 
-      {/* Schedule Cards */}
+      {/* Schedule Info & Cards */}
       <div className="px-6 py-4">
+        {courseName && (
+          <div className="mb-4 bg-blue-50 rounded-xl p-3 border border-blue-100 shadow-sm">
+            <p className="text-sm font-semibold text-blue-900">{courseName}</p>
+            <p className="text-xs text-blue-600 mt-1 font-medium">
+              {activeTab === 'upcoming' 
+                ? `${filteredSchedules.length} upcoming ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
+                : `${filteredSchedules.length} past ${filteredSchedules.length === 1 ? 'class' : 'classes'}`
+              }
+            </p>
+          </div>
+        )}
         {selectedDate && (
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-gray-600">
@@ -547,7 +552,7 @@ export default function SchedulesPage() {
             <span className="text-xs font-medium">Calendar</span>
           </button>
           <button 
-            onClick={() => router.push('/liff/payments')}
+            onClick={() => router.push(`/liff/payments?studentId=${studentId}`)}
             className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

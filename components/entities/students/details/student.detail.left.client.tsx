@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Student } from "@/app/types/student.type";
 import { Parent } from "@/app/types/parent.type";
 import { useSearchParents } from "@/hooks/query/use-parents";
@@ -61,6 +61,7 @@ export default function StudentDetailClient({
   const [parentQuery, setParentQuery] = useState(localStudent.parent || "");
   const [showParentResults, setShowParentResults] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false); // Track user interaction
+  const [parentCleared, setParentCleared] = useState(false); // Track if user explicitly cleared the parent
   const [debouncedParentQuery] = useDebounce(parentQuery, 300);
 
   // Use the search parents hook
@@ -81,10 +82,12 @@ export default function StudentDetailClient({
     }
   }, [debouncedParentQuery, parentSearchResults, hasUserInteracted]);
 
-  // Update parent query when localStudent changes
+  // Update parent query when localStudent changes (but not if user explicitly cleared it)
   useEffect(() => {
-    setParentQuery(localStudent.parent || "");
-  }, [localStudent.parent]);
+    if (!parentCleared) {
+      setParentQuery(localStudent.parent || "");
+    }
+  }, [localStudent.parent, parentCleared]);
 
   const {
     register,
@@ -149,6 +152,16 @@ export default function StudentDetailClient({
     setSelectedParent(parent);
     setParentQuery(parent.name); // Update the controlled input state
     setValue("parent", parent.name); // Update the form state
+    setParentCleared(false); // They picked a new parent, so not "cleared" anymore
+    setShowParentResults(false);
+  };
+
+  // Explicitly clears the parent — user clicked the X button
+  const handleClearParent = () => {
+    setParentCleared(true); // Prevent useEffect from restoring the old parent
+    setSelectedParent(null);
+    setParentQuery("");
+    setValue("parent", "");
     setShowParentResults(false);
   };
 
@@ -156,7 +169,7 @@ export default function StudentDetailClient({
     // Delay hiding results to allow click events on dropdown items to fire
     setTimeout(() => {
       setShowParentResults(false);
-    }, 300); // Increased delay to ensure click events work
+    }, 300);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,7 +244,10 @@ export default function StudentDetailClient({
         .filter(Boolean),
       profilePicture: newImageUrl,
       profileKey: newProfileKey,
-      parentId: selectedParent ? selectedParent.id : undefined,
+      // If parentCleared is true, send null to explicitly remove the parent.
+      // If a new parent was selected, send their id.
+      // If neither, send undefined to leave it unchanged.
+      parentId: selectedParent ? selectedParent.id : parentCleared ? null : undefined,
     };
     console.log("Update Data is here", updateData);
 
@@ -433,16 +449,30 @@ export default function StudentDetailClient({
               onBlur={handleParentInputBlur}
               className="bg-white border border-black pr-10"
             />
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            {parentQuery ? (
+              <button
+                type="button"
+                onClick={handleClearParent}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                title="Remove parent"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : (
+              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            )}
 
             {/* Search Results Dropdown */}
             {showParentResults && parentSearchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto parent-search-dropdown">
                 {parentSearchResults.map((parent) => (
                   <div
                     key={parent.id}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() => handleSelectParent(parent)}
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent blur from firing before click
+                      handleSelectParent(parent);
+                    }}
                   >
                     <div className="font-medium">{parent.name}</div>
                   </div>

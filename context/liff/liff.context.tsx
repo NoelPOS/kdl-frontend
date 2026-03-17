@@ -71,6 +71,35 @@ export const LiffProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('LIFF ID is not configured');
       }
 
+      // DEV MODE BYPASS (Localhost Testing)
+      if (process.env.NEXT_PUBLIC_LIFF_DEV_MODE === 'true') {
+        console.log('🚀 LIFF DEV MODE ENABLED: Bypassing LINE authentication');
+        setIsInitialized(true);
+        setIsLoggedIn(true);
+        
+        const mockProfile: LiffProfile = {
+          userId: 'mock-local-user-2257',
+          displayName: 'Local Dev User (2257)',
+          pictureUrl: 'https://ui-avatars.com/api/?name=Local+Dev',
+        };
+        setProfile(mockProfile);
+        
+        // Mock a parent profile so you can access protected routes
+        // (If you want to test the /liff/verify page instead, set this to null)
+        console.log('🔍 Injecting Mock Parent Profile for Dev Mode (ID: 2257)...');
+        setParentProfile({
+          id: 2257,
+          name: 'Real Parent 2257',
+          email: 'parent2257@example.com',
+          contactNo: '0812345678',
+          lineId: 'mock-local-user-2257',
+          profilePicture: 'https://ui-avatars.com/api/?name=Parent+2257'
+        });
+        
+        setIsLoading(false);
+        return;
+      }
+
       // Initialize LIFF
       console.log('📱 Calling liff.init()...');
       await liff.init({ liffId });

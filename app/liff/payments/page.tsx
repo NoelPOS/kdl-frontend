@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import { useLiff } from '@/context/liff/liff.context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { CreditCard, FileText, CheckCircle, Clock } from 'lucide-react';
 
 interface Invoice {
@@ -14,18 +15,41 @@ interface Invoice {
   receiptDone: boolean;
   studentName: string;
   courseName: string;
-  status: 'paid' | 'unpaid'; // We'll derive this from receiptDone
+  studentId: number;
+}
+
+interface ParentChild {
+  id: number;
+  parentId: number;
+  studentId: number;
+  isPrimary: boolean;
+  student: {
+    id: number;
+    name: string;
+    nickname: string;
+    studentId: string;
+    profilePicture?: string;
+  };
 }
 
 export default function PaymentsPage() {
   const { parentProfile, isLoading: liffLoading } = useLiff();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const studentIdParam = searchParams?.get('studentId');
+  const selectedStudentId = studentIdParam ? Number(studentIdParam) : null;
+
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [children, setChildren] = useState<ParentChild[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const [lastUpdate, setLastUpdate] = useState('');
 
   useEffect(() => {
     if (parentProfile?.id) {
-      fetchInvoices(parentProfile.id);
+      Promise.all([fetchInvoices(parentProfile.id), fetchChildren(parentProfile.id)]).finally(() => {
+        setLoading(false);
+      });
     } else if (!liffLoading && !parentProfile) {
        // Not logged in or verified
        router.push('/liff/verify');
@@ -34,17 +58,32 @@ export default function PaymentsPage() {
 
   const fetchInvoices = async (parentId: number) => {
     try {
-      setLoading(true);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/${parentId}/invoices`
       );
       if (!response.ok) throw new Error('Failed to fetch invoices');
       const data = await response.json();
       setInvoices(data);
+
+      const now = new Date();
+      setLastUpdate(
+        `${now.getDate()} ${now.toLocaleString('en-US', { month: 'short' })} ${now.getFullYear()} ${now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} hrs.`
+      );
     } catch (error) {
       console.error('Error fetching invoices:', error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchChildren = async (parentId: number) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/${parentId}/children?limit=100`
+      );
+      if (!response.ok) throw new Error('Failed to fetch children');
+      const data = await response.json();
+      setChildren(data.children || []);
+    } catch (error) {
+      console.error('Error fetching children:', error);
     }
   };
 
@@ -71,24 +110,129 @@ export default function PaymentsPage() {
     );
   }
 
+  const selectedStudent = selectedStudentId
+    ? children.find((child) => child.studentId === selectedStudentId)?.student
+    : null;
+
+  const studentScopedInvoices = selectedStudentId
+    ? invoices.filter((invoice) => invoice.studentId === selectedStudentId)
+    : invoices;
+
+  const filteredInvoices = studentScopedInvoices.filter((invoice) => {
+    if (activeFilter === 'paid') return invoice.receiptDone;
+    if (activeFilter === 'unpaid') return !invoice.receiptDone;
+    return true;
+  });
+
+  const coursesHref = selectedStudentId
+    ? `/liff/my-courses?studentId=${selectedStudentId}`
+    : '/liff/children';
+  const calendarHref = selectedStudentId
+    ? `/liff/schedules?studentId=${selectedStudentId}`
+    : '/liff/children';
+  const settingsHref = selectedStudentId
+    ? `/liff/settings?studentId=${selectedStudentId}`
+    : '/liff/settings';
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-         <div className="bg-white px-6 pt-6 pb-4 border-b">
-        <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
+      {/* Student Header */}
+      <div className="bg-white px-6 pt-6 pb-4 border-b">
+        <button
+          onClick={() => router.push(coursesHref)}
+          className="mb-4 text-gray-600 hover:text-gray-900"
+        >
+          ← Back
+        </button>
+
+        <div className="flex items-center gap-4 mb-2">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+            {selectedStudent?.profilePicture ? (
+              <Image
+                src={selectedStudent.profilePicture}
+                alt={selectedStudent.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-3xl">
+                👤
+              </div>
+            )}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {selectedStudent?.name || 'All Children'}
+            </h1>
+            {selectedStudent && (
+              <div className="bg-green-100/50 rounded-lg px-3 py-1 mt-1 inline-block">
+                <p className="text-xs font-mono text-green-700">
+                  ID: {selectedStudent.studentId}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="text-xs text-gray-500">
+          Data last updated at {lastUpdate}
+        </p>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="bg-white flex border-b sticky top-0 z-10">
+        <button
+          onClick={() => setActiveFilter('all')}
+          className={`flex-1 py-3 font-medium transition-colors relative ${
+            activeFilter === 'all'
+              ? 'text-yellow-500'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          All
+          {activeFilter === 'all' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-500"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveFilter('paid')}
+          className={`flex-1 py-3 font-medium transition-colors relative ${
+            activeFilter === 'paid'
+              ? 'text-green-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Paid
+          {activeFilter === 'paid' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-600"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveFilter('unpaid')}
+          className={`flex-1 py-3 font-medium transition-colors relative ${
+            activeFilter === 'unpaid'
+              ? 'text-red-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Unpaid
+          {activeFilter === 'unpaid' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600"></div>
+          )}
+        </button>
       </div>
 
       <div className="p-4 space-y-4">
-        {invoices.length === 0 ? (
+        {filteredInvoices.length === 0 ? (
           <div className="text-center py-10 bg-white rounded-xl shadow-sm">
             <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No invoices found</p>
           </div>
         ) : (
-          invoices.map((invoice) => (
+          filteredInvoices.map((invoice) => (
             <div 
               key={invoice.id} 
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col gap-3"
+              className="bg-blue-50 rounded-xl p-4 shadow-sm border border-blue-100 flex flex-col gap-3"
             >
               {/* Header row: Doc ID + Status */}
               <div className="flex justify-between items-start">
@@ -128,7 +272,7 @@ export default function PaymentsPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="flex justify-around items-center py-3">
           <button 
-            onClick={() => router.push('/liff/children')}
+            onClick={() => router.push(coursesHref)}
             className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +281,7 @@ export default function PaymentsPage() {
             <span className="text-xs">Courses</span>
           </button>
           <button 
-             onClick={() => router.push('/liff/children')} // Fallback if no student ID
+             onClick={() => router.push(calendarHref)}
              className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +296,7 @@ export default function PaymentsPage() {
             <span className="text-xs font-medium">Payments</span>
           </button>
           <button 
-            onClick={() => router.push('/liff/settings')}
+            onClick={() => router.push(settingsHref)}
             className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

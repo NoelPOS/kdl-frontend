@@ -127,7 +127,25 @@ export function AddNewStudent() {
   };
 
   // Close parent search results when clicking outside
-  const handleParentInputBlur = () => {
+  const handleParentInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Check if the related target (where focus is moving to) is inside the dropdown
+    // If it is, don't close the dropdown
+    if (e.relatedTarget && e.relatedTarget.closest('.parent-search-dropdown')) {
+      return;
+    }
+
+    // If the input is completely cleared, allow it to remain blank
+    if (!parentQuery || parentQuery.trim() === "") {
+      setSelectedParent(null);
+      setParentQuery("");
+      setValue("parent", "");
+      setValue("parentId", null);
+    } else if (selectedParent && parentQuery !== selectedParent.name) {
+      // Revert to selected parent if you type garbage but don't select
+      setParentQuery(selectedParent.name);
+      setValue("parent", selectedParent.name);
+    }
+
     // Add a longer delay to allow for clicking on search results
     setTimeout(() => {
       setShowParentResults(false);

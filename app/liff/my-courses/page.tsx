@@ -55,6 +55,7 @@ export default function CoursesPage() {
   const [student, setStudent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'wip' | 'completed' | 'cancelled'>('wip');
 
   const fetchSessions = async () => {
     try {
@@ -137,6 +138,21 @@ export default function CoursesPage() {
     );
   }
 
+  const filteredSessions = sessions.filter((session) => {
+    if (activeFilter === 'all') return true;
+    
+    const status = session.status.toLowerCase();
+    
+    // Explicit matches for "completed" and "cancelled"
+    if (activeFilter === 'completed') return status === 'completed';
+    if (activeFilter === 'cancelled') return status === 'cancelled';
+    
+    // "wip" catches the explicit 'wip' status from backend, plus 'paid' and 'reserved'
+    if (activeFilter === 'wip') return ['wip', 'paid', 'reserved'].includes(status);
+
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-white pb-20">
       {/* Student Header */}
@@ -167,7 +183,11 @@ export default function CoursesPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               {student?.name || 'Student'}
             </h1>
-            <p className="text-gray-600">{student?.studentId}</p>
+            <div className="bg-green-100/50 rounded-lg px-3 py-1 mt-1 inline-block">
+              <p className="text-xs font-mono text-green-700">
+                ID: {student?.studentId || 'N/A'}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -180,51 +200,97 @@ export default function CoursesPage() {
       <div className="px-6 py-4">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Courses</h2>
 
-        {sessions.length === 0 ? (
+        {/* Filter Dropdown */}
+        <div className="mb-6 relative">
+          <select
+            value={activeFilter}
+            onChange={(e) => setActiveFilter(e.target.value as any)}
+            className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 shadow-sm transition-all"
+          >
+            <option value="all">All Courses</option>
+            <option value="wip">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        {filteredSessions.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
-            <p className="text-gray-500">No courses found</p>
+            <p className="text-gray-500">
+              No {activeFilter === 'all' ? '' : activeFilter} courses found
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {sessions.map((session) => {
+          <div className="flex flex-col gap-4">
+            {filteredSessions.map((session) => {
               const completed = getCompletedClasses(session);
               const total = getTotalClasses(session);
               const canceled = getCanceledClasses(session);
+              const progressPercentage = total > 0 ? Math.min(Math.round((completed / total) * 100), 100) : 0;
 
               return (
                 <button
                   key={session.id}
                   onClick={() => handleCourseClick(session.id)}
-                  className={`${getStatusColor(session.status)} rounded-2xl p-4 text-left transition-all hover:shadow-lg active:scale-95`}
+                  className={`${getStatusColor(session.status)} rounded-2xl p-5 text-left transition-all hover:shadow-lg active:scale-95 flex flex-col gap-4 border border-white/40 ring-1 ring-black/5`}
                 >
-                  {/* Course Title */}
-                  <h3 className="font-bold text-gray-900 mb-3 leading-tight min-h-[2.5rem]">
-                    {session.course.title}
-                  </h3>
+                  <div className="flex justify-between items-start w-full gap-4">
+                    {/* Header: Title and Teacher */}
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 text-lg mb-1 leading-tight">
+                        {session.course.title}
+                      </h3>
+                      <div className="flex flex-col gap-2 mt-2">
+                        {/* Teacher */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="bg-white/60 p-1.5 rounded-lg">
+                            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <span className="font-medium">{session.teacher?.name || 'TBD'}</span>
+                        </div>
 
-                  {/* Teacher */}
-                  <div className="flex items-center gap-2 mb-2 text-sm text-gray-700">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>{session.teacher?.name || 'TBD'}</span>
+                        {/* Cancellations */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className={`p-1.5 rounded-lg ${canceled > 0 ? 'bg-red-50 text-red-600' : 'bg-white/60 text-gray-700'}`}>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <span className={canceled > 0 ? 'text-red-600 font-medium' : 'font-medium'}>
+                            {canceled} class cancel
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Progress */}
-                  <div className="flex items-center gap-2 mb-2 text-sm text-gray-700">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{completed} out of {total}</span>
-                  </div>
-
-                  {/* Cancellations */}
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{canceled} class cancel</span>
+                  {/* Progress Section */}
+                  <div className="w-full bg-white/60 rounded-xl p-3">
+                    <div className="flex justify-between items-center mb-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-700 font-medium font-mono text-xs">
+                        <span className="bg-white px-2 py-0.5 rounded shadow-sm text-yellow-600 border border-yellow-100">{completed}</span>
+                        <span className="text-gray-400">/</span>
+                        <span className="bg-white px-2 py-0.5 rounded shadow-sm">{total} Classes</span>
+                      </div>
+                      <span className="font-bold text-yellow-600 text-sm">
+                        {progressPercentage}%
+                      </span>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-200/50 rounded-full h-2 overflow-hidden shadow-inner">
+                      <div 
+                        className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-2 rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: `${progressPercentage}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </button>
               );
@@ -255,7 +321,7 @@ export default function CoursesPage() {
             <span className="text-xs">Calendar</span>
           </button>
           <button 
-            onClick={() => router.push('/liff/payments')}
+            onClick={() => router.push(`/liff/payments?studentId=${studentId}`)}
             className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

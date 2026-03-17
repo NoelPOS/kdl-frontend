@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useLiff } from '@/context/liff/liff.context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 /**
@@ -16,7 +16,13 @@ import Image from 'next/image';
 export default function SettingsPage() {
   const { parentProfile, profile, isLoading, logout } = useLiff();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const studentId = searchParams?.get('studentId');
   const [isUnlinking, setIsUnlinking] = useState(false);
+
+  const coursesHref = studentId ? `/liff/my-courses?studentId=${studentId}` : '/liff/children';
+  const calendarHref = studentId ? `/liff/schedules?studentId=${studentId}` : '/liff/children';
+  const paymentsHref = studentId ? `/liff/payments?studentId=${studentId}` : '/liff/payments';
 
   const handleLogout = async () => {
     if (!profile?.userId) return;
@@ -259,7 +265,7 @@ export default function SettingsPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="flex justify-around items-center py-3">
           <button 
-            onClick={() => router.push('/liff/children')}
+            onClick={() => router.push(coursesHref)}
             className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,7 +274,7 @@ export default function SettingsPage() {
             <span className="text-xs">Courses</span>
           </button>
           <button 
-             onClick={() => router.push('/liff/children')} // Fallback if no student ID
+             onClick={() => router.push(calendarHref)}
              className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,7 +283,7 @@ export default function SettingsPage() {
             <span className="text-xs">Calendar</span>
           </button>
           <button 
-            onClick={() => router.push('/liff/payments')}
+            onClick={() => router.push(paymentsHref)}
             className="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600"
           >
            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -94,7 +94,7 @@ export default function ChildrenPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200/40 sticky top-0 z-10">
         <div className="px-6 py-4">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -182,8 +182,8 @@ export default function ChildrenPage() {
                   <p className="text-sm text-gray-500 mb-2">
                     {child.student.nickname}
                   </p>
-                  <div className="bg-gray-100 rounded-lg px-3 py-1 inline-block">
-                    <p className="text-xs font-mono text-gray-700">
+                  <div className="bg-green-100/50 rounded-lg px-3 py-1 inline-block">
+                    <p className="text-xs font-mono text-green-700">
                       ID: {child.student.studentId}
                     </p>
                   </div>
