@@ -256,7 +256,7 @@ export default function SettingsPage() {
                 <>
                   <h2 className="text-xl font-bold mb-1">Reset Password</h2>
                   <p className="text-sm text-gray-500 mb-5">
-                    We'll send a 6-digit code to your registered email.
+                    We&apos;ll send a 6-digit code to your registered email.
                   </p>
                   <div className="mb-4 bg-gray-50 rounded-lg px-4 py-3 text-sm text-gray-700 flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
