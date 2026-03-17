@@ -197,15 +197,19 @@ export default function TeacherEditScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent
+        className="sm:max-w-md max-h-[90vh] overflow-hidden p-0 flex flex-col"
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+      >
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle>Update Schedule</DialogTitle>
           <DialogDescription>
             Update attendance status and provide feedback for this session.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 px-6 pb-4 flex-1 overflow-y-auto">
           {/* Editable Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -318,7 +322,7 @@ export default function TeacherEditScheduleDialog({
           </div>
         </form>
 
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="sm:justify-start border-t px-6 py-4 bg-background mt-auto">
           <Button
             type="button"
             variant="outline"
@@ -328,7 +332,7 @@ export default function TeacherEditScheduleDialog({
             Cancel
           </Button>
           <Button
-            type="submit"
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || !formData.status}
             className="bg-yellow-600 hover:bg-yellow-700"

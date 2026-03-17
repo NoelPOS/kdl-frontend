@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { FeedbackItem } from "@/app/types/feedback.type";
 import FeedbackCard from "../cards/feedback-card";
-import { CheckCircle, Check } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 interface ClientFeedbackListProps {
   initialFeedbacks: FeedbackItem[];
@@ -43,11 +43,11 @@ export default function ClientFeedbackList({
   if (feedbacks.length === 0) {
     return (
       <div className="text-center py-12">
-        <CheckCircle className="h-16 w-16 mx-auto mb-4 text-green-500 opacity-50" />
-        <div className="text-green-600 text-lg mb-2">
+        <CheckCircle className="h-16 w-16 mx-auto mb-4 text-yellow-500 opacity-70" />
+        <div className="text-yellow-700 text-lg mb-2 font-medium">
           All feedbacks verified!
         </div>
-        <div className="text-gray-400 text-sm">
+        <div className="text-yellow-700 text-sm opacity-80">
           All feedbacks in this view have been processed and verified.
         </div>
       </div>

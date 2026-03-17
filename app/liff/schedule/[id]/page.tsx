@@ -16,6 +16,7 @@ import {
   Edit,
   Check,
 } from 'lucide-react';
+import MediaPreview from '@/components/shared/media-preview';
 
 interface ScheduleDetail {
   id: number;
@@ -383,7 +384,6 @@ export default function ScheduleDetailPage() {
             <p className="text-sm font-semibold text-gray-700">Feedback</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3 min-h-[100px] border border-gray-200">
-          <div className="bg-gray-50 rounded-lg p-3 min-h-[100px] border border-gray-200">
             {schedule.verifyFb ? (
               <div className="space-y-4">
                 {/* Feedback Text */}
@@ -397,36 +397,16 @@ export default function ScheduleDetailPage() {
 
                 {/* Media Gallery */}
                 {((schedule.feedbackImages && schedule.feedbackImages.length > 0) || (schedule.feedbackVideos && schedule.feedbackVideos.length > 0)) && (
-                   <div className="grid grid-cols-2 gap-2 mt-4">
-                      {/* Images */}
-                      {schedule.feedbackImages?.map((img, idx) => (
-                        <div key={`img-${idx}`} className="relative aspect-square rounded-lg overflow-hidden bg-gray-200">
-                           <Image 
-                             src={img} 
-                             alt={`Feedback ${idx + 1}`}
-                             fill
-                             className="object-cover"
-                           />
-                        </div>
-                      ))}
-                      
-                      {/* Videos */}
-                      {schedule.feedbackVideos?.map((vid, idx) => (
-                        <div key={`vid-${idx}`} className="relative aspect-square rounded-lg overflow-hidden bg-black flex items-center justify-center">
-                           <video 
-                             src={vid} 
-                             className="w-full h-full object-cover" 
-                             controls
-                           />
-                        </div>
-                      ))}
-                   </div>
+                   <MediaPreview 
+                     images={schedule.feedbackImages} 
+                     videos={schedule.feedbackVideos}
+                     className="mt-4"
+                   />
                 )}
               </div>
             ) : (
               <p className="text-sm text-gray-500 italic">Feedback pending verification or not available</p>
             )}
-          </div>
           </div>
         </div>
       </div>

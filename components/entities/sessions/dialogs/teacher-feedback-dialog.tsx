@@ -123,8 +123,12 @@ export default function TeacherFeedbackDialog({
           Give Feedback
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent
+        className="sm:max-w-md max-h-[90vh] overflow-hidden p-0 flex flex-col"
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+      >
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle>Provide Student Feedback</DialogTitle>
           <DialogDescription>
             Share your feedback about the student&apos;s performance in this
@@ -132,64 +136,66 @@ export default function TeacherFeedbackDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Student Preview Section */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-              <User className="h-5 w-5 text-gray-600" />
+        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
+          {/* Student Preview Section */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                <User className="h-5 w-5 text-gray-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">
+                  {session.courseTitle}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Session ID: {session.sessionId}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">
-                {session.courseTitle}
-              </h3>
-              <p className="text-sm text-gray-600">
-                Session ID: {session.sessionId}
-              </p>
-            </div>
+          </div>
+
+          {/* Feedback Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="feedback"
+              className="text-sm font-medium text-gray-900"
+            >
+              Your Feedback
+            </label>
+            <Textarea
+              id="feedback"
+              placeholder="Enter your feedback about the student's performance, areas for improvement, strengths, etc..."
+              value={feedback}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setFeedback(e.target.value)
+              }
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-gray-500">
+              {feedback.length}/500 characters
+            </p>
+          </div>
+
+          {/* File Upload */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-900">
+              Attach Photos/Videos (Optional)
+            </label>
+            <p className="text-xs text-gray-500">
+              Files will be uploaded when you submit the feedback
+            </p>
+            <FileUpload
+              onFilesSelected={handleFilesSelected}
+              accept="image/*,video/*"
+              maxFiles={10}
+              maxSizeMB={50}
+              disabled={isSubmitting}
+            />
           </div>
         </div>
 
-        {/* Feedback Input */}
-        <div className="space-y-2">
-          <label
-            htmlFor="feedback"
-            className="text-sm font-medium text-gray-900"
-          >
-            Your Feedback
-          </label>
-          <Textarea
-            id="feedback"
-            placeholder="Enter your feedback about the student's performance, areas for improvement, strengths, etc..."
-            value={feedback}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              setFeedback(e.target.value)
-            }
-            rows={4}
-            className="resize-none"
-          />
-          <p className="text-xs text-gray-500">
-            {feedback.length}/500 characters
-          </p>
-        </div>
-
-        {/* File Upload */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-900">
-            Attach Photos/Videos (Optional)
-          </label>
-          <p className="text-xs text-gray-500">
-            Files will be uploaded when you submit the feedback
-          </p>
-          <FileUpload
-            onFilesSelected={handleFilesSelected}
-            accept="image/*,video/*"
-            maxFiles={10}
-            maxSizeMB={50}
-            disabled={isSubmitting}
-          />
-        </div>
-
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="sm:justify-start border-t px-6 py-4 bg-background mt-auto">
           <Button
             type="button"
             variant="outline"
