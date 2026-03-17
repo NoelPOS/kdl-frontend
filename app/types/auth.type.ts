@@ -31,6 +31,7 @@ export enum UserRole {
   ADMIN = "admin",
   REGISTRAR = "registrar",
   TEACHER = "teacher",
+  PARENT = "parent",
 }
 
 export const USER_ROLE_LABELS = {

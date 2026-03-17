@@ -65,50 +65,88 @@ export default function SettingsPage() {
     }
   };
 
-  // Change Password State
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [changePasswordForm, setChangePasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-  });
-  const [changePasswordError, setChangePasswordError] = useState('');
-  const [changePasswordSuccess, setChangePasswordSuccess] = useState('');
+  // Reset Password State (email-based, 3-step flow)
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetStep, setResetStep] = useState<'send' | 'verify' | 'reset' | 'done'>('send');
+  const [resetCode, setResetCode] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSubmitting, setResetSubmitting] = useState(false);
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChangePasswordError('');
-    setChangePasswordSuccess('');
+  const openResetModal = () => {
+    setResetStep('send');
+    setResetCode('');
+    setResetNewPassword('');
+    setResetConfirmPassword('');
+    setResetError('');
+    setShowResetModal(true);
+  };
 
+  const handleSendCode = async () => {
+    const email = parentProfile?.email;
+    if (!email) return;
+    setResetError('');
+    setResetSubmitting(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/parent-portal/change-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            lineUserId: profile?.userId,
-            currentPassword: changePasswordForm.currentPassword,
-            newPassword: changePasswordForm.newPassword,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to change password');
-      }
-
-      setChangePasswordSuccess('Password changed successfully!');
-      setTimeout(() => {
-        setShowChangePassword(false);
-        setChangePasswordForm({ currentPassword: '', newPassword: '' });
-        setChangePasswordSuccess('');
-      }, 2000);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role: 'parent' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to send code');
+      setResetStep('verify');
     } catch (err: any) {
-      setChangePasswordError(err.message);
+      setResetError(err.message);
+    } finally {
+      setResetSubmitting(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const email = parentProfile?.email;
+    if (!email) return;
+    setResetError('');
+    setResetSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-reset-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetCode, email, role: 'parent' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Invalid or expired code');
+      setResetStep('reset');
+    } catch (err: any) {
+      setResetError(err.message);
+    } finally {
+      setResetSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const email = parentProfile?.email;
+    if (!email) return;
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetError('Passwords do not match');
+      return;
+    }
+    setResetError('');
+    setResetSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetCode, newPassword: resetNewPassword, email, role: 'parent' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to reset password');
+      setResetStep('done');
+    } catch (err: any) {
+      setResetError(err.message);
+    } finally {
+      setResetSubmitting(false);
     }
   };
 
@@ -174,15 +212,15 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Change Password Button */}
+        {/* Reset Password Button */}
         <button
-          onClick={() => setShowChangePassword(true)}
+          onClick={openResetModal}
           className="w-full bg-white border border-gray-200 text-gray-700 font-medium py-4 rounded-xl shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 mb-4"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          Change Password
+          Reset Password
         </button>
 
         {/* Logout Button */}
@@ -208,54 +246,161 @@ export default function SettingsPage() {
         </p>
 
         {/* Change Password Dialog */}
-        {showChangePassword && (
+        {/* Reset Password Modal (3-step: send → verify → reset → done) */}
+        {showResetModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-              <h2 className="text-xl font-bold mb-4">Change Password</h2>
-              <form onSubmit={handleChangePassword}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                  <input
-                    type="password"
-                    required
-                    className="w-full border rounded-lg p-2"
-                    value={changePasswordForm.currentPassword}
-                    onChange={(e) => setChangePasswordForm({...changePasswordForm, currentPassword: e.target.value})}
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    className="w-full border rounded-lg p-2"
-                    value={changePasswordForm.newPassword}
-                    onChange={(e) => setChangePasswordForm({...changePasswordForm, newPassword: e.target.value})}
-                  />
-                </div>
-                {changePasswordError && (
-                  <p className="text-red-500 text-sm mb-4">{changePasswordError}</p>
-                )}
-                 {changePasswordSuccess && (
-                  <p className="text-green-500 text-sm mb-4">{changePasswordSuccess}</p>
-                )}
-                <div className="flex justify-end gap-2">
+
+              {/* Step 1 — Send code */}
+              {resetStep === 'send' && (
+                <>
+                  <h2 className="text-xl font-bold mb-1">Reset Password</h2>
+                  <p className="text-sm text-gray-500 mb-5">
+                    We'll send a 6-digit code to your registered email.
+                  </p>
+                  <div className="mb-4 bg-gray-50 rounded-lg px-4 py-3 text-sm text-gray-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {parentProfile?.email}
+                  </div>
+                  {resetError && <p className="text-red-500 text-sm mb-3">{resetError}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowResetModal(false)}
+                      className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSendCode}
+                      disabled={resetSubmitting}
+                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-60"
+                    >
+                      {resetSubmitting ? 'Sending...' : 'Send Code'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Step 2 — Verify code */}
+              {resetStep === 'verify' && (
+                <>
+                  <h2 className="text-xl font-bold mb-1">Enter Code</h2>
+                  <p className="text-sm text-gray-500 mb-5">
+                    We sent a 6-digit code to <strong>{parentProfile?.email}</strong>
+                  </p>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="000000"
+                      className="w-full border rounded-lg p-2 text-center text-lg tracking-widest"
+                      value={resetCode}
+                      onChange={(e) => setResetCode(e.target.value.replace(/\D/g, ''))}
+                    />
+                  </div>
+                  {resetError && <p className="text-red-500 text-sm mb-3">{resetError}</p>}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => { setResetStep('send'); setResetError(''); }}
+                      className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleVerifyCode}
+                      disabled={resetSubmitting || resetCode.length !== 6}
+                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-60"
+                    >
+                      {resetSubmitting ? 'Verifying...' : 'Verify'}
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setShowChangePassword(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                    onClick={handleSendCode}
+                    className="w-full text-sm text-green-600 hover:text-green-700 text-center"
                   >
-                    Cancel
+                    Resend code
                   </button>
+                </>
+              )}
+
+              {/* Step 3 — New password */}
+              {resetStep === 'reset' && (
+                <>
+                  <h2 className="text-xl font-bold mb-1">New Password</h2>
+                  <p className="text-sm text-gray-500 mb-5">Enter a new password for your account.</p>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      placeholder="At least 6 characters"
+                      className="w-full border rounded-lg p-2"
+                      value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Repeat new password"
+                      className="w-full border rounded-lg p-2"
+                      value={resetConfirmPassword}
+                      onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                  {resetError && <p className="text-red-500 text-sm mb-3">{resetError}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setResetStep('verify'); setResetError(''); }}
+                      className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetPassword}
+                      disabled={resetSubmitting || !resetNewPassword || !resetConfirmPassword}
+                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-60"
+                    >
+                      {resetSubmitting ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Step 4 — Done */}
+              {resetStep === 'done' && (
+                <div className="text-center py-4">
+                  <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold mb-2">Password Reset!</h2>
+                  <p className="text-sm text-gray-500 mb-6">Your password has been updated successfully.</p>
                   <button
-                    type="submit"
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    type="button"
+                    onClick={() => setShowResetModal(false)}
+                    className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                   >
-                    Save
+                    Done
                   </button>
                 </div>
-              </form>
+              )}
+
             </div>
           </div>
         )}
