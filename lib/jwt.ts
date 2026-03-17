@@ -38,7 +38,7 @@ export function isProtectedRoute(route: string): boolean {
  * Check if user has permission to access a route
  */
 export function hasRoutePermission(userRole: UserRole, route: string): boolean {
-  const permissions = {
+  const permissions: Partial<Record<UserRole, string[]>> = {
     [UserRole.ADMIN]: [
       "/today",
       "/courses",
