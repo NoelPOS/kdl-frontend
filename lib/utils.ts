@@ -222,3 +222,26 @@ export const formatLastUpdated = (timestamp: Date | undefined): string => {
     return timestamp.toLocaleString();
   }
 };
+
+/**
+ * Parse API datetime safely for UI display.
+ * If timezone is missing (e.g. "2026-03-18 10:00:00"), treat it as Bangkok local time.
+ */
+export const parseApiDateTime = (
+  value: string | Date | null | undefined
+): Date => {
+  if (!value) return new Date();
+  if (value instanceof Date) return value;
+
+  const raw = String(value).trim();
+  if (!raw) return new Date();
+
+  // Already timezone-aware (UTC/Z or +/-offset) -> use native parsing.
+  if (/Z$/i.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+    return new Date(raw);
+  }
+
+  // Normalize "YYYY-MM-DD HH:mm:ss" -> "YYYY-MM-DDTHH:mm:ss+07:00".
+  const normalized = raw.replace(" ", "T");
+  return new Date(`${normalized}+07:00`);
+};
