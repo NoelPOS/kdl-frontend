@@ -7,7 +7,7 @@ import { notificationApi, Notification } from '@/lib/api/notifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { cn, parseApiDateTime } from '@/lib/utils';
+import { cn, parseNotificationDateTime } from '@/lib/utils';
 import { Loader2, CheckCheck, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -292,7 +292,7 @@ export default function NotificationsPage() {
                           {notification.message}
                         </TableCell>
                         <TableCell className="border h-30 text-center whitespace-nowrap px-2 text-muted-foreground">
-                          {format(parseApiDateTime(notification.createdAt), 'MMM d, yyyy HH:mm')}
+                          {format(parseNotificationDateTime(notification.createdAt), 'MMM d, yyyy HH:mm')}
                         </TableCell>
                         <TableCell className="border h-30 text-center whitespace-nowrap px-2">
                           {notification.data?.studentName ?? '—'}

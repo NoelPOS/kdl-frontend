@@ -245,3 +245,22 @@ export const parseApiDateTime = (
   const normalized = raw.replace(" ", "T");
   return new Date(`${normalized}+07:00`);
 };
+
+/**
+ * Temporary workaround for notification timestamp drift.
+ * Set NEXT_PUBLIC_NOTIFICATION_TIME_CORRECTION_HOURS to 7 or 8 as needed.
+ */
+export const parseNotificationDateTime = (
+  value: string | Date | null | undefined
+): Date => {
+  const parsed = parseApiDateTime(value);
+  const correctionRaw =
+    process.env.NEXT_PUBLIC_NOTIFICATION_TIME_CORRECTION_HOURS ?? "7";
+  const correctionHours = Number(correctionRaw);
+
+  if (!Number.isFinite(correctionHours) || correctionHours === 0) {
+    return parsed;
+  }
+
+  return new Date(parsed.getTime() + correctionHours * 60 * 60 * 1000);
+};

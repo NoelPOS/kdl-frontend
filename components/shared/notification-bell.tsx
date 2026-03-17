@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { cn, parseApiDateTime } from '@/lib/utils';
+import { cn, parseNotificationDateTime } from '@/lib/utils';
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
@@ -106,7 +106,7 @@ export function NotificationBell() {
                   <div className="flex justify-between items-start mb-1">
                     <span className="font-medium text-sm text-foreground">{notification.title}</span>
                     <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
-                      {formatDistanceToNow(parseApiDateTime(notification.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(parseNotificationDateTime(notification.createdAt), { addSuffix: true })}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2">
