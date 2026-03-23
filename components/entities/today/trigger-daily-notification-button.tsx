@@ -14,15 +14,13 @@ export default function TriggerDailyNotificationButton() {
     const isToday = daysOffset === 0;
     const setIsLoading = isToday ? setIsLoadingToday : setIsLoadingThreeDays;
     setIsLoading(true);
-    let toastId: string | number | undefined;
 
     try {
       const label = isToday ? "today" : "3 days from now";
-      toastId = showToast.loading(`Triggering notifications for ${label}...`);
-      
-      const result = await triggerDailyNotifications(daysOffset);
-      
-      showToast.dismiss(toastId);
+      const result = await showToast.withLoading(
+        `Triggering notifications for ${label}...`,
+        () => triggerDailyNotifications(daysOffset)
+      );
       
       if (result.success) {
         const dateLabel = result.targetDate 
@@ -43,7 +41,6 @@ export default function TriggerDailyNotificationButton() {
         );
       }
     } catch (error) {
-      showToast.dismiss(toastId);
       const errorMsg =
         typeof error === "object" && error && "message" in error
           ? (error as any).message

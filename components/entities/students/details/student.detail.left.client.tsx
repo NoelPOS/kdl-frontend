@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { useDebounce } from "use-debounce";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, X } from "lucide-react";
+import { Plus, Search, Trash2, X } from "lucide-react";
 import { Student } from "@/app/types/student.type";
 import { Parent } from "@/app/types/parent.type";
 import { useSearchParents } from "@/hooks/query/use-parents";
@@ -25,8 +25,8 @@ interface StudentFormData {
   dob: string;
   gender: string;
   school: string;
-  allergic: string;
-  doNotEat: string;
+  allergic: { value: string }[];
+  doNotEat: { value: string }[];
   parent: string;
   nationalId: string;
   adConcent: boolean;
@@ -43,6 +43,19 @@ export default function StudentDetailClient({
 }: StudentDetailClientProps) {
   console.log("Student is here", student)
   const router = useRouter();
+
+  const listToFieldArray = (value?: string[] | null): { value: string }[] => {
+    if (!Array.isArray(value) || value.length === 0) {
+      return [{ value: "" }];
+    }
+    const normalized = value
+      .map((item) => item?.trim() ?? "")
+      .filter((item) => item.length > 0)
+      .map((item) => ({ value: item }));
+
+    return normalized.length > 0 ? normalized : [{ value: "" }];
+  };
+
   const [localStudent, setLocalStudent] = useState<Partial<Student>>(student);
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState<{
@@ -90,6 +103,7 @@ export default function StudentDetailClient({
   }, [localStudent.parent, parentCleared]);
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -104,16 +118,30 @@ export default function StudentDetailClient({
       dob: localStudent.dob || "",
       gender: localStudent.gender || "",
       school: localStudent.school || "",
-      allergic: Array.isArray(localStudent.allergic)
-        ? localStudent.allergic.join(", ")
-        : "",
-      doNotEat: Array.isArray(localStudent.doNotEat)
-        ? localStudent.doNotEat.join(", ")
-        : "",
+      allergic: listToFieldArray(localStudent.allergic),
+      doNotEat: listToFieldArray(localStudent.doNotEat),
       parent: localStudent.parent || "",
       nationalId: localStudent.nationalId || "",
       adConcent: localStudent.adConcent || false,
     },
+  });
+
+  const {
+    fields: allergicFields,
+    append: appendAllergic,
+    remove: removeAllergic,
+  } = useFieldArray({
+    control,
+    name: "allergic",
+  });
+
+  const {
+    fields: doNotEatFields,
+    append: appendDoNotEat,
+    remove: removeDoNotEat,
+  } = useFieldArray({
+    control,
+    name: "doNotEat",
   });
 
   // Update local state when student prop changes
@@ -126,12 +154,8 @@ export default function StudentDetailClient({
       dob: student.dob || "",
       gender: student.gender || "",
       school: student.school || "",
-      allergic: Array.isArray(student.allergic)
-        ? student.allergic.join(", ")
-        : "",
-      doNotEat: Array.isArray(student.doNotEat)
-        ? student.doNotEat.join(", ")
-        : "",
+      allergic: listToFieldArray(student.allergic),
+      doNotEat: listToFieldArray(student.doNotEat),
       parent: student.parent || "",
       nationalId: student.nationalId || "",
       adConcent: student.adConcent || false,
@@ -235,12 +259,10 @@ export default function StudentDetailClient({
     const updateData: Partial<Student> = {
       ...rest,
       allergic: data.allergic
-        .split(",")
-        .map((item) => item.trim())
+        .map((item) => item.value.trim())
         .filter(Boolean),
       doNotEat: data.doNotEat
-        .split(",")
-        .map((item) => item.trim())
+        .map((item) => item.value.trim())
         .filter(Boolean),
       profilePicture: newImageUrl,
       profileKey: newProfileKey,
@@ -417,25 +439,85 @@ export default function StudentDetailClient({
         </div>
 
         <div>
-          <Label className="text-xs text-black block">
-            Allergic (comma-separated)
-          </Label>
-          <Input
-            {...register("allergic")}
-            className="bg-white border border-black"
-            placeholder="e.g., nuts, dairy, eggs"
-          />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-black block">Allergic</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => appendAllergic({ value: "" })}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          <div className="space-y-2 mt-1">
+            {allergicFields.map((field, index) => (
+              <div key={field.id} className="flex items-center gap-2">
+                <Input
+                  {...register(`allergic.${index}.value` as const)}
+                  className="bg-white border border-black"
+                  placeholder="e.g., nuts"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => {
+                    if (allergicFields.length === 1) {
+                      setValue("allergic.0.value", "");
+                      return;
+                    }
+                    removeAllergic(index);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div>
-          <Label className="text-xs text-black block">
-            Do not eat (comma-separated)
-          </Label>
-          <Input
-            {...register("doNotEat")}
-            className="bg-white border border-black"
-            placeholder="e.g., spicy food, seafood"
-          />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-black block">Do not eat</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2"
+              onClick={() => appendDoNotEat({ value: "" })}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          <div className="space-y-2 mt-1">
+            {doNotEatFields.map((field, index) => (
+              <div key={field.id} className="flex items-center gap-2">
+                <Input
+                  {...register(`doNotEat.${index}.value` as const)}
+                  className="bg-white border border-black"
+                  placeholder="e.g., seafood"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => {
+                    if (doNotEatFields.length === 1) {
+                      setValue("doNotEat.0.value", "");
+                      return;
+                    }
+                    removeDoNotEat(index);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div>

@@ -81,38 +81,56 @@ export default function AddNewTeacher() {
     let imageUrl = "";
     let key = "";
     try {
-      let toastId: string | number | undefined;
       if (imageFile) {
-        toastId = showToast.loading("Uploading image...");
-        const getUrlRes = await fetch(
-          `/api/s3-upload-url?fileName=${encodeURIComponent(
-            imageFile.name
-          )}&fileType=${encodeURIComponent(imageFile.type)}&folder=teachers`
-        );
-        if (!getUrlRes.ok) {
-          showToast.dismiss(toastId);
-          showToast.error("Failed to get upload URL");
+        try {
+          const uploadResult = await showToast.withLoading(
+            "Uploading image...",
+            async () => {
+              const getUrlRes = await fetch(
+                `/api/s3-upload-url?fileName=${encodeURIComponent(
+                  imageFile.name
+                )}&fileType=${encodeURIComponent(
+                  imageFile.type
+                )}&folder=teachers`
+              );
+              if (!getUrlRes.ok) {
+                throw new Error("Failed to get upload URL");
+              }
+
+              const { url } = await getUrlRes.json();
+              const uploadRes = await fetch(url, {
+                method: "PUT",
+                headers: { "Content-Type": imageFile.type },
+                body: imageFile,
+              });
+
+              if (!uploadRes.ok) {
+                throw new Error("Image upload failed");
+              }
+
+              return {
+                key: `teachers/${imageFile.name}`,
+                imageUrl: `https://${
+                  process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+                }.s3.amazonaws.com/teachers/${encodeURIComponent(
+                  imageFile.name
+                )}`,
+              };
+            }
+          );
+
+          key = uploadResult.key;
+          imageUrl = uploadResult.imageUrl;
+          showToast.success("Image uploaded");
+        } catch (uploadError) {
+          const message =
+            uploadError instanceof Error
+              ? uploadError.message
+              : "Image upload failed";
+          showToast.error(message);
           return;
         }
-        const { url } = await getUrlRes.json();
-        const uploadRes = await fetch(url, {
-          method: "PUT",
-          headers: { "Content-Type": imageFile.type },
-          body: imageFile,
-        });
-        if (!uploadRes.ok) {
-          showToast.dismiss(toastId);
-          showToast.error("Image upload failed");
-          return;
-        }
-        key = `teachers/${imageFile.name}`;
-        imageUrl = `https://${
-          process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
-        }.s3.amazonaws.com/teachers/${encodeURIComponent(imageFile.name)}`;
-        showToast.dismiss(toastId);
-        showToast.success("Image uploaded");
       }
-      toastId = showToast.loading("Creating teacher...");
       const teacherData = {
         name: data.name,
         email: data.email,
@@ -123,16 +141,17 @@ export default function AddNewTeacher() {
         profilePicture: imageUrl,
         profileKey: key,
       };
-      // console.log("Creating teacher with data:", teacherData);
-      const newTeacher = await addNewTeacher(teacherData);
-      showToast.dismiss(toastId);
+      const newTeacher = await showToast.withLoading(
+        "Creating teacher...",
+        async () => addNewTeacher(teacherData)
+      );
       showToast.success("Teacher created successfully");
       const selectedCourses = data.courses.filter((course) => course.id > 0);
       if (selectedCourses.length > 0) {
-        toastId = showToast.loading("Assigning courses...");
         const courseIds = selectedCourses.map((course) => course.id);
-        await assignCoursesToTeacher(newTeacher.id, courseIds);
-        showToast.dismiss(toastId);
+        await showToast.withLoading("Assigning courses...", async () =>
+          assignCoursesToTeacher(newTeacher.id, courseIds)
+        );
         showToast.success("Courses assigned");
       }
       setImagePreview("");
@@ -141,7 +160,6 @@ export default function AddNewTeacher() {
       reset();
       router.refresh();
     } catch (error) {
-      showToast.dismiss();
       const errorMsg =
         typeof error === "object" && error && "message" in error
           ? (error as any).message

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar22 } from "@/components/shared/schedule/date-picker";
 import { useCoursePackages } from "@/hooks/query/use-course-packages";
 import {
   useCreateCoursePackage,
@@ -50,6 +51,20 @@ const formatDate = (dateString: string | null): string => {
     month: "short",
     year: "numeric",
   });
+};
+
+const parseLocalDateString = (dateString: string): Date | undefined => {
+  if (!dateString) return undefined;
+  const [year, month, day] = dateString.split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  return new Date(year, month - 1, day);
+};
+
+const formatLocalDateToIso = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
 export default function CoursePackagesPage() {
@@ -161,10 +176,15 @@ export default function CoursePackagesPage() {
               </div>
               <div className="space-y-2">
                 <Label>Effective Start Date <span className="text-red-500">*</span></Label>
-                <Input
-                  type="date"
-                  value={form.effectiveStartDate}
-                  onChange={(e) => setForm((f) => ({ ...f, effectiveStartDate: e.target.value }))}
+                <Calendar22
+                  popoverModal={true}
+                  date={parseLocalDateString(form.effectiveStartDate)}
+                  onChange={(date) =>
+                    setForm((f) => ({
+                      ...f,
+                      effectiveStartDate: date ? formatLocalDateToIso(date) : "",
+                    }))
+                  }
                 />
               </div>
             </div>

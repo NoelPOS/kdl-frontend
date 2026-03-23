@@ -13,6 +13,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -84,6 +93,7 @@ export function FreeTrialEditDialog({
   const endTimeRef = useRef<HTMLInputElement>(null);
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [teacherPickerOpen, setTeacherPickerOpen] = useState(false);
   
   // Course search states
   const [courseSearchResults, setCourseSearchResults] = useState<Course[]>([]);
@@ -276,23 +286,6 @@ export function FreeTrialEditDialog({
     }
   }, [open]);
 
-  // Memoize the teacher options to prevent unnecessary re-renders
-  const teacherOptions = useMemo(
-    () => (
-      <>
-        <option value="" disabled hidden>
-          Select a teacher
-        </option>
-        {teachers.map((teacher) => (
-          <option key={teacher.id} value={teacher.name}>
-            {teacher.name}
-          </option>
-        ))}
-      </>
-    ),
-    [teachers]
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="sm:max-w-[700px] p-8">
@@ -393,17 +386,46 @@ export function FreeTrialEditDialog({
             {/* Teacher */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="teacher">Teacher</Label>
-              <div className="relative">
-                <select
-                  id="teacher"
-                  {...register("teacher")}
-                  className="border-black w-full border rounded-md py-1.5 px-2"
-                  style={{ fontSize: "0.875rem" }}
-                >
-                  {teacherOptions}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
-              </div>
+              <input type="hidden" {...register("teacher")} />
+              <Popover open={teacherPickerOpen} onOpenChange={setTeacherPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={teacherPickerOpen}
+                    className="w-full justify-between border-black py-1.5 px-2 text-sm font-normal"
+                  >
+                    <span className="truncate">{watch("teacher") || "Select a teacher"}</span>
+                    <ChevronDown className="h-5 w-5 shrink-0 opacity-60" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search teacher..." />
+                    <CommandList>
+                      <CommandEmpty>No teacher found.</CommandEmpty>
+                      <CommandGroup>
+                        {teachers.map((teacher) => (
+                          <CommandItem
+                            key={teacher.id}
+                            value={teacher.name}
+                            onSelect={() => {
+                              setValue("teacher", teacher.name, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                              setTeacherPickerOpen(false);
+                            }}
+                          >
+                            {teacher.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Student */}

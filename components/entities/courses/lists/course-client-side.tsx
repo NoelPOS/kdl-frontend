@@ -2,6 +2,7 @@
 
 // basic imports
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // components import
 import TeacherRoomSelectionDialog from "@/components/entities/students/dialogs/teacher-room-selection-dialog";
@@ -39,6 +40,8 @@ function CourseClientSide({
   pagination: PaginationData;
   lastUpdated?: Date;
 }) {
+  const router = useRouter();
+
   // Navigation state
   const [currentStep, setCurrentStep] = useState<DialogStep>("closed");
 
@@ -143,9 +146,15 @@ function CourseClientSide({
   };
 
   const handleConfirmSubmit = () => {
+    const firstStudentId = studentsData[0]?.id;
+
     setCurrentStep("closed");
     setConfirmOpen(false);
     resetAllData();
+
+    if (firstStudentId) {
+      router.push(`/student/${firstStudentId}`);
+    }
   };
 
   const resetAllData = () => {

@@ -69,6 +69,14 @@ export default function ScheduleConfirmationDialog({
   isFromPackage = false,
   packageId,
 }: ScheduleConfirmationDialogProps) {
+  const isIsoDate = (value?: string) =>
+    !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+  const isValidTime = (value?: string) => !!value && /^\d{2}:\d{2}$/.test(value);
+
+  const isConcreteValue = (value?: string) =>
+    !!value && value.trim() !== "" && value.trim().toUpperCase() !== "TBD";
+
   const router = useRouter();
   const [scheduleRows, setScheduleRows] = useState<ComfirmScheduleRow[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,21 +107,32 @@ export default function ScheduleConfirmationDialog({
       try {
         const rows = generateScheduleRows(students, classSchedule, teacherData, overrideLimit);
 
-        const formattedSchedules = rows.map((row) => {
-          const [startTime, endTime] = row.time.split(" - ");
-          return {
-            date: row.date,
-            room: row.room,
-            startTime,
-            endTime,
-            teacherId: row.teacherId,
-            studentId: row.studentId,
-          };
-        });
+        const formattedSchedules = rows
+          .map((row) => {
+            const [startTime, endTime] = row.time.split(" - ");
+            return {
+              date: row.date,
+              room: row.room,
+              startTime,
+              endTime,
+              teacherId: row.teacherId,
+              studentId: row.studentId,
+            };
+          })
+          .filter(
+            (schedule) =>
+              isIsoDate(schedule.date) &&
+              isValidTime(schedule.startTime) &&
+              isValidTime(schedule.endTime) &&
+              isConcreteValue(schedule.room)
+          );
 
-        const conflicts = await checkScheduleConflicts({
-          schedules: formattedSchedules,
-        });
+        const conflicts =
+          formattedSchedules.length > 0
+            ? await checkScheduleConflicts({
+                schedules: formattedSchedules,
+              })
+            : [];
 
         const updatedRows = await Promise.all(rows.map(async (row) => {
           if (process.env.NODE_ENV !== "production") {
@@ -121,14 +140,21 @@ export default function ScheduleConfirmationDialog({
           }
 
           const [rowStartTime, rowEndTime] = row.time.split(" - ");
+          const rowDate = row.date;
           const warnings: string[] = [];
 
           // Check teacher availability
-          if (row.teacherId && row.date && rowStartTime && rowEndTime) {
+          if (
+            row.teacherId &&
+            typeof rowDate === "string" &&
+            isIsoDate(rowDate) &&
+            isValidTime(rowStartTime) &&
+            isValidTime(rowEndTime)
+          ) {
             try {
               const availabilityResult = await checkTeacherAvailability(
                 row.teacherId,
-                row.date,
+                rowDate,
                 rowStartTime,
                 rowEndTime
               );
@@ -287,14 +313,22 @@ export default function ScheduleConfirmationDialog({
     }
 
     try {
-      const conflictCourse = await checkScheduleConflict({
-        date,
-        startTime,
-        endTime,
-        room: editedData.room,
-        teacherId: editedData.teacherId ? Number(editedData.teacherId) : undefined,
-        studentId: Number(student?.id || editedData.studentId),
-      });
+      const shouldCheckConflict =
+        isIsoDate(date) &&
+        isValidTime(startTime) &&
+        isValidTime(endTime) &&
+        isConcreteValue(editedData.room);
+
+      const conflictCourse = shouldCheckConflict
+        ? await checkScheduleConflict({
+            date,
+            startTime,
+            endTime,
+            room: editedData.room,
+            teacherId: editedData.teacherId ? Number(editedData.teacherId) : undefined,
+            studentId: Number(student?.id || editedData.studentId),
+          })
+        : null;
 
       updatedRows[originalIndex] = {
         ...updatedRows[originalIndex],
@@ -352,42 +386,100 @@ export default function ScheduleConfirmationDialog({
     const loadingMessage =
       mode === "assign"
         ? "Assigning course and creating schedules..."
+        : mode === "swap"
+        ? "Swapping session type..."
         : "Creating sessions and schedules...";
-    const toastId = showToast.loading(loadingMessage);
 
     try {
-      const sessionsMap: Record<string, number> = {};
+      await showToast.withLoading(loadingMessage, async () => {
+        const sessionsMap: Record<string, number> = {};
 
-      if (mode === "assign" && session) {
-        // Update the existing session with new course details
-        await updateSession(session.sessionId, {
-          courseId: course.id,
-          teacherId: teacherData.teacherId,
-          classOptionId: classSchedule.classType.id,
-        });
+        if (mode === "assign" && session) {
+          // Update the existing session with new course details
+          await updateSession(session.sessionId, {
+            courseId: course.id,
+            teacherId: teacherData.teacherId,
+            classOptionId: classSchedule.classType.id,
+          });
 
-        // Use existing session for all students (assuming single student in assign mode)
-        students.forEach((student) => {
-          sessionsMap[student.id] = session.sessionId;
-        });
+          // Use existing session for all students (assuming single student in assign mode)
+          students.forEach((student) => {
+            sessionsMap[student.id] = session.sessionId;
+          });
 
-        if (process.env.NODE_ENV !== "production") {
-          console.log("Session updated successfully");
+          if (process.env.NODE_ENV !== "production") {
+            console.log("Session updated successfully");
+          }
+        } else if (mode === "swap" && session) {
+          // Mode: swap - Call swapSessionType API
+          if (process.env.NODE_ENV !== "production") {
+            console.log("=== Swapping Session Type ===");
+          }
+
+          const schedulePayload = scheduleRows.map((row, index) => {
+            const [startTime, endTime] = row.time.split(" - ");
+            const student = students.find(
+              (s) => s.nickname === row.student || s.name === row.student
+            );
+
+            return {
+              sessionId: session.sessionId,
+              courseId: course.id,
+              studentId: Number(student!.id),
+              teacherId: row.teacherId
+                ? row.teacherId
+                : teacherData.teacherId === -1
+                ? undefined
+                : teacherData.teacherId,
+              date: row.date,
+              startTime,
+              endTime,
+              room: row.room,
+              remark: row.remark,
+              attendance: row.attendance || "pending",
+              feedback: "",
+              verifyFb: false,
+              classNumber: index + 1,
+              warning: row.warning || "",
+            };
+          });
+
+          await swapSessionType(session.sessionId, {
+            classOptionId: classSchedule.classType.id,
+            newSchedules: schedulePayload,
+          });
+
+          return;
+        } else {
+          // Mode: create - Create new sessions
+          if (process.env.NODE_ENV !== "production") {
+            console.log("=== Creating New Sessions and Schedules ===");
+          }
+
+          // Create a session for each student
+          for (const student of students) {
+            const newSession = await createSession({
+              studentId: Number(student.id),
+              courseId: course.id,
+              teacherId:
+                teacherData.teacherId === -1 ? undefined : teacherData.teacherId,
+              classOptionId: Number(classSchedule.classType.id),
+              classCancel: 0,
+              payment: isFromPackage ? "Paid" : "Unpaid",
+              status: "wip",
+            });
+            sessionsMap[student.id] = newSession.id;
+          }
         }
-      } else if (mode === "swap" && session) {
-        // Mode: swap - Call swapSessionType API
-        if (process.env.NODE_ENV !== "production") {
-          console.log("=== Swapping Session Type ===");
-        }
 
+        // Create schedule entries for create/assign modes
         const schedulePayload = scheduleRows.map((row, index) => {
           const [startTime, endTime] = row.time.split(" - ");
           const student = students.find(
             (s) => s.nickname === row.student || s.name === row.student
           );
-          
           return {
-            sessionId: session.sessionId,
+            sessionId: sessionsMap[student!.id],
             courseId: course.id,
             studentId: Number(student!.id),
             teacherId: row.teacherId
@@ -408,71 +500,9 @@ export default function ScheduleConfirmationDialog({
           };
         });
 
-        await swapSessionType(session.sessionId, {
-          classOptionId: classSchedule.classType.id,
-          newSchedules: schedulePayload,
-        });
-
-        showToast.dismiss(toastId);
-        showToast.success(`Successfully swapped schedule to ${classSchedule.classType.classMode}!`);
-
-        onConfirm();
-        router.refresh();
-        return; // Exit early as we handled everything
-      } else {
-        // Mode: create - Create new sessions
-        if (process.env.NODE_ENV !== "production") {
-          console.log("=== Creating New Sessions and Schedules ===");
-        }
-
-        // Create a session for each student
-        for (const student of students) {
-          const newSession = await createSession({
-            studentId: Number(student.id),
-            courseId: course.id,
-            teacherId:
-              teacherData.teacherId === -1 ? undefined : teacherData.teacherId,
-            classOptionId: Number(classSchedule.classType.id),
-            classCancel: 0,
-            payment: isFromPackage ? "Paid" : "Unpaid",
-            status: "wip",
-          });
-          sessionsMap[student.id] = newSession.id;
-        }
-      }
-
-      // Create schedule entries for create/assign modes
-      const schedulePayload = scheduleRows.map((row, index) => {
-        const [startTime, endTime] = row.time.split(" - ");
-        const student = students.find(
-          (s) => s.nickname === row.student || s.name === row.student
-        );
-        return {
-          sessionId: sessionsMap[student!.id],
-          courseId: course.id,
-          studentId: Number(student!.id),
-          teacherId: row.teacherId
-            ? row.teacherId
-            : teacherData.teacherId === -1
-            ? undefined
-            : teacherData.teacherId,
-          date: row.date,
-          startTime,
-          endTime,
-          room: row.room,
-          remark: row.remark,
-          attendance: row.attendance || "pending",
-          feedback: "",
-          verifyFb: false,
-          classNumber: index + 1,
-          warning: row.warning || "",
-        };
+        // Send schedules to backend
+        await createBulkSchedules(schedulePayload);
       });
-
-      // Send schedules to backend
-      await createBulkSchedules(schedulePayload);
-
-      showToast.dismiss(toastId);
 
       const successMessage =
         mode === "assign"
@@ -552,6 +582,9 @@ export default function ScheduleConfirmationDialog({
           <Table className="min-w-max w-full">
             <TableHeader>
               <TableRow className="bg-gray-50">
+                <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[70px]">
+                  No.
+                </TableHead>
                 <TableHead className="border h-30 text-center whitespace-nowrap font-semibold min-w-[100px]">
                   Date
                 </TableHead>
@@ -582,6 +615,9 @@ export default function ScheduleConfirmationDialog({
                   className="hover:bg-gray-50 cursor-pointer"
                   onDoubleClick={() => handleRowDoubleClick(row, index)}
                 >
+                  <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[70px]">
+                    {index + 1}
+                  </TableCell>
                   <TableCell className="border h-30 text-center whitespace-nowrap px-2 min-w-[100px]">
                     {formatDateDisplay(row.date)}
                   </TableCell>

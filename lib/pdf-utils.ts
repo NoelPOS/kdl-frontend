@@ -52,11 +52,11 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
         <div style="margin-bottom: 25px;">
           <table style="width: 100%; font-size: 14px;">
             <tr>
-              <td style="width: 120px; padding: 4px 0; color: #000000;"><strong>เอกสารเลขที่</strong></td>
+              <td style="width: 170px; padding: 4px 0; color: #000000; white-space: nowrap;"><strong>เอกสารเลขที่</strong></td>
               <td style="padding: 4px 0; color: #000000;">${invoice.documentId}</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>วันที่</strong></td>
+              <td style="padding: 4px 0; color: #000000; white-space: nowrap;"><strong>วันที่</strong></td>
               <td style="padding: 4px 0; color: #000000;">${new Date(
                 invoice.date
               ).toLocaleDateString("en-GB", {
@@ -66,23 +66,23 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
               })}</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>ชื่อลูกค้า</strong></td>
+              <td style="padding: 4px 0; color: #000000; white-space: nowrap;"><strong>ชื่อลูกค้า</strong></td>
               <td style="padding: 4px 0; color: #000000;">${
                 invoice.studentName || "N/A"
               }</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>ชื่อเล่น</strong></td>
+              <td style="padding: 4px 0; color: #000000; white-space: nowrap;"><strong>ชื่อเล่น</strong></td>
               <td style="padding: 4px 0; color: #000000;">${
                 invoice.studentNickname || "-"
               }</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>ที่อยู่</strong></td>
+              <td style="padding: 4px 0; color: #000000; white-space: nowrap;"><strong>ที่อยู่</strong></td>
               <td style="padding: 4px 0; color: #000000;">-</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; color: #000000;"><strong>เลขประจำตัวผู้เสียภาษี</strong></td>
+              <td style="padding: 4px 0; color: #000000; white-space: nowrap;"><strong>เลขประจำตัวผู้เสียภาษี</strong></td>
               <td style="padding: 4px 0; color: #000000;">-</td>
             </tr>
           </table>
@@ -156,15 +156,21 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
 
         <!-- Signatures -->
         <div style="display: flex; justify-content: space-between; margin-top: 40px;">
-          <div style="text-align: center; width: 200px;">
+          <div style="text-align: center; width: 220px;">
             <p style="margin-bottom: 60px; color: #000000;"><strong>ผู้รับเงิน</strong></p>
             <div style="border-bottom: 1px solid #000000; margin-bottom: 8px;"></div>
-            <p style="margin: 0; font-size: 12px; color: #000000;">ลงชื่อ _________________ วันที่. _______</p>
+            <div style="font-size: 12px; color: #000000; line-height: 1.8;">
+              <p style="margin: 0;">ลงชื่อ <span style="display: inline-block; min-width: 90px; border-bottom: 1px solid #000000;">&nbsp;</span></p>
+              <p style="margin: 0;">วันที่ <span style="display: inline-block; min-width: 55px; border-bottom: 1px solid #000000;">&nbsp;</span></p>
+            </div>
           </div>
-          <div style="text-align: center; width: 200px;">
+          <div style="text-align: center; width: 220px;">
             <p style="margin-bottom: 60px; color: #000000;"><strong>ผู้ปกครอง</strong></p>
             <div style="border-bottom: 1px solid #000000; margin-bottom: 8px;"></div>
-            <p style="margin: 0; font-size: 12px; color: #000000;">ลงชื่อ _________________ วันที่. _______</p>
+            <div style="font-size: 12px; color: #000000; line-height: 1.8;">
+              <p style="margin: 0;">ลงชื่อ <span style="display: inline-block; min-width: 90px; border-bottom: 1px solid #000000;">&nbsp;</span></p>
+              <p style="margin: 0;">วันที่ <span style="display: inline-block; min-width: 55px; border-bottom: 1px solid #000000;">&nbsp;</span></p>
+            </div>
           </div>
         </div>
       </div>
@@ -259,3 +265,4 @@ export const generateReceiptPDF = async (invoice: Invoice) => {
     throw new Error("Failed to generate PDF receipt");
   }
 };
+

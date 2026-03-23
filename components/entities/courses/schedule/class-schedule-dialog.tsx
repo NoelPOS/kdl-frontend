@@ -300,6 +300,7 @@ export function ClassScheduleDialog({
                       <span className="text-gray-400 font-normal">(optional — defaults to today)</span>
                     </label>
                     <Calendar22
+                      popoverModal={true}
                       date={
                         watch("fixedStartDate")
                           ? new Date(watch("fixedStartDate") as string)

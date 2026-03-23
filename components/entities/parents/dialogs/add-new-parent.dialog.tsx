@@ -55,36 +55,55 @@ export default function AddNewParent() {
     let imageUrl = "";
     let key = "";
     try {
-      let toastId: string | number | undefined;
       if (imageFile) {
-        toastId = showToast.loading("Uploading image...");
-        const getUrlRes = await fetch(
-          `/api/s3-upload-url?fileName=${encodeURIComponent(
-            imageFile.name
-          )}&fileType=${encodeURIComponent(imageFile.type)}&folder=parents`
-        );
-        if (!getUrlRes.ok) {
-          showToast.dismiss(toastId);
-          showToast.error("Failed to get upload URL");
+        try {
+          const uploadResult = await showToast.withLoading(
+            "Uploading image...",
+            async () => {
+              const getUrlRes = await fetch(
+                `/api/s3-upload-url?fileName=${encodeURIComponent(
+                  imageFile.name
+                )}&fileType=${encodeURIComponent(
+                  imageFile.type
+                )}&folder=parents`
+              );
+              if (!getUrlRes.ok) {
+                throw new Error("Failed to get upload URL");
+              }
+
+              const { url } = await getUrlRes.json();
+              const uploadRes = await fetch(url, {
+                method: "PUT",
+                headers: { "Content-Type": imageFile.type },
+                body: imageFile,
+              });
+
+              if (!uploadRes.ok) {
+                throw new Error("Image upload failed");
+              }
+
+              return {
+                key: `parents/${imageFile.name}`,
+                imageUrl: `https://${
+                  process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
+                }.s3.amazonaws.com/parents/${encodeURIComponent(
+                  imageFile.name
+                )}`,
+              };
+            }
+          );
+
+          key = uploadResult.key;
+          imageUrl = uploadResult.imageUrl;
+          showToast.success("Image uploaded");
+        } catch (uploadError) {
+          const message =
+            uploadError instanceof Error
+              ? uploadError.message
+              : "Image upload failed";
+          showToast.error(message);
           return;
         }
-        const { url } = await getUrlRes.json();
-        const uploadRes = await fetch(url, {
-          method: "PUT",
-          headers: { "Content-Type": imageFile.type },
-          body: imageFile,
-        });
-        if (!uploadRes.ok) {
-          showToast.dismiss(toastId);
-          showToast.error("Image upload failed");
-          return;
-        }
-        key = `parents/${imageFile.name}`;
-        imageUrl = `https://${
-          process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME
-        }.s3.amazonaws.com/parents/${encodeURIComponent(imageFile.name)}`;
-        showToast.dismiss(toastId);
-        showToast.success("Image uploaded");
       }
       await createParent({
         ...data,

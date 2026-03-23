@@ -39,4 +39,16 @@ export const showToast = {
   ) => {
     return toast.promise(promise, { loading, success, error });
   },
+
+  withLoading: async <T>(
+    loadingMessage: string,
+    action: () => Promise<T>
+  ): Promise<T> => {
+    const toastId = toast.loading(loadingMessage);
+    try {
+      return await action();
+    } finally {
+      toast.dismiss(toastId);
+    }
+  },
 };

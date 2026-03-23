@@ -12,6 +12,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Search, Calendar, Clock, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTeachersByCourse } from "@/hooks/query/use-teachers";
@@ -22,7 +31,6 @@ import { Room } from "@/app/types/room.type";
 import { formatDateLocal } from "@/lib/utils";
 import { TimeInput } from "@/components/shared/schedule/time-input";
 
-import { toast } from "sonner";
 import { showToast } from "@/lib/toast";
 import { Calendar22 } from "@/components/shared/schedule/date-picker";
 
@@ -76,6 +84,7 @@ export function EditScheduleDialog({
 
   const [teachers, setTeachers] = useState<Pick<Teacher, "name" | "id">[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [teacherPickerOpen, setTeacherPickerOpen] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   // Validation functions
@@ -93,18 +102,6 @@ export function EditScheduleDialog({
       return "End time must be after start time";
     }
     return true;
-  };
-
-  // Handle teacher selection change
-  const handleTeacherChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedTeacherName = event.target.value;
-    const selectedTeacher = teachers.find(
-      (teacher) => teacher.name === selectedTeacherName
-    );
-
-    // Update both teacher name and teacherId
-    setValue("teacher", selectedTeacherName);
-    setValue("teacherId", selectedTeacher?.id);
   };
 
   useEffect(() => {
@@ -204,7 +201,6 @@ export function EditScheduleDialog({
     try {
       onSave(data, originalIndex);
       onOpenChange(false);
-      showToast.success("Schedule updated successfully!");
       setShowValidationErrors(false);
     } catch (error) {
       if (process.env.NODE_ENV !== "production") {
@@ -293,29 +289,58 @@ export function EditScheduleDialog({
             {/* Teacher */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="teacher">Teacher *</Label>
-              <div className="relative">
-                <select
-                  id="teacher"
-                  {...register("teacher", {
-                    required: "Teacher selection is required",
-                  })}
-                  onChange={handleTeacherChange}
-                  className={`w-full border rounded-md py-1.5 px-2 ${
-                    errors.teacher ? "border-red-500" : "border-black"
-                  }`}
-                  style={{ fontSize: "0.875rem" }}
-                >
-                  <option value="" disabled hidden>
-                    Select a teacher
-                  </option>
-                  {teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.name}>
-                      {teacher.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black pointer-events-none" />
-              </div>
+              <input
+                type="hidden"
+                {...register("teacher", {
+                  required: "Teacher selection is required",
+                })}
+              />
+              <Popover open={teacherPickerOpen} onOpenChange={setTeacherPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={teacherPickerOpen}
+                    className={`w-full justify-between border py-1.5 px-2 text-sm font-normal ${
+                      errors.teacher ? "border-red-500" : "border-black"
+                    }`}
+                  >
+                    <span className="truncate">
+                      {watch("teacher") || "Select a teacher"}
+                    </span>
+                    <ChevronDown className="h-5 w-5 shrink-0 opacity-60" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search teacher..." />
+                    <CommandList>
+                      <CommandEmpty>No teacher found.</CommandEmpty>
+                      <CommandGroup>
+                        {teachers.map((teacher) => (
+                          <CommandItem
+                            key={teacher.id}
+                            value={teacher.name}
+                            onSelect={() => {
+                              setValue("teacher", teacher.name, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                              setValue("teacherId", teacher.id, {
+                                shouldDirty: true,
+                              });
+                              setTeacherPickerOpen(false);
+                            }}
+                          >
+                            {teacher.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {errors.teacher && (
                 <span className="text-red-500 text-sm">
                   {errors.teacher.message}

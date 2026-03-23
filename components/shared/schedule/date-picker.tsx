@@ -16,9 +16,15 @@ type Calendar22Props = {
   label?: string;
   date?: Date;
   onChange?: (date: Date | undefined) => void;
+  popoverModal?: boolean;
 };
 
-export function Calendar22({ label, date, onChange }: Calendar22Props) {
+export function Calendar22({
+  label,
+  date,
+  onChange,
+  popoverModal = false,
+}: Calendar22Props) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -28,7 +34,7 @@ export function Calendar22({ label, date, onChange }: Calendar22Props) {
           {label}
         </Label>
       )}
-      <Popover open={open} onOpenChange={setOpen} modal={true}>
+      <Popover open={open} onOpenChange={setOpen} modal={popoverModal}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"

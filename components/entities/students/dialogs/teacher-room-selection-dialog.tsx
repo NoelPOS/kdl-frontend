@@ -13,6 +13,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { ChevronDown } from "lucide-react";
 import { useTeachersByCourse } from "@/hooks/query/use-teachers";
 import { useRoomList } from "@/hooks/query/use-rooms";
@@ -46,6 +55,8 @@ export default function TeacherRoomSelectionDialog({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
@@ -63,6 +74,9 @@ export default function TeacherRoomSelectionDialog({
 
   // Fetch all rooms
   const { data: rooms = [] } = useRoomList();
+
+  const [teacherPickerOpen, setTeacherPickerOpen] = useState(false);
+  const [roomPickerOpen, setRoomPickerOpen] = useState(false);
 
   const onSubmit = (data: FormData) => {
     // Validate required fields
@@ -91,7 +105,15 @@ export default function TeacherRoomSelectionDialog({
   };
 
   return (
-    <Dialog open={open}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onCancel();
+        }
+      }}
+      modal={false}
+    >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Select Teacher & Room</DialogTitle>
@@ -103,23 +125,49 @@ export default function TeacherRoomSelectionDialog({
             <Label htmlFor="teacher">
               Teacher <span className="text-red-500">*</span>
             </Label>
-            <div className="relative">
-              <select
-                id="teacher"
-                {...register("teacher", { required: "Teacher is required" })}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none"
-              >
-                <option value="" disabled>
-                  Select a teacher
-                </option>
-                {teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.name}>
-                    {teacher.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-            </div>
+            <input
+              type="hidden"
+              {...register("teacher", { required: "Teacher is required" })}
+            />
+            <Popover open={teacherPickerOpen} onOpenChange={setTeacherPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={teacherPickerOpen}
+                  className="w-full justify-between border-gray-300 font-normal"
+                >
+                  <span className="truncate">{watch("teacher") || "Select a teacher"}</span>
+                  <ChevronDown className="h-5 w-5 shrink-0 opacity-60" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search teacher..." />
+                  <CommandList>
+                    <CommandEmpty>No teacher found.</CommandEmpty>
+                    <CommandGroup>
+                      {teachers.map((teacher) => (
+                        <CommandItem
+                          key={teacher.id}
+                          value={teacher.name}
+                          onSelect={() => {
+                            setValue("teacher", teacher.name, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            });
+                            setTeacherPickerOpen(false);
+                          }}
+                        >
+                          {teacher.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             {errors.teacher && (
               <p className="text-red-500 text-sm">{errors.teacher.message}</p>
             )}
@@ -130,23 +178,49 @@ export default function TeacherRoomSelectionDialog({
             <Label htmlFor="room">
               Room <span className="text-red-500">*</span>
             </Label>
-            <div className="relative">
-              <select
-                id="room"
-                {...register("room", { required: "Room is required" })}
-                className="w-full border border-gray-300 rounded-md py-2 px-3 appearance-none"
-              >
-                <option value="" disabled>
-                  Select a room
-                </option>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.name}>
-                    {room.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-            </div>
+            <input
+              type="hidden"
+              {...register("room", { required: "Room is required" })}
+            />
+            <Popover open={roomPickerOpen} onOpenChange={setRoomPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={roomPickerOpen}
+                  className="w-full justify-between border-gray-300 font-normal"
+                >
+                  <span className="truncate">{watch("room") || "Select a room"}</span>
+                  <ChevronDown className="h-5 w-5 shrink-0 opacity-60" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search room..." />
+                  <CommandList>
+                    <CommandEmpty>No room found.</CommandEmpty>
+                    <CommandGroup>
+                      {rooms.map((room) => (
+                        <CommandItem
+                          key={room.id}
+                          value={room.name}
+                          onSelect={() => {
+                            setValue("room", room.name, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            });
+                            setRoomPickerOpen(false);
+                          }}
+                        >
+                          {room.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             {errors.room && (
               <p className="text-red-500 text-sm">{errors.room.message}</p>
             )}
